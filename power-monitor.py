@@ -11,7 +11,10 @@ import sys
 #board_voltage = 3.305
 AC_TRANSFORMER_RATIO = 11.5
 AC_TRANSFORMER_OUTPUT = 10.6
-ct_sensor_channel = 0       # YDHC CT sensor #1 input
+ct1_channel = 0             # YDHC CT sensor #1 input | Subpanel
+ct2_channel = 1             # YDHC CT sensor #2 input | Solar Main
+ct3_channel = 2             # CT sensor #3 input      | House main (leg 1) (orange pair)
+ct4_channel = 3             # CT sensor #4 input      | House main (leg 2) (green pair)
 board_voltage_channel = 5   # Board voltage ~3.3V
 v_sensor_channel = 6        # AC Voltage channel
 ref_voltage_channel = 7     # Voltage splitter channel ~1.65V
@@ -19,15 +22,18 @@ ref_voltage_channel = 7     # Voltage splitter channel ~1.65V
 # Tuning Variables
 v_read_delay                = 0.0001       # voltage read delay 
 delay_factor                = 1   # Total read delay will be v_read_delay * delay_factor 
-reference_level             = 511       # This is the digital equivalent to the reference voltage of 1.65V (half of 1024) 
-CT_accuracy_factor          = 0.01
-AC_voltage_accuracy_factor  =  -0.0035   # Negative if output voltage reads higher than meter
+ct1_accuracy_factor         = -0.0515   # DONE
+ct2_accuracy_factor         = -0.050    # DONE
+ct3_accuracy_factor         = -0.050    # DONE
+ct4_accuracy_factor         = -0.0503   # 
+AC_voltage_accuracy_factor  = 0.00585   # Negative if output voltage reads higher than meter
 
 
 #Create SPI
 spi = spidev.SpiDev()
 spi.open(0, 0)
-spi.max_speed_hz = 200000
+spi.max_speed_hz = 650000
+
 
 def readadc(adcnum):
     # read SPI data from the MCP3008, 8 channels in total
@@ -40,23 +46,42 @@ def readadc(adcnum):
 def collect_data(numSamples):
     
     samples = []
-    while len(samples) < numSamples:
-        ct_data = readadc(ct_sensor_channel)
-        v_data = readadc(v_sensor_channel)
-        samples.append((ct_data, v_data))
-        #time.sleep(v_read_delay * delay_factor)
+    ct1_data = []
+    ct2_data = []
+    ct3_data = []
+    ct4_data = []
+    v_data = []
+    while len(v_data) < numSamples:
+        ct1 = readadc(ct1_channel)
+        ct2 = readadc(ct2_channel)
+        v = readadc(v_sensor_channel)
+        ct3 = readadc(ct3_channel)
+        ct4 = readadc(ct4_channel)        
+        ct1_data.append(ct1)
+        ct2_data.append(ct2)
+        ct3_data.append(ct3)
+        ct4_data.append(ct4)
+        v_data.append(v)
+
+    samples = (ct1_data, ct2_data, ct3_data, ct4_data, v_data)
     return samples
 
 
 def dump_data(dump_type, samples):
     speed_kHz = spi.max_speed_hz / 1000
-    filename = f'laptop-plugin-{speed_kHz}kHz-delay-{delay_factor}.csv'
-    with open(filename, 'a') as f:
-        headers = ["Sample#", "current", "voltage"]
+    filename = f'data-dump-{speed_kHz}kHz-delay-{delay_factor}.csv'
+    with open(filename, 'w') as f:
+        headers = ["Sample#", "ct1", "ct2", "ct3", "ct4", "voltage"]
         writer = csv.writer(f)
         writer.writerow(headers)
-        for i, sample in enumerate(samples):
-            writer.writerow([i, sample[0], sample[1]])
+        # samples contains lists for each data sample. 
+        for i in range(0, len(samples[0])):
+            ct1_data = samples[0]
+            ct2_data = samples[1]
+            ct3_data = samples[2]
+            ct4_data = samples[3]
+            v_data = samples[-1]
+            writer.writerow([i, ct1_data[i], ct2_data[i], ct3_data[i], ct4_data[i], v_data[i]])
     print("data dumped")
 
 
@@ -76,7 +101,7 @@ def get_ref_voltage(board_voltage):
 def get_board_voltage():
     # Take 10 sample readings and return the average board voltage from the +3.3V rail. 
     samples = []
-    while len(samples) < 10:
+    while len(samples) <= 10:
         data = readadc(board_voltage_channel)
         samples.append(data)
 
@@ -87,63 +112,186 @@ def get_board_voltage():
 
 
 def calculate_power(samples, board_voltage):
-    # Samples contains a list of 2-tuples. Inside each 2-tuple is a raw ADC current and voltage reading.
-    # The reference value should be subtracted from each of the values prior to calculating.
+    # Samples contains several lists.
+    ct1_samples = samples[0]
+    ct2_samples = samples[1]
+    ct3_samples = samples[2]
+    ct4_samples = samples[3]
+    v_samples   = samples[-1]
 
-    sum_inst_power = 0
+    # Variable Initialization    
+    sum_inst_power_ct1 = sum_inst_power_ct2 = sum_inst_power_ct3 = sum_inst_power_ct4 = 0
+    sum_squared_current_ct1 = sum_squared_current_ct2 = sum_squared_current_ct3 = sum_squared_current_ct4 = 0
+    sum_raw_current_ct1 = sum_raw_current_ct2 = sum_raw_current_ct3 = sum_raw_current_ct4 = 0
     sum_squared_voltage = 0
-    sum_squared_current = 0
+    sum_raw_voltage = 0
 
-    current_scaling_factor = (board_voltage / 1024) * 100 * (1 + CT_accuracy_factor)
+    # Scaling factors
+    ct1_scaling_factor = (board_voltage / 1024) * 100 * (1 + ct1_accuracy_factor)
+    ct2_scaling_factor = (board_voltage / 1024) * 100 * (1 + ct2_accuracy_factor)
+    ct3_scaling_factor = (board_voltage / 1024) * 100 * (1 + ct3_accuracy_factor)
+    ct4_scaling_factor = (board_voltage / 1024) * 100 * (1 + ct4_accuracy_factor)
     voltage_scaling_factor = (board_voltage / 1024) * 126.5 * (1 + AC_voltage_accuracy_factor)
 
-    total_scaling_factor = current_scaling_factor * voltage_scaling_factor
+    
+    for i in range(0, len(v_samples)):
+        ct1 = (int(ct1_samples[i]))
+        ct2 = (int(ct2_samples[i]))
+        ct3 = (int(ct3_samples[i]))
+        ct4 = (int(ct4_samples[i]))
+        voltage = (int(v_samples[i]))      
 
-    for sample in samples:
-        current = (int(sample[0]) - 512)
-        voltage = (int(sample[1]) - 512)
+        # Process all data in a single function to reduce runtime complexity
+        # Get the sum of all current samples individually
+        sum_raw_current_ct1 += ct1
+        sum_raw_current_ct2 += ct2
+        sum_raw_current_ct3 += ct3
+        sum_raw_current_ct4 += ct4
+        sum_raw_voltage += voltage
 
-        inst_power = current * voltage 
-        sum_inst_power += inst_power
+        # Calculate instant power for each ct sensor
+        inst_power_ct1 = ct1 * voltage
+        inst_power_ct2 = ct2 * voltage
+        inst_power_ct3 = ct3 * voltage
+        inst_power_ct4 = ct4 * voltage
+        sum_inst_power_ct1 += inst_power_ct1
+        sum_inst_power_ct2 += inst_power_ct2
+        sum_inst_power_ct3 += inst_power_ct3
+        sum_inst_power_ct4 += inst_power_ct4
 
-        squared_voltage = voltage * voltage 
+        # Squared voltage
+        squared_voltage = voltage * voltage  
         sum_squared_voltage += squared_voltage
 
-        squared_current = current * current
-        sum_squared_current += squared_current
+        # Squared current
+        sq_ct1 = ct1 * ct1
+        sq_ct2 = ct2 * ct2
+        sq_ct3 = ct3 * ct3
+        sq_ct4 = ct4 * ct4
+        
+        sum_squared_current_ct1 += sq_ct1
+        sum_squared_current_ct2 += sq_ct2
+        sum_squared_current_ct3 += sq_ct3
+        sum_squared_current_ct4 += sq_ct4
 
-    real_power = sum_inst_power / len(samples)  * total_scaling_factor # 1 is subtracted to account for the header row in the CSV data
-    mean_square_voltage = sum_squared_voltage / len(samples)
-    rms_voltage = sqrt(mean_square_voltage) * voltage_scaling_factor
+    avg_raw_current_ct1 = sum_raw_current_ct1 / len(v_samples)
+    avg_raw_current_ct2 = sum_raw_current_ct2 / len(v_samples)
+    avg_raw_current_ct3 = sum_raw_current_ct3 / len(v_samples)
+    avg_raw_current_ct4 = sum_raw_current_ct4 / len(v_samples)
+    avg_raw_voltage = sum_raw_voltage / len(v_samples)
 
-    mean_square_current = sum_squared_current / len(samples) 
-    rms_current = sqrt(mean_square_current) * current_scaling_factor
+    real_power_1 = ((sum_inst_power_ct1 / len(v_samples)) - (avg_raw_current_ct1 * avg_raw_voltage))  * ct1_scaling_factor * voltage_scaling_factor 
+    real_power_2 = ((sum_inst_power_ct2 / len(v_samples)) - (avg_raw_current_ct2 * avg_raw_voltage))  * ct2_scaling_factor * voltage_scaling_factor 
+    real_power_3 = ((sum_inst_power_ct3 / len(v_samples)) - (avg_raw_current_ct3 * avg_raw_voltage))  * ct3_scaling_factor * voltage_scaling_factor 
+    real_power_4 = ((sum_inst_power_ct4 / len(v_samples)) - (avg_raw_current_ct4 * avg_raw_voltage))  * ct4_scaling_factor * voltage_scaling_factor 
+    mean_square_voltage = sum_squared_voltage / len(v_samples)    
 
-    apparent_power = rms_voltage * rms_current
-    power_factor = real_power / apparent_power
+    rms_voltage = sqrt(mean_square_voltage - (avg_raw_voltage * avg_raw_voltage)) * voltage_scaling_factor
+
+    mean_square_current_ct1 = sum_squared_current_ct1 / len(v_samples) 
+    mean_square_current_ct2 = sum_squared_current_ct2 / len(v_samples) 
+    mean_square_current_ct3 = sum_squared_current_ct3 / len(v_samples) 
+    mean_square_current_ct4 = sum_squared_current_ct4 / len(v_samples) 
+
+    rms_current_ct1 = sqrt(mean_square_current_ct1 - (avg_raw_current_ct1 * avg_raw_current_ct1)) * ct1_scaling_factor
+    rms_current_ct2 = sqrt(mean_square_current_ct2 - (avg_raw_current_ct2 * avg_raw_current_ct2)) * ct2_scaling_factor
+    rms_current_ct3 = sqrt(mean_square_current_ct3 - (avg_raw_current_ct3 * avg_raw_current_ct3)) * ct3_scaling_factor
+    rms_current_ct4 = sqrt(mean_square_current_ct4 - (avg_raw_current_ct4 * avg_raw_current_ct4)) * ct4_scaling_factor
+
+    if rms_current_ct1 != 0:
+        apparent_power = rms_voltage * rms_current_ct1        
+        power_factor = real_power_1 / apparent_power
+
+    else:
+        apparent_power = 0
+        power_factor = 0
     
-    return real_power, rms_voltage, rms_current, apparent_power, power_factor
+    results = (
+        real_power_1,
+        real_power_2,
+        real_power_3,
+        real_power_4,
+        rms_voltage,
+        rms_current_ct1,
+        rms_current_ct2,
+        rms_current_ct3,
+        rms_current_ct4,
+        power_factor
+        )
+
+    return results
 
 def run_main():
-    while True:
+    avg_rms_voltage = []
+    avg_ct_0 = []
+    avg_ct_1 = []
+    avg_ct_2 = []
+    avg_ct_3 = []
+
+    avg_rms_0 = []
+    avg_rms_1 = []
+    avg_rms_2 = []
+    avg_rms_3 = []
+    
+    
+    while True:        
         try:
             board_voltage = get_board_voltage()
-            ref_voltage = get_ref_voltage(board_voltage)
+            #print(f"Board voltage is: {board_voltage}") 
+            #ref_voltage = get_ref_voltage(board_voltage)
             #print(f"Ref voltage {ref_voltage}V | Board voltage: {board_voltage}V")
             starttime = timeit.default_timer()
-            chan0_samples = collect_data(2000)
+            samples = collect_data(2000)
             stop = timeit.default_timer() - starttime
-            #print(f"Collected {len(samples)} samples in {round(stop,4)} seconds at {spi.max_speed_hz} Hz.")
-            #dump_data('tuple', samples)
+            # print(f"Collected {len(samples[2]) * len(samples)} samples in {round(stop,4)} seconds at {spi.max_speed_hz} Hz.")
+            
+            ct0_samples = samples[0]
+            ct1_samples = samples[1]
+            ct2_samples = samples[2]
+            ct3_samples = samples[3]
+            v_samples = samples[-1]
 
-            real_power, rms_voltage, rms_current, apparent_power, power_factor = calculate_power(chan0_samples, board_voltage)
+            # EXPERIMENTAL: Phase correction 
+            # ct1_samples = ct1_samples[:-1]    # remove the last sample from ct1
+            # ct2_samples = ct2_samples[1:]   # remove the first sample from ct2
+            # v_samples = v_samples[1:]     # remove the first sample from voltage samples
+            # Repackage the individual samples after phase correction
+            # samples = (ct1_samples, ct2_samples, v_samples)
 
-            if real_power < 1 and real_power > -1:
-                real_power = 0
+            # dump_data('tuple', samples)
 
-            print(f"Real Power: {round(real_power, 3)} W | RMS Voltage: {round(rms_voltage, 3)}V | RMS Current: {round(rms_current, 3)}A | Apparent Power: {round(apparent_power, 3)} W | Power Factor: {round(power_factor, 3)}")
-     
-    
+            results = calculate_power(samples, board_voltage)
+            # Unpack results
+            real_power_0, real_power_1, real_power_2, real_power_3, rms_voltage, rms_current_ct0, rms_current_ct1, rms_current_ct2, rms_current_ct3, power_factor = results         
+           
+            avg_ct_0.append(rms_current_ct0)
+            avg_ct_1.append(rms_current_ct1)
+            avg_ct_2.append(rms_current_ct2)
+            avg_ct_3.append(rms_current_ct3)
+            avg_rms_voltage.append(rms_voltage)
+
+            avg_ct_0_value = sum(avg_ct_0) / len(avg_ct_0)
+            avg_ct_1_value = sum(avg_ct_1) / len(avg_ct_1)
+            avg_ct_2_value = sum(avg_ct_2) / len(avg_ct_2)
+            avg_ct_3_value = sum(avg_ct_3) / len(avg_ct_3)
+            avg_rms_voltage_value = sum(avg_rms_voltage) / len(avg_rms_voltage)
+      
+            
+            #print(f"CT0 Average: {round(avg_ct_0_value, 3)} | CT1: {round(avg_ct_1_value, 3)} | CT2: {round(avg_ct_2_value, 3)} | CT3: {round(avg_ct_3_value, 3)} | Voltage: {round(avg_rms_voltage_value, 3)}") 
+            #print(f"CT3: {round(avg_ct_3_value, 3)}    |    Voltage: {round(avg_rms_voltage_value, 3)}")
+            print("\n")
+            print(f"Sensor 0: Real Power {round(real_power_0, 3)} | RMS Current: {round(rms_current_ct0, 3)} | RMS Voltage: {round(rms_voltage, 3)} | Power Factor: {round(power_factor, 3)}")
+            print(f"Sensor 1: Real Power {round(real_power_1, 3)} | RMS Current: {round(rms_current_ct1, 3)} | RMS Voltage: {round(rms_voltage, 3)}")
+            print(f"Sensor 2: Real Power {round(real_power_2, 3)} | RMS Current: {round(rms_current_ct2, 3)} | RMS Voltage: {round(rms_voltage, 3)}")
+            print(f"Sensor 3: Real Power {round(real_power_3, 3)} | RMS Current: {round(rms_current_ct3, 3)} | RMS Voltage: {round(rms_voltage, 3)}")
+            # print("\n\n")
+
+            avg_rms_0.append(rms_current_ct0)
+            avg_rms_1.append(rms_current_ct1)
+            avg_rms_2.append(rms_current_ct2)
+            avg_rms_3.append(rms_current_ct3)
+
+            print(f"Averages: Ct0: {round(sum(avg_rms_0) / len(avg_rms_0),2)} | Ct1: {round(sum(avg_rms_1) / len(avg_rms_1), 2)} | Ct2: {round(sum(avg_rms_2) / len(avg_rms_2), 2)} | Ct3: {round(sum(avg_rms_3) / len(avg_rms_3), 2)}")    
      
         except KeyboardInterrupt:
             sys.exit()
