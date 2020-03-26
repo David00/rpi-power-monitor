@@ -20,6 +20,8 @@ In my particular case, 3 CT sensors will be used for monitoring the house consum
 
 As I continue working on this project, I intend on sharing a complete list of hardware components and a summary of my experiences.
 
+March 25, 2020 Update: Over the past couple of weeks, I've been working on a custom printed circuit board to address a noise/interference problem I was having with the prototype board. The PCB is currently being manufacturered which gives me some time to address other aspects of this project while I wait. 
+
 
 ---
 
