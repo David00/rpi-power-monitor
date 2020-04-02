@@ -8,38 +8,40 @@ from math import sqrt
 import sys
 import influx_interface as infl
 from datetime import datetime
+from plotting import plot_data
 
 #Define Variables
 #board_voltage = 3.305
 AC_TRANSFORMER_RATIO = 11.5
 AC_TRANSFORMER_OUTPUT = 10.6
-ct0_channel = 0             # YDHC CT sensor #1 input | Solar Main
-ct1_channel = 1             # YDHC CT sensor #2 input | Subpanel
-ct2_channel = 2             # CT sensor #3 input      | House main (leg 1 - left)  (orange pair)
-ct3_channel = 3             # CT sensor #4 input      | House main (leg 2 - right) (green pair)
+ct0_channel = 0             # YDHC CT sensor #0 input | Solar Main
+ct1_channel = 1             # YDHC CT sensor #1 input | Subpanel main (leg 1 - top)
+ct2_channel = 2             # CT sensor #2 input      | House main (leg 1 - left)  (orange pair)
+ct3_channel = 3             # CT sensor #3 input      | House main (leg 2 - right) (green pair)
+ct4_channel = 4             # CT sensor #4            | Subpanel main (leg 2 - bottom)
 board_voltage_channel = 5   # Board voltage ~3.3V
 v_sensor_channel = 6        # AC Voltage channel
 ref_voltage_channel = 7     # Voltage splitter channel ~1.65V
 
 # DEBUGGING
-MODE = 'debug'      # 'debug' mode will disable database storing and enable writing the data to a CSV file.
-MODE = ''
+#MODE = ''
+#MODE = 'debug'      # 'debug' mode will disable database storing and enable writing the data to a CSV file.
+
 
 # Tuning Variables
 v_read_delay                = 0.0001       # voltage read delay 
 delay_factor                = 1   # Total read delay will be v_read_delay * delay_factor 
-ct0_accuracy_factor         = -0.0890   # DONE
-ct1_accuracy_factor         = -0.050    # DONE
-ct2_accuracy_factor         = -0.050    # DONE
-ct3_accuracy_factor         = -0.0503   # 
-AC_voltage_accuracy_factor  = -0.009   # Negative if output voltage reads higher than meter
+ct0_accuracy_factor         = 0   # DONE
+ct1_accuracy_factor         = 0    # DONE
+ct2_accuracy_factor         = 0    # DONE
+ct3_accuracy_factor         = 0   # 
+AC_voltage_accuracy_factor  = 0   # Negative if output voltage reads higher than meter
 
 
 #Create SPI
 spi = spidev.SpiDev()
 spi.open(0, 0)
-#spi.max_speed_hz = 650000
-spi.max_speed_hz = 600000
+spi.max_speed_hz = 1750000
 
 
 def readadc(adcnum):
@@ -59,10 +61,12 @@ def collect_data(numSamples):
     ct1_data = []
     ct2_data = []
     ct3_data = []
+    ct4_data = []
     v_data = []
     while len(v_data) < numSamples:
-        ct0 = readadc(ct0_channel)
-        ct1 = readadc(ct1_channel)
+        ct0 = readadc(ct0_channel)  # Read subpanel leg #1
+        ct4 = readadc(ct4_channel)  # Read subpanel leg #2
+        ct1 = readadc(ct1_channel)  # Read 
         v = readadc(v_sensor_channel)
         ct2 = readadc(ct2_channel)
         ct3 = readadc(ct3_channel)        
@@ -70,15 +74,25 @@ def collect_data(numSamples):
         ct1_data.append(ct1)
         ct2_data.append(ct2)
         ct3_data.append(ct3)
+        ct4_data.append(ct4)
         v_data.append(v)
 
-    samples = (ct0_data, ct1_data, ct2_data, ct3_data, v_data, now)
+    samples = {
+        'ct0' : ct0_data,
+        'ct1' : ct1_data,
+        'ct2' : ct2_data,
+        'ct3' : ct3_data,
+        'ct4' : ct4_data,
+        'voltage' : v_data,
+        'time' : now,
+    }
+    #samples = (ct0_data, ct1_data, ct2_data, ct3_data, v_data, now)
     return samples
 
 
 def dump_data(dump_type, samples):
     speed_kHz = spi.max_speed_hz / 1000
-    filename = f'ct1_no_conductor-22nFcap.csv'
+    filename = f'upstairs-no-conductors-breadboard.csv'
     with open(filename, 'w') as f:
         headers = ["Sample#", "ct0", "ct1", "ct2", "ct3", "voltage"]
         writer = csv.writer(f)
@@ -122,16 +136,26 @@ def get_board_voltage():
 
 def calculate_power(samples, board_voltage):
     # Samples contains several lists.
-    ct0_samples = samples[0]
-    ct1_samples = samples[1]
-    ct2_samples = samples[2]
-    ct3_samples = samples[3]
-    v_samples   = samples[4]
+    ct0_samples = samples['ct0']
+    ct1_samples = samples['ct1']
+    ct2_samples = samples['ct2']
+    ct3_samples = samples['ct3']
+    ct4_samples = samples['ct4']
+    v_samples   = samples['voltage']
 
     # Variable Initialization    
-    sum_inst_power_ct0 = sum_inst_power_ct1 = sum_inst_power_ct2 = sum_inst_power_ct3 = 0
-    sum_squared_current_ct0 = sum_squared_current_ct1 = sum_squared_current_ct2 = sum_squared_current_ct3 = 0
-    sum_raw_current_ct0 = sum_raw_current_ct1 = sum_raw_current_ct2 = sum_raw_current_ct3 = 0
+    sum_inst_power_ct0 = 0
+    sum_inst_power_ct1 = 0
+    sum_inst_power_ct2 = 0
+    sum_inst_power_ct3 = 0
+    sum_squared_current_ct0 = 0 
+    sum_squared_current_ct1 = 0
+    sum_squared_current_ct2 = 0
+    sum_squared_current_ct3 = 0
+    sum_raw_current_ct0 = 0
+    sum_raw_current_ct1 = 0
+    sum_raw_current_ct2 = 0
+    sum_raw_current_ct3 = 0
     sum_squared_voltage = 0
     sum_raw_voltage = 0
 
@@ -312,49 +336,30 @@ def run_main():
             #print(f"Board voltage is: {board_voltage}") 
             #ref_voltage = get_ref_voltage(board_voltage)
             #print(f"Ref voltage {ref_voltage}V | Board voltage: {board_voltage}V")
-            #starttime = timeit.default_timer()
+            starttime = timeit.default_timer()
             samples = collect_data(2000)
-            poll_time = samples[-1]
-            #stop = timeit.default_timer() - starttime
-            # print(f"Collected {len(samples[2]) * len(samples)} samples in {round(stop,4)} seconds at {spi.max_speed_hz} Hz.")
+            poll_time = samples['time']
+            stop = timeit.default_timer() - starttime
+            print(f"Collected {len(samples['ct0']) * (len(samples)-1)} samples in {round(stop,4)} seconds at {spi.max_speed_hz} Hz.")
             
-            ct0_samples = samples[0]
-            ct0_samples = samples[1]
-            ct1_samples = samples[2]
-            ct2_samples = samples[3]
-            v_samples = samples[4]
+            ct0_samples = samples['ct0']
+            ct1_samples = samples['ct1']
+            ct2_samples = samples['ct2']
+            ct3_samples = samples['ct3']
+            ct4_sampels = samples['ct4']
+            v_samples = samples['voltage']
 
-            # EXPERIMENTAL: Phase correction 
-            # ct0_samples = ct0_samples[:-1]    # remove the last sample from ct0
-            # ct1_samples = ct1_samples[1:]   # remove the first sample from ct1
-            # v_samples = v_samples[1:]     # remove the first sample from voltage samples
-            # Repackage the individual samples after phase correction
-            # samples = (ct0_samples, ct1_samples, v_samples)
-            if MODE == 'debug':
-                # remove the datetime object from the end of samples
-                dump_data('tuple', samples[:-2])
+  
 
             results = calculate_power(samples, board_voltage)
-            # Unpack results
-            #real_power_0, real_power_1, real_power_2, real_power_3, rms_voltage, rms_current_ct0, rms_current_ct0, rms_current_ct1, rms_current_ct2, power_factor = results         
-           
-            # avg_ct_0.append(rms_current_ct0)
-            # avg_ct_1.append(rms_current_ct0)
-            # avg_ct_2.append(rms_current_ct1)
-            # avg_ct_3.append(rms_current_ct2)
-            # avg_rms_voltage.append(rms_voltage)
-
-            # avg_ct_0_value = sum(avg_ct_0) / len(avg_ct_0)
-            # avg_ct_1_value = sum(avg_ct_1) / len(avg_ct_1)
-            # avg_ct_2_value = sum(avg_ct_2) / len(avg_ct_2)
-            # avg_ct_3_value = sum(avg_ct_3) / len(avg_ct_3)
-            # avg_rms_voltage_value = sum(avg_rms_voltage) / len(avg_rms_voltage)
+    
 
             print("\n")
-            print(f"Solar    : {round(results['ct0']['power'],2):>8} W | {round(results['ct0']['current'],2):>6} A")
-            print(f"Subpanel : {round(results['ct1']['power'],2):>8} W | {round(results['ct1']['current'],2):>6} A")
-            print(f"L Main   : {round(results['ct2']['power'],2):>8} W | {round(results['ct2']['current'],2):>6} A")
-            print(f"R Main   : {round(results['ct3']['power'],2):>8} W | {round(results['ct3']['current'],2):>6} A")
+            print(f"CT0    : {round(results['ct0']['power'],2):>8} W | {round(results['ct0']['current'],2):>6} A")
+            print(f"CT1 : {round(results['ct1']['power'],2):>8} W | {round(results['ct1']['current'],2):>6} A")
+            print(f"CT2   : {round(results['ct2']['power'],2):>8} W | {round(results['ct2']['current'],2):>6} A")
+            print(f"CT3   : {round(results['ct3']['power'],2):>8} W | {round(results['ct3']['current'],2):>6} A")
+            print(f"Voltage   : {round(results['voltage'],2):>8} V")
             
             solar_power      = results['ct0']['power']
             solar_current    = results['ct0']['current']
@@ -386,12 +391,12 @@ def run_main():
                 current_status = "Producing"
                 verb = 'production'
 
-            print()
-            print(f"{'Current Status:':<20s} {current_status:>2}")
-            print(f"{f'Net {verb}:':<20s} {round(home_consumption - solar_power, 2)} W")
-            print(f"{'Solar Output:':<20s} {round(solar_power, 2):>8} W | {round(solar_current, 2)} A")
-            print(f"{'Home Consumption:':<20s} {round(home_consumption,2):>8} W | {round(home_load, 2)} A")
-            print(f"{'Line Voltage:':<20s} {round(results['voltage'], 2)} V")
+            # print()
+            # print(f"{'Current Status:':<20s} {current_status:>2}")
+            # print(f"{f'Net {verb}:':<20s} {round(home_consumption - solar_power, 2)} W")
+            # print(f"{'Solar Output:':<20s} {round(solar_power, 2):>8} W | {round(solar_current, 2)} A")
+            # print(f"{'Home Consumption:':<20s} {round(home_consumption,2):>8} W | {round(home_load, 2)} A")
+            # print(f"{'Line Voltage:':<20s} {round(results['voltage'], 2)} V")
             
             # Aggregate and average results before writing to database
             num_results = 5
@@ -400,8 +405,8 @@ def run_main():
             
             else:
                 avg_results = aggregate_results(all_results)
-                if MODE != 'debug':
-                    infl.write_to_db(avg_results, poll_time)     
+                # if MODE != 'debug':
+                #     infl.write_to_db(avg_results, poll_time)     
                 all_results = []
             
             if MODE == 'debug':
@@ -411,6 +416,33 @@ def run_main():
             sys.exit()
 
 if __name__ == '__main__':
+    
+    if len(sys.argv) > 1:
+        MODE = sys.argv[1]
+        try:
+            title = sys.argv[2]
+        except IndexError:
+            title = None
+    else:
+        MODE = None
+
     if MODE != 'debug':
-        infl.init_db()
-    run_main()
+        #infl.init_db()
+        run_main()
+
+    else:
+        # DEBUG MODE
+        samples = collect_data(2000)
+        ct0_samples = samples['ct0']
+        ct1_samples = samples['ct1']
+        ct2_samples = samples['ct2']
+        ct3_samples = samples['ct3']
+        ct4_samples = samples['ct4']
+        v_samples = samples['voltage']
+
+        if not title:
+            title = input("Enter the title for this chart: ")
+
+        plot_data(samples, title)
+        
+        print("file written")
