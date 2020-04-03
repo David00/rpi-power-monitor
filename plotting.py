@@ -1,5 +1,6 @@
 import plotly
 import plotly.graph_objs as go
+from plotly.subplots import make_subplots
 from datetime import datetime
 
 
@@ -10,21 +11,28 @@ webroot = '/var/www/html'
 
 
 def plot_data(samples, title):
-    # Plots the raw sample data from the individual CT channels and the 
+    # Plots the raw sample data from the individual CT channels and the AC voltage channel.
     ct0 = samples['ct0']
     ct1 = samples['ct1']
     ct2 = samples['ct2']
     ct3 = samples['ct3']
     voltage = samples['voltage']
-
-
     x = [x for x in range(1, len(ct0))]
 
-    fig = go.Figure(data=go.Scatter(x=x, y=ct0, mode='lines', name='CT0'))
-    fig.add_trace(go.Scatter(x=x, y=ct1, mode='lines', name='CT1'))
-    fig.add_trace(go.Scatter(x=x, y=ct2, mode='lines', name='CT2'))
-    fig.add_trace(go.Scatter(x=x, y=ct3, mode='lines', name='CT3'))
-    fig.add_trace(go.Scatter(x=x, y=voltage, mode='lines', name='AC Voltage'))
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    fig.add_trace(go.Scatter(x=x, y=ct0, mode='lines', name='CT0'), secondary_y=False)
+    fig.add_trace(go.Scatter(x=x, y=ct1, mode='lines', name='CT1'), secondary_y=False)
+    fig.add_trace(go.Scatter(x=x, y=ct2, mode='lines', name='CT2'), secondary_y=False)
+    fig.add_trace(go.Scatter(x=x, y=ct3, mode='lines', name='CT3'), secondary_y=False)
+    fig.add_trace(go.Scatter(x=x, y=voltage, mode='lines', name='AC Voltage'), secondary_y=True)
+
+    if 'vWave_ct0' in samples.keys():
+        fig.add_trace(go.Scatter(x=x, y=samples['vWave_ct0'], mode='lines', name='New V wave (ct0)'), secondary_y=True)
+        fig.add_trace(go.Scatter(x=x, y=samples['vWave_ct1'], mode='lines', name='New V wave (ct1)'), secondary_y=True)
+        fig.add_trace(go.Scatter(x=x, y=samples['vWave_ct2'], mode='lines', name='New V wave (ct2)'), secondary_y=True)
+        fig.add_trace(go.Scatter(x=x, y=samples['vWave_ct3'], mode='lines', name='New V wave (ct3)'), secondary_y=True)
+        fig.add_trace(go.Scatter(x=x, y=samples['vWave_ct4'], mode='lines', name='New V wave (ct4)'), secondary_y=True)
+
 
     fig.update_layout(
         title=title,
