@@ -34,7 +34,7 @@ ct1_accuracy_factor         = 0.9321
 ct2_accuracy_factor         = 0.9751
 ct3_accuracy_factor         = 0.9734
 ct4_accuracy_factor         = 1         # Not yet implemented.
-AC_voltage_accuracy_factor  = 1   
+AC_voltage_accuracy_factor  = 1.075
 
 # Phase Calibration - note that these items are listed in the order they are sampled.
 ct0_phasecal = 1.489     # Calculated  1.5              # TUNED - error between real power and rms power is about -0.72W with a 3.4kW load
@@ -309,6 +309,7 @@ def calculate_power(samples, board_voltage):
             'voltage'   : rms_voltage_3,
             'pf'        : power_factor_3
         },
+        'voltage' : rms_voltage_0,
     }
 
     return results
@@ -441,18 +442,18 @@ def run_main():
             v_samples = samples['voltage']
 
             rebuilt_waves = rebuild_waves(samples, ct0_phasecal, ct1_phasecal, ct2_phasecal, ct3_phasecal, ct4_phasecal)
-            phase_corrected_results = calculate_power(rebuilt_waves, board_voltage) 
+            results = calculate_power(rebuilt_waves, board_voltage) 
 
             # RMS calculation for phase correction only - this is not needed after everything is tuned.
-            rms_power_0 = round(phase_corrected_results['ct0']['current'] * phase_corrected_results['ct0']['voltage'], 2)
-            rms_power_1 = round(phase_corrected_results['ct1']['current'] * phase_corrected_results['ct1']['voltage'], 2)
-            rms_power_2 = round(phase_corrected_results['ct2']['current'] * phase_corrected_results['ct2']['voltage'], 2)
-            rms_power_3 = round(phase_corrected_results['ct3']['current'] * phase_corrected_results['ct3']['voltage'], 2)
+            rms_power_0 = round(results['ct0']['current'] * results['ct0']['voltage'], 2)
+            rms_power_1 = round(results['ct1']['current'] * results['ct1']['voltage'], 2)
+            rms_power_2 = round(results['ct2']['current'] * results['ct2']['voltage'], 2)
+            rms_power_3 = round(results['ct3']['current'] * results['ct3']['voltage'], 2)
 
-            phase_corrected_power_0 = phase_corrected_results['ct0']['power'] / 2
-            phase_corrected_power_1 = phase_corrected_results['ct1']['power']
-            phase_corrected_power_2 = phase_corrected_results['ct2']['power']
-            phase_corrected_power_3 = phase_corrected_results['ct3']['power']
+            phase_corrected_power_0 = results['ct0']['power'] / 2
+            phase_corrected_power_1 = results['ct1']['power']
+            phase_corrected_power_2 = results['ct2']['power']
+            phase_corrected_power_3 = results['ct3']['power']
 
             # diff is the difference between the real_power (phase corrected) compared to the simple rms power calculation.
             # This is used to calibrate for the "unknown" phase error in each CT.  The phasecal value for each CT input should be adjusted so that diff comes as close to zero as possible.
@@ -463,10 +464,12 @@ def run_main():
 
             # Phase Corrected Results
             print("\n")
-            print(f"CT0 Real Power: {round(phase_corrected_results['ct0']['power'] / 2, 2):>6} W | Amps: {round(phase_corrected_results['ct0']['current'], 2):<6} | RMS Power: {round(phase_corrected_results['ct0']['current'] * phase_corrected_results['ct0']['voltage'], 2):<6} W | PF: {round(phase_corrected_results['ct0']['pf'], 4)}")
-            print(f"CT1 Real Power: {round(phase_corrected_results['ct1']['power'], 2):>6} W | Amps: {round(phase_corrected_results['ct1']['current'], 2):<6} | RMS Power: {round(phase_corrected_results['ct1']['current'] * phase_corrected_results['ct1']['voltage'], 2):<6} W | PF: {round(phase_corrected_results['ct1']['pf'], 4)}")
-            print(f"CT2 Real Power: {round(phase_corrected_results['ct2']['power'], 2):>6} W | Amps: {round(phase_corrected_results['ct2']['current'], 2):<6} | RMS Power: {round(phase_corrected_results['ct2']['current'] * phase_corrected_results['ct2']['voltage'], 2):<6} W | PF: {round(phase_corrected_results['ct2']['pf'], 4)}")
-            print(f"CT3 Real Power: {round(phase_corrected_results['ct3']['power'], 2):>6} W | Amps: {round(phase_corrected_results['ct3']['current'], 2):<6} | RMS Power: {round(phase_corrected_results['ct3']['current'] * phase_corrected_results['ct3']['voltage'], 2):<6} W | PF: {round(phase_corrected_results['ct3']['pf'], 4)}")
+            print(f"CT0 Real Power: {round(results['ct0']['power'] / 2, 2):>6} W | Amps: {round(results['ct0']['current'], 2):<6} | RMS Power: {round(results['ct0']['current'] * results['ct0']['voltage'], 2):<6} W | PF: {round(results['ct0']['pf'], 4)}")
+            print(f"CT1 Real Power: {round(results['ct1']['power'], 2):>6} W | Amps: {round(results['ct1']['current'], 2):<6} | RMS Power: {round(results['ct1']['current'] * results['ct1']['voltage'], 2):<6} W | PF: {round(results['ct1']['pf'], 4)}")
+            print(f"CT2 Real Power: {round(results['ct2']['power'], 2):>6} W | Amps: {round(results['ct2']['current'], 2):<6} | RMS Power: {round(results['ct2']['current'] * results['ct2']['voltage'], 2):<6} W | PF: {round(results['ct2']['pf'], 4)}")
+            print(f"CT3 Real Power: {round(results['ct3']['power'], 2):>6} W | Amps: {round(results['ct3']['current'], 2):<6} | RMS Power: {round(results['ct3']['current'] * results['ct3']['voltage'], 2):<6} W | PF: {round(results['ct3']['pf'], 4)}")
+            print(f"Line Voltage: {round(results['voltage'], 2)} V")
+            
 
             #print(f"Difference between calculated real power and rms power: {diff_0} W")
             
