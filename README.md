@@ -8,15 +8,23 @@ The code in this repository is still being developed and at this point (March 20
 
 ---
 
-### What does it do?
+## What does it do?
 
-This code accompanies DIY circuitry (see the references above) that supports monitoring of 4 current transformers and one AC voltage reading, with an end goal of calculating, storing, and displaying whole-home power usage and solar photovoltaic generation.
+This code accompanies DIY circuitry (see the references above) that supports monitoring of up to 6 current transformers and one AC voltage reading, with an end goal of calculating, storing, and displaying whole-home power usage and solar photovoltaic generation.
 
-In my particular case, 3 CT sensors will be used for monitoring the house consumption via two main 120V legs in my electrical panel and a smaller 100A subpanel.  The 4th CT sensor will be used to monitor my solar PV feed into the main panel.
+All the energy data gathered will be stored to provide live and/or historical views for several key metrics, including the following:
+
+* Total home consumption
+* Total solar PV generation
+* Net home consumption
+* Net home generation
+* Total current, voltage, power, and power factor values
+* Individual current transformer readings
+
 
 ---
 
-### More Info
+### More Info...
 
 As I continue working on this project, I intend on sharing a complete list of hardware components and a summary of my experiences.
 
@@ -30,3 +38,9 @@ March 25, 2020 Update: Over the past couple of weeks, I've been working on a cus
 * [OpenEnergyMonitor](https://openenergymonitor.org) and forum member Robert.Wall for guidance and support
 
 * The `spidev` project on PyPi for providing the interface to read an analog to digital converter
+
+
+---
+
+
+###### Last Updated:  April 3, 2020
