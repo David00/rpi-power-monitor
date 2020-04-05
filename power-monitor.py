@@ -19,29 +19,30 @@ ct0_channel = 0             # YDHC CT sensor #0 input | Solar Main
 ct1_channel = 1             # YDHC CT sensor #1 input | Subpanel main (leg 1 - top)
 ct2_channel = 2             # CT sensor #2 input      | House main (leg 1 - left)  (orange pair)
 ct3_channel = 3             # CT sensor #3 input      | House main (leg 2 - right) (green pair)
-ct4_channel = 4             # CT sensor #4            | Subpanel main (leg 2 - bottom)
-board_voltage_channel = 5   # Board voltage ~3.3V
-v_sensor_channel = 6        # AC Voltage channel
-ref_voltage_channel = 7     # Voltage splitter channel ~1.65V
+ct4_channel = 6             # CT sensor #4            | Subpanel main (leg 2 - bottom)
+board_voltage_channel =  4  # Board voltage ~3.3V
+v_sensor_channel = 5        # AC Voltage channel
+ct5_channel = 7    
+
 
 # TODO
 # 1. Build a dynamic Phase Correction algorithm depending on how many inputs are in use
 
 
 # Tuning Variables
-ct0_accuracy_factor         = 0.955
-ct1_accuracy_factor         = 0.9321
+ct0_accuracy_factor         = 1.0151
+ct1_accuracy_factor         = 1.054
 ct2_accuracy_factor         = 0.9751
-ct3_accuracy_factor         = 0.9734
+ct3_accuracy_factor         = 0.985
 ct4_accuracy_factor         = 1         # Not yet implemented.
 AC_voltage_accuracy_factor  = 1.075
 
 # Phase Calibration - note that these items are listed in the order they are sampled.
-ct0_phasecal = 1.489     # Calculated  1.5              # TUNED - error between real power and rms power is about -0.72W with a 3.4kW load
-ct4_phasecal = 1.333     # Calculated 1.3333            # Not yet implemented.
-ct1_phasecal = 0.851     # Calculated 1.166667          # TUNED - error between real power and rms power is about -0.446W with a 3.4kW load
-ct2_phasecal = 1.475     # Calculated 1.166667          # TUNED - error between real power and rms power is about -0.526W with a 3.4kW load
-ct3_phasecal = 1.775     # Calculated 1.3333            # TUNED - error between real power and rms power is about -0.52W with a 3.4kW load
+ct0_phasecal = 1.3025    # Calculated  1.5              # TUNED 
+ct4_phasecal = 1.3       # Calculated 1.3333            # TUNED
+ct1_phasecal = 2.1995    # Calculated 1.166667          # TUNED 
+ct2_phasecal = 1.475     # Calculated 1.166667          # TUNED 
+ct3_phasecal = 1.775     # Calculated 1.3333            # TUNED 
 
 #Create SPI
 spi = spidev.SpiDev()
@@ -98,7 +99,7 @@ def dump_data(dump_type, samples):
     speed_kHz = spi.max_speed_hz / 1000
     filename = f'upstairs-no-conductors-breadboard.csv'
     with open(filename, 'w') as f:
-        headers = ["Sample#", "ct0", "ct1", "ct2", "ct3", "voltage"]
+        headers = ["Sample#", "ct0", "ct1", "ct2", "ct3", "ct4", "voltage"]
         writer = csv.writer(f)
         writer.writerow(headers)
         # samples contains lists for each data sample. 
@@ -107,23 +108,10 @@ def dump_data(dump_type, samples):
             ct1_data = samples[1]
             ct2_data = samples[2]
             ct3_data = samples[3]
+            ct4_data = samples[4]
             v_data = samples[-1]
-            writer.writerow([i, ct0_data[i], ct1_data[i], ct2_data[i], ct3_data[i], v_data[i]])
+            writer.writerow([i, ct0_data[i], ct1_data[i], ct2_data[i], ct3_data[i], ct4_data[i], v_data[i]])
     print("data dumped")
-
-
-def get_ref_voltage(board_voltage):
-    # take 10 samples readings and return the average reference voltage from the voltage splitter. Should be equal to about 1.65
-    # The reference voltage is fed to input 7 on the MCP3008.
-
-    samples = []
-    while len(samples) < 10:
-        data = readadc(ref_voltage_channel)
-        samples.append(data)
-    
-    avg_reading = sum(samples) / len(samples)
-    ref_voltage = (avg_reading / 1024) * board_voltage
-    return ref_voltage
 
 def get_board_voltage():
     # Take 10 sample readings and return the average board voltage from the +3.3V rail. 
@@ -133,7 +121,7 @@ def get_board_voltage():
         samples.append(data)
 
     avg_reading = sum(samples) / len(samples)
-    board_voltage = (avg_reading / 1024) * 3.31
+    board_voltage = (avg_reading / 1024) * 3.31 * 2    
     return board_voltage
 
 # Phase corrected power calculation
@@ -147,37 +135,41 @@ def calculate_power(samples, board_voltage):
     v_samples_1 = samples['v_ct1']      # phase-corrected voltage wave specifically for CT1
     v_samples_2 = samples['v_ct2']      # phase-corrected voltage wave specifically for CT2
     v_samples_3 = samples['v_ct3']      # phase-corrected voltage wave specifically for CT3
-    v_samples_4 = samples['v_ct4']      # phase-corrected voltage wave specifically for CT4
-    
-
+    v_samples_4 = samples['v_ct4']      # phase-corrected voltage wave specifically for CT4   
 
     # Variable Initialization    
     sum_inst_power_ct0 = 0
     sum_inst_power_ct1 = 0
     sum_inst_power_ct2 = 0
     sum_inst_power_ct3 = 0
+    sum_inst_power_ct4 = 0
     sum_squared_current_ct0 = 0 
     sum_squared_current_ct1 = 0
     sum_squared_current_ct2 = 0
     sum_squared_current_ct3 = 0
+    sum_squared_current_ct4 = 0
     sum_raw_current_ct0 = 0
     sum_raw_current_ct1 = 0
     sum_raw_current_ct2 = 0
     sum_raw_current_ct3 = 0
+    sum_raw_current_ct4 = 0
     sum_squared_voltage_0 = 0
     sum_squared_voltage_1 = 0
     sum_squared_voltage_2 = 0
     sum_squared_voltage_3 = 0
+    sum_squared_voltage_4 = 0
     sum_raw_voltage_0 = 0
     sum_raw_voltage_1 = 0
     sum_raw_voltage_2 = 0
     sum_raw_voltage_3 = 0
+    sum_raw_voltage_4 = 0
 
     # Scaling factors
     ct0_scaling_factor = (board_voltage / 1024) * 100 * ct0_accuracy_factor
     ct1_scaling_factor = (board_voltage / 1024) * 100 * ct1_accuracy_factor
     ct2_scaling_factor = (board_voltage / 1024) * 100 * ct2_accuracy_factor
     ct3_scaling_factor = (board_voltage / 1024) * 100 * ct3_accuracy_factor
+    ct4_scaling_factor = (board_voltage / 1024) * 100 * ct4_accuracy_factor
     voltage_scaling_factor = (board_voltage / 1024) * 126.5 * AC_voltage_accuracy_factor
 
     num_samples = len(v_samples_0)
@@ -187,10 +179,12 @@ def calculate_power(samples, board_voltage):
         ct1 = (int(ct1_samples[i]))
         ct2 = (int(ct2_samples[i]))
         ct3 = (int(ct3_samples[i]))
+        ct4 = (int(ct4_samples[i]))        
         voltage_0 = (int(v_samples_0[i]))      
         voltage_1 = (int(v_samples_1[i]))      
         voltage_2 = (int(v_samples_2[i]))      
         voltage_3 = (int(v_samples_3[i]))      
+        voltage_4 = (int(v_samples_4[i]))      
 
         # Process all data in a single function to reduce runtime complexity
         # Get the sum of all current samples individually
@@ -198,10 +192,12 @@ def calculate_power(samples, board_voltage):
         sum_raw_current_ct1 += ct1
         sum_raw_current_ct2 += ct2
         sum_raw_current_ct3 += ct3
+        sum_raw_current_ct4 += ct4
         sum_raw_voltage_0 += voltage_0
         sum_raw_voltage_1 += voltage_1
         sum_raw_voltage_2 += voltage_2
         sum_raw_voltage_3 += voltage_3
+        sum_raw_voltage_4 += voltage_4
 
 
         # Calculate instant power for each ct sensor
@@ -209,74 +205,88 @@ def calculate_power(samples, board_voltage):
         inst_power_ct1 = ct1 * voltage_1
         inst_power_ct2 = ct2 * voltage_2
         inst_power_ct3 = ct3 * voltage_3
+        inst_power_ct4 = ct4 * voltage_4
         sum_inst_power_ct0 += inst_power_ct0
         sum_inst_power_ct1 += inst_power_ct1
         sum_inst_power_ct2 += inst_power_ct2
         sum_inst_power_ct3 += inst_power_ct3
+        sum_inst_power_ct4 += inst_power_ct4
 
         # Squared voltage
         squared_voltage_0 = voltage_0 * voltage_0
-        squared_voltage_1 = voltage_1 * voltage_1  
-        squared_voltage_2 = voltage_2 * voltage_2  
-        squared_voltage_3 = voltage_3 * voltage_3  
+        squared_voltage_1 = voltage_1 * voltage_1
+        squared_voltage_2 = voltage_2 * voltage_2
+        squared_voltage_3 = voltage_3 * voltage_3
+        squared_voltage_4 = voltage_4 * voltage_4
         sum_squared_voltage_0 += squared_voltage_0
         sum_squared_voltage_1 += squared_voltage_1
         sum_squared_voltage_2 += squared_voltage_2
         sum_squared_voltage_3 += squared_voltage_3
+        sum_squared_voltage_4 += squared_voltage_4
 
         # Squared current
         sq_ct0 = ct0 * ct0
         sq_ct1 = ct1 * ct1
         sq_ct2 = ct2 * ct2
         sq_ct3 = ct3 * ct3
+        sq_ct4 = ct4 * ct4
         
         sum_squared_current_ct0 += sq_ct0
         sum_squared_current_ct1 += sq_ct1
         sum_squared_current_ct2 += sq_ct2
         sum_squared_current_ct3 += sq_ct3
+        sum_squared_current_ct4 += sq_ct4
 
     avg_raw_current_ct0 = sum_raw_current_ct0 / num_samples
     avg_raw_current_ct1 = sum_raw_current_ct1 / num_samples
     avg_raw_current_ct2 = sum_raw_current_ct2 / num_samples
     avg_raw_current_ct3 = sum_raw_current_ct3 / num_samples
+    avg_raw_current_ct4 = sum_raw_current_ct4 / num_samples
     avg_raw_voltage_0 = sum_raw_voltage_0 / num_samples
     avg_raw_voltage_1 = sum_raw_voltage_1 / num_samples
     avg_raw_voltage_2 = sum_raw_voltage_2 / num_samples
     avg_raw_voltage_3 = sum_raw_voltage_3 / num_samples
+    avg_raw_voltage_4 = sum_raw_voltage_4 / num_samples
     
-
     real_power_0 = ((sum_inst_power_ct0 / num_samples) - (avg_raw_current_ct0 * avg_raw_voltage_0 * 2))  * ct0_scaling_factor * voltage_scaling_factor
     real_power_1 = ((sum_inst_power_ct1 / num_samples) - (avg_raw_current_ct1 * avg_raw_voltage_1))  * ct1_scaling_factor * voltage_scaling_factor 
     real_power_2 = ((sum_inst_power_ct2 / num_samples) - (avg_raw_current_ct2 * avg_raw_voltage_2))  * ct2_scaling_factor * voltage_scaling_factor 
     real_power_3 = ((sum_inst_power_ct3 / num_samples) - (avg_raw_current_ct3 * avg_raw_voltage_3))  * ct3_scaling_factor * voltage_scaling_factor 
+    real_power_4 = ((sum_inst_power_ct4 / num_samples) - (avg_raw_current_ct4 * avg_raw_voltage_3))  * ct4_scaling_factor * voltage_scaling_factor 
 
     mean_square_current_ct0 = sum_squared_current_ct0 / num_samples 
     mean_square_current_ct1 = sum_squared_current_ct1 / num_samples 
     mean_square_current_ct2 = sum_squared_current_ct2 / num_samples 
     mean_square_current_ct3 = sum_squared_current_ct3 / num_samples 
+    mean_square_current_ct4 = sum_squared_current_ct4 / num_samples 
     mean_square_voltage_0 = sum_squared_voltage_0 / num_samples
     mean_square_voltage_1 = sum_squared_voltage_1 / num_samples
     mean_square_voltage_2 = sum_squared_voltage_2 / num_samples
     mean_square_voltage_3 = sum_squared_voltage_3 / num_samples
+    mean_square_voltage_4 = sum_squared_voltage_4 / num_samples
 
     rms_current_ct0 = sqrt(mean_square_current_ct0 - (avg_raw_current_ct0 * avg_raw_current_ct0)) * ct0_scaling_factor
     rms_current_ct1 = sqrt(mean_square_current_ct1 - (avg_raw_current_ct1 * avg_raw_current_ct1)) * ct1_scaling_factor
     rms_current_ct2 = sqrt(mean_square_current_ct2 - (avg_raw_current_ct2 * avg_raw_current_ct2)) * ct2_scaling_factor
     rms_current_ct3 = sqrt(mean_square_current_ct3 - (avg_raw_current_ct3 * avg_raw_current_ct3)) * ct3_scaling_factor
+    rms_current_ct4 = sqrt(mean_square_current_ct4 - (avg_raw_current_ct4 * avg_raw_current_ct4)) * ct4_scaling_factor
     rms_voltage_0     = sqrt(mean_square_voltage_0 - (avg_raw_voltage_0 * avg_raw_voltage_0)) * voltage_scaling_factor
     rms_voltage_1     = sqrt(mean_square_voltage_1 - (avg_raw_voltage_1 * avg_raw_voltage_1)) * voltage_scaling_factor
     rms_voltage_2     = sqrt(mean_square_voltage_2 - (avg_raw_voltage_2 * avg_raw_voltage_2)) * voltage_scaling_factor
     rms_voltage_3     = sqrt(mean_square_voltage_3 - (avg_raw_voltage_3 * avg_raw_voltage_3)) * voltage_scaling_factor
+    rms_voltage_4     = sqrt(mean_square_voltage_4 - (avg_raw_voltage_4 * avg_raw_voltage_4)) * voltage_scaling_factor
 
     # Power Factor
     apparent_power_0 = rms_voltage_0 * rms_current_ct0        
     apparent_power_1 = rms_voltage_1 * rms_current_ct1        
     apparent_power_2 = rms_voltage_2 * rms_current_ct2        
     apparent_power_3 = rms_voltage_3 * rms_current_ct3        
+    apparent_power_4 = rms_voltage_4 * rms_current_ct4        
     power_factor_0 = real_power_0 / apparent_power_0 / 2
     power_factor_1 = real_power_1 / apparent_power_1
     power_factor_2 = real_power_2 / apparent_power_2
     power_factor_3 = real_power_3 / apparent_power_3
+    power_factor_4 = real_power_4 / apparent_power_4
 
 
     
@@ -308,6 +318,13 @@ def calculate_power(samples, board_voltage):
             'current'   : rms_current_ct3,
             'voltage'   : rms_voltage_3,
             'pf'        : power_factor_3
+        },
+        'ct4' : {
+            'type'      : 'consumption',
+            'power'     : real_power_4,
+            'current'   : rms_current_ct4,
+            'voltage'   : rms_voltage_4,
+            'pf'        : power_factor_4
         },
         'voltage' : rms_voltage_0,
     }
@@ -464,10 +481,11 @@ def run_main():
 
             # Phase Corrected Results
             print("\n")
-            print(f"CT0 Real Power: {round(results['ct0']['power'] / 2, 2):>6} W | Amps: {round(results['ct0']['current'], 2):<6} | RMS Power: {round(results['ct0']['current'] * results['ct0']['voltage'], 2):<6} W | PF: {round(results['ct0']['pf'], 4)}")
-            print(f"CT1 Real Power: {round(results['ct1']['power'], 2):>6} W | Amps: {round(results['ct1']['current'], 2):<6} | RMS Power: {round(results['ct1']['current'] * results['ct1']['voltage'], 2):<6} W | PF: {round(results['ct1']['pf'], 4)}")
-            print(f"CT2 Real Power: {round(results['ct2']['power'], 2):>6} W | Amps: {round(results['ct2']['current'], 2):<6} | RMS Power: {round(results['ct2']['current'] * results['ct2']['voltage'], 2):<6} W | PF: {round(results['ct2']['pf'], 4)}")
-            print(f"CT3 Real Power: {round(results['ct3']['power'], 2):>6} W | Amps: {round(results['ct3']['current'], 2):<6} | RMS Power: {round(results['ct3']['current'] * results['ct3']['voltage'], 2):<6} W | PF: {round(results['ct3']['pf'], 4)}")
+            print(f"CT0 Real Power: {round(results['ct0']['power'] / 2, 2):>6} W | Amps: {round(results['ct0']['current'], 2):<6} | RMS Power: {round(results['ct0']['current'] * results['ct0']['voltage'], 2):<6} W | PF: {round(results['ct0']['pf'], 5)}")
+            print(f"CT1 Real Power: {round(results['ct1']['power'], 2):>6} W | Amps: {round(results['ct1']['current'], 2):<6} | RMS Power: {round(results['ct1']['current'] * results['ct1']['voltage'], 2):<6} W | PF: {round(results['ct1']['pf'], 5)}")
+            print(f"CT2 Real Power: {round(results['ct2']['power'], 2):>6} W | Amps: {round(results['ct2']['current'], 2):<6} | RMS Power: {round(results['ct2']['current'] * results['ct2']['voltage'], 2):<6} W | PF: {round(results['ct2']['pf'], 5)}")
+            print(f"CT3 Real Power: {round(results['ct3']['power'], 2):>6} W | Amps: {round(results['ct3']['current'], 2):<6} | RMS Power: {round(results['ct3']['current'] * results['ct3']['voltage'], 2):<6} W | PF: {round(results['ct3']['pf'], 5)}")
+            print(f"CT4 Real Power: {round(results['ct4']['power'], 2):>6} W | Amps: {round(results['ct4']['current'], 2):<6} | RMS Power: {round(results['ct4']['current'] * results['ct4']['voltage'], 2):<6} W | PF: {round(results['ct4']['pf'], 5)}")
             print(f"Line Voltage: {round(results['voltage'], 2)} V")
             
 
@@ -561,6 +579,9 @@ if __name__ == '__main__':
         #stop = timeit.default_timer() - starttime
         #print(f'Took {round(stop, 3)} seconds to rebuild 5 voltage waves with {len(rebuilt_waves[0])} each.')
 
+        board_voltage = get_board_voltage()
+        results = calculate_power(rebuilt_waves, board_voltage) 
+
 
         samples.update({
             'vWave_ct0' : rebuilt_waves['v_ct0'],
@@ -570,7 +591,15 @@ if __name__ == '__main__':
             'vWave_ct4' : rebuilt_waves['v_ct4'],
         })
 
-        plot_data(samples, title)        
-        print("file written")
+
+        print(f"CT0 Real Power: {round(results['ct0']['power'] / 2, 2):>6} W | Amps: {round(results['ct0']['current'], 2):<6} | RMS Power: {round(results['ct0']['current'] * results['ct0']['voltage'], 2):<6} W | PF: {round(results['ct0']['pf'], 6)}")
+        print(f"CT1 Real Power: {round(results['ct1']['power'], 2):>6} W | Amps: {round(results['ct1']['current'], 2):<6} | RMS Power: {round(results['ct1']['current'] * results['ct1']['voltage'], 2):<6} W | PF: {round(results['ct1']['pf'], 6)}")
+        print(f"CT2 Real Power: {round(results['ct2']['power'], 2):>6} W | Amps: {round(results['ct2']['current'], 2):<6} | RMS Power: {round(results['ct2']['current'] * results['ct2']['voltage'], 2):<6} W | PF: {round(results['ct2']['pf'], 6)}")
+        #print(f"CT3 Real Power: {round(results['ct3']['power'], 2):>6} W | Amps: {round(results['ct3']['current'], 2):<6} | RMS Power: {round(results['ct3']['current'] * results['ct3']['voltage'], 2):<6} W | PF: {round(results['ct3']['pf'], 6)}")
+        print(f"CT4 Real Power: {round(results['ct4']['power'], 2):>6} W | Amps: {round(results['ct4']['current'], 2):<6} | RMS Power: {round(results['ct4']['current'] * results['ct4']['voltage'], 2):<6} W | PF: {round(results['ct4']['pf'], 6)}")
+        #print(f"Line Voltage: {round(results['voltage'], 2)} V")
+
+        #plot_data(samples, title)        
+        #print("file written")
 
 
