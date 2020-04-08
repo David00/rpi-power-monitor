@@ -451,6 +451,13 @@ def run_main():
             solar_current = results['ct3']['current']
             solar_pf = results['ct3']['pf']
 
+            # Set solar power and current to zero if the solar power is under 20W.
+            if solar_power < 20:
+                solar_power = 0
+                solar_current = 0
+                solar_pf = 0
+            
+
             # If the power on these two CTs is negative, indication net production, invert the amperage value to follow suit.
             if grid_0_power < 0:
                 grid_0_current = grid_0_current * -1
