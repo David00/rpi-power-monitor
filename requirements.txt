@@ -1,4 +1,3 @@
-adafruit_circuitpython_ads1x15==2.1.2
-Adafruit_Blinka==3.9.0
-adafruit_ads1x15==1.0.2
-board==1.0
+influxdb==5.2.3
+spidev==3.4
+plotly==4.5.4

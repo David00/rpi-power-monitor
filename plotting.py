@@ -16,6 +16,7 @@ def plot_data(samples, title):
     ct1 = samples['ct1']
     ct2 = samples['ct2']
     ct3 = samples['ct3']
+    ct4 = samples['ct4']
     voltage = samples['voltage']
     x = [x for x in range(1, len(ct0))]
 
@@ -24,6 +25,7 @@ def plot_data(samples, title):
     fig.add_trace(go.Scatter(x=x, y=ct1, mode='lines', name='CT1'), secondary_y=False)
     fig.add_trace(go.Scatter(x=x, y=ct2, mode='lines', name='CT2'), secondary_y=False)
     fig.add_trace(go.Scatter(x=x, y=ct3, mode='lines', name='CT3'), secondary_y=False)
+    fig.add_trace(go.Scatter(x=x, y=ct4, mode='lines', name='CT4'), secondary_y=False)
     fig.add_trace(go.Scatter(x=x, y=voltage, mode='lines', name='AC Voltage'), secondary_y=True)
 
     if 'vWave_ct0' in samples.keys():
