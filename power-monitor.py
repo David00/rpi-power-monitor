@@ -382,7 +382,7 @@ def rebuild_waves(samples, PHASECAL_0, PHASECAL_1, PHASECAL_2, PHASECAL_3, PHASE
 
 
 def run_main():
-        
+    print("Press Ctrl-c to quit...")
     # The following empty dictionaries will hold the respective calculated values at the end of each polling cycle, which are then averaged prior to storing the value to the DB.
     solar_power_values = dict(power=[], pf=[], current=[])
     home_load_values = dict(power=[], pf=[], current=[])
@@ -476,9 +476,9 @@ def run_main():
             else:
                 current_status = "Consuming"                
 
-            print(f'{"Solar Output:":<20} {round(solar_power, 2):>10} W | {round(solar_current, 2):>10} A')
-            print(f'{"Home Consumption:":<20} {round(home_consumption_power, 2):>10} W | {round(home_consumption_current, 2):>10} A')
-            print(f'{"Current Status:":<20} {current_status:>10} {abs(round(net_power, 2))} W | {round(net_current, 2):>10} A')
+            # print(f'{"Solar Output:":<20} {round(solar_power, 2):>10} W | {round(solar_current, 2):>10} A')
+            # print(f'{"Home Consumption:":<20} {round(home_consumption_power, 2):>10} W | {round(home_consumption_current, 2):>10} A')
+            # print(f'{"Current Status:":<20} {current_status:>10} {abs(round(net_power, 2))} W | {round(net_current, 2):>10} A')
 
 
             # Average 2 readings before sending to db
@@ -542,16 +542,28 @@ if __name__ == '__main__':
     
     if len(sys.argv) > 1:
         MODE = sys.argv[1]
-        try:
-            title = sys.argv[2]
-        except IndexError:
-            title = None
+        if MODE == 'debug' or MODE == 'phase':
+            try:
+                title = sys.argv[2]
+            except IndexError:
+                title = None
     else:
         MODE = None
 
     if not MODE:
         infl.init_db()
         run_main()
+
+    elif 'help' in MODE.lower() or '-h' in MODE.lower():
+        print("\nSee the project Wiki for more detailed usage instructions: https://github.com/David00/rpi-power-monitor/wiki")
+        print("""\nUsage:
+            Start the program:                                  python3 power-monitor.py
+
+            Collect raw data and build an interactive plot:     python3 power-monitor.py debug "chart title here" 
+
+            Use the previously collected data to tune phase
+            correction:                                         python3 power-monitor.py phase "chart title here"
+            """)
 
     elif MODE == 'debug':
         # This mode is intended to take a look at the raw CT sensor data.  It will take 2000 samples from each CT sensor, plot them to a single chart, write the chart to an HTML file located in /var/www/html/, and then terminate.
