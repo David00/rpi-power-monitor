@@ -1,18 +1,16 @@
-# Raspberry Pi Whole Home Power Monitor
+# Raspberry Pi Power Monitor
+
+The Raspberry Pi Power Monitor is a combination of custom hardware and software that will allow you to monitor your unique power situation in real time (<0.5 second intervals), including consumption, generation, and net-production. The data are stored to a database and displayed in a Grafana dashboard for monitoring and reporting purposes.
+
+This project is derived from the resources located at https://learn.openenergymonitor.org. 
 
 
-This project is derived from the resources located at https://openenergymonitor.org, and, more specifically, the theory described in the section here:
-https://learn.openenergymonitor.org/electricity-monitoring/ac-power-theory/introduction
-
-The code in this repository is still being developed and at this point (March 2020) in time, only basic functionality exists.
 
 ---
 
 ## What does it do?
 
-This code accompanies DIY circuitry (see the references above) that supports monitoring of up to 6 current transformers and one AC voltage reading, with an end goal of calculating, storing, and displaying whole-home power usage and solar photovoltaic generation.
-
-All the energy data gathered will be stored to provide live and/or historical views for several key metrics, including the following:
+This code accompanies DIY circuitry (see the references above) that supports monitoring of up to 6 current transformers and one AC voltage reading. The individual readings are then used in calculations to provide real data on consumption and generation, including the following key metrics:
 
 * Total home consumption
 * Total solar PV generation
@@ -21,14 +19,58 @@ All the energy data gathered will be stored to provide live and/or historical vi
 * Total current, voltage, power, and power factor values
 * Individual current transformer readings
 
-
 ---
 
-### More Info...
+## Installation
 
-As I continue working on this project, I intend on sharing a complete list of hardware components and a summary of my experiences.
+These steps are for the Raspbian (Debian-based) operating system. I highly recommend using the "lite" version of Raspbian to avoid wasting resources on a GUI.  Also, I have only tested this code on a Raspberry Pi 3b+. I would not recommend using an older Raspberry Pi.
 
-March 25, 2020 Update: Over the past couple of weeks, I've been working on a custom printed circuit board to address a noise/interference problem I was having with the prototype board. The PCB is currently being manufacturered which gives me some time to address other aspects of this project while I wait. 
+In summary, the following steps will:
+
+* Update and upgrade your Pi
+* Install Python 3.7 & pip
+* Install Git
+* Install Nginx (optional, but recommended for viewing raw data - more on this in the project Wiki)
+* Install Docker
+* Download the InfluxDB and Grafana docker images
+* Download the source code for this project
+* Install the Python dependencies for the source code
+
+For simplicity, I've chosen to *not* include the optional Python virtual environment setup in these steps. It is not required, but it is always recommended to create a Python virtual environment. This will be covered in the project Wiki.
+
+
+1. Update and upgrade your system:
+
+        sudo apt-get update && sudo apt-get upgrade
+
+2. Install Python 3.7, Git, and Nginx:
+
+        sudo apt-get install python3.7 python3-pip git nginx
+
+3. Install Docker
+
+        curl -fsSL https://get.docker.com -o get-docker.sh
+        sudo sh get-docker.sh
+
+4. Add the default Pi user to the docker group. If you are using a different username, replace Pi with your username:
+
+        sudo usermod -aG docker Pi
+
+5. Reboot your Pi:
+
+        sudo reboot 0
+
+6. Download the source code for this project
+
+        git clone https://github.com/David00/rpi-power-monitor.git
+
+
+7. Navigate into the `rpi-power-monitor` directory and install the Python library dependencies
+
+        cd rpi-power-monitor
+        pip3 install -r requirements.txt 
+
+8. That's it! Head to the project Wiki's Quickstart section to get started with some real measurements! (Note: The Wiki is still being constructed as of April 13, 2020. Check back frequently for updates).
 
 
 ---
@@ -43,4 +85,4 @@ March 25, 2020 Update: Over the past couple of weeks, I've been working on a cus
 ---
 
 
-###### Last Updated:  April 3, 2020
+###### Last Updated:  April 13, 2020
