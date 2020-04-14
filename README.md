@@ -70,7 +70,7 @@ For simplicity, I've chosen to *not* include the optional Python virtual environ
         cd rpi-power-monitor
         pip3 install -r requirements.txt 
 
-8. That's it! Head to the project Wiki's Quickstart section to get started with some real measurements! (Note: The Wiki is still being constructed as of April 13, 2020. Check back frequently for updates).
+8. That's it! Head to the project Wiki's [Quickstart section](https://github.com/David00/rpi-power-monitor/wiki#quick-start--table-of-contents) to get started with some real measurements! (Note: The Wiki is still being constructed as of April 13, 2020. Check back frequently for updates).
 
 
 ---
