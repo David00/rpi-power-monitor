@@ -147,7 +147,7 @@ def write_to_influx(solar_power_values, home_load_values, net_power_values, ct0_
 
     try:    
         client.write_points(points, time_precision='ms')
-    except influxdb.exceptions.InfluxDBServerError as e:
+    except InfluxDBServerError as e:
         print(f"Failed to write data to Influx. Reason: {e}")
 
 

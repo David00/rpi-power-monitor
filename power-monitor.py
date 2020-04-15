@@ -277,12 +277,29 @@ def calculate_power(samples, board_voltage):
     apparent_power_2 = rms_voltage_2 * rms_current_ct2        
     apparent_power_3 = rms_voltage_3 * rms_current_ct3        
     apparent_power_4 = rms_voltage_4 * rms_current_ct4        
-    power_factor_0 = real_power_0 / apparent_power_0
-    power_factor_1 = real_power_1 / apparent_power_1
-    power_factor_2 = real_power_2 / apparent_power_2
-    power_factor_3 = real_power_3 / apparent_power_3
-    power_factor_4 = real_power_4 / apparent_power_4
+    
+    try:
+        power_factor_0 = real_power_0 / apparent_power_0
+    except ZeroDivisionError:
+        power_factor_0 = 0
+    try:
+        power_factor_1 = real_power_1 / apparent_power_1
+    except ZeroDivisionError:
+        power_factor_1 = 0
+    try:
+        power_factor_2 = real_power_2 / apparent_power_2
+    except ZeroDivisionError:
+        power_factor_2 = 0
+    try:
+        power_factor_3 = real_power_3 / apparent_power_3
+    except ZeroDivisionError:
+        power_factor_3 = 0
+    try:
+        power_factor_4 = real_power_4 / apparent_power_4
+    except ZeroDivisionError:
+        power_factor_4 = 0
 
+    
 
     
     results = {
