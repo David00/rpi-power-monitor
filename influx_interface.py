@@ -1,4 +1,5 @@
 from influxdb import InfluxDBClient
+from influxdb.exceptions import InfluxDBServerError
 from datetime import datetime
 import random
 
@@ -144,10 +145,12 @@ def write_to_influx(solar_power_values, home_load_values, net_power_values, ct0_
         ct4.to_dict(),
     ]
 
-    
-    client.write_points(points, time_precision='ms')
+    try:    
+        client.write_points(points, time_precision='ms')
+    except influxdb.exceptions.InfluxDBServerError as e:
+        print(f"Failed to write data to Influx. Reason: {e}")
 
 
 if __name__ == '__main__':
-    client = InfluxDBClient(host='localhost', port=8086, username='root', password='root', database='example')
+    client = InfluxDBClient(host='localhost', port=8086, username='root', password='password', database='example')
     test_insert_and_retrieve(client)

@@ -12,9 +12,6 @@ from plotting import plot_data
 import pickle
 
 #Define Variables
-#board_voltage = 3.305
-AC_TRANSFORMER_RATIO = 11.5
-AC_TRANSFORMER_OUTPUT = 10.6
 ct0_channel = 0             # Orange Pair           | House main (leg 1 - left)  (orange pair)
 ct1_channel = 1             # Green Pair            | House main (leg 2 - right) (green pair)
 ct2_channel = 2             # Blue Pair             | Subpanel main (leg 1 - top)
@@ -25,16 +22,13 @@ v_sensor_channel = 5        # AC Voltage channel
 ct5_channel = 7             # Available for use
 
 
-# TODO
-# 1. Build a dynamic Phase Correction algorithm depending on how many inputs are in use
-
-
 # Tuning Variables
 ct0_accuracy_factor         = 1.0151
 ct1_accuracy_factor         = 1.054
 ct2_accuracy_factor         = 0.9751
 ct3_accuracy_factor         = 0.985
-ct4_accuracy_factor         = 1         # Not yet implemented.
+ct4_accuracy_factor         = 1
+ct5_accuracy_factor         = 1
 AC_voltage_accuracy_factor  = 1.075
 
 # Phase Calibration - note that these items are listed in the order they are sampled.
@@ -165,12 +159,13 @@ def calculate_power(samples, board_voltage):
     sum_raw_voltage_4 = 0
 
     # Scaling factors
-    ct0_scaling_factor = (board_voltage / 1024) * 100 * ct0_accuracy_factor
-    ct1_scaling_factor = (board_voltage / 1024) * 100 * ct1_accuracy_factor
-    ct2_scaling_factor = (board_voltage / 1024) * 100 * ct2_accuracy_factor
-    ct3_scaling_factor = (board_voltage / 1024) * 100 * ct3_accuracy_factor
-    ct4_scaling_factor = (board_voltage / 1024) * 100 * ct4_accuracy_factor
-    voltage_scaling_factor = (board_voltage / 1024) * 126.5 * AC_voltage_accuracy_factor
+    vref = board_voltage / 1024
+    ct0_scaling_factor = vref * 100 * ct0_accuracy_factor
+    ct1_scaling_factor = vref * 100 * ct1_accuracy_factor
+    ct2_scaling_factor = vref * 100 * ct2_accuracy_factor
+    ct3_scaling_factor = vref * 100 * ct3_accuracy_factor
+    ct4_scaling_factor = vref * 100 * ct4_accuracy_factor
+    voltage_scaling_factor = vref * 126.5 * AC_voltage_accuracy_factor
 
     num_samples = len(v_samples_0)
     
@@ -201,7 +196,7 @@ def calculate_power(samples, board_voltage):
 
 
         # Calculate instant power for each ct sensor
-        inst_power_ct0 = ct0 * voltage_0        # * 2 # Removed doubling of the measurement since this channel is no longer used for the solar output.
+        inst_power_ct0 = ct0 * voltage_0
         inst_power_ct1 = ct1 * voltage_1
         inst_power_ct2 = ct2 * voltage_2
         inst_power_ct3 = ct3 * voltage_3
@@ -314,12 +309,12 @@ def calculate_power(samples, board_voltage):
         },
         'ct3' : {
             'type'      : 'production',
-            'power'     : real_power_3 * 2,
-            'current'   : rms_current_ct3 * 2,
-            'voltage'   : rms_voltage_3,
-            'pf'        : power_factor_3
-        },
-        'ct4' : {
+            'power'     : real_power_3 * 2,         # NOTE: The 'power' and 'current' readings are multiplied by 2 for CT3 because
+            'current'   : rms_current_ct3 * 2,      # CT3 is measuring my solar input, and I'm only measuring a 120V single leg when the
+            'voltage'   : rms_voltage_3,            # solar input consists of two legs.  I trust that my inverter is equally distributing the
+            'pf'        : power_factor_3            # load evenly over both legs, hence why I've chosen to simply double this measurement instead of
+        },                                          # adding another CT sensor.  Check my implementation diagram for a visual depiction:
+        'ct4' : {                                   # https://raw.githubusercontent.com/David00/rpi-power-monitor/master/docs/Sample%20Electrical%20Panel%20with%20Solar%20PV%20Input.png
             'type'      : 'consumption',
             'power'     : real_power_4,
             'current'   : rms_current_ct4,
@@ -457,8 +452,8 @@ def run_main():
                 solar_current = 0
                 solar_pf = 0
             
-
-            # If the power on these two CTs is negative, indication net production, invert the amperage value to follow suit.
+            # Determine if the system is net producing or net consuming right now by looking at the two panel mains.
+            # Since the current measured is always positive, we need to add a negative sign to the amperage value if we're exporting power.
             if grid_0_power < 0:
                 grid_0_current = grid_0_current * -1
             if grid_1_power < 0:
@@ -466,6 +461,7 @@ def run_main():
             if solar_power > 0:
                 solar_current = solar_current * -1
 
+            # Unless your specific panel setup matches mine exactly, the following four lines will likely need to be re-written:
             home_consumption_power = grid_2_power + grid_4_power + grid_0_power + grid_1_power + solar_power
             net_power = home_consumption_power - solar_power
             home_consumption_current = grid_2_current + grid_4_current + grid_0_current + grid_1_current - solar_current
@@ -547,6 +543,8 @@ if __name__ == '__main__':
                 title = sys.argv[2]
             except IndexError:
                 title = None
+        # Create the data/samples directory:
+        os.makedirs('data/samples/')
     else:
         MODE = None
 
@@ -597,8 +595,14 @@ if __name__ == '__main__':
             title = input("Enter the title for this chart: ")
 
         # Read last sample set to disk to perform phase correction
-        with open('data/samples/last-run.pkl', 'rb') as f:
-            samples = pickle.load(f)
+        try:
+            with open('data/samples/last-run.pkl', 'rb') as f:
+                samples = pickle.load(f)
+        
+        except FileNotFoundError:
+            print("Please start the program in debug mode first so it can read from the CT sensors and save the data to disk.  Example:")
+            print('python3.7 power-monitor.py debug "Initialize debug mode"')
+            sys.exit()
 
         rebuilt_waves = rebuild_waves(samples, ct0_phasecal, ct1_phasecal, ct2_phasecal, ct3_phasecal, ct4_phasecal)
         board_voltage = get_board_voltage()
