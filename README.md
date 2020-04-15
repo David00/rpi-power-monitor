@@ -59,7 +59,8 @@ You should assign a static IP address to your Pi and issue the following command
 5. Enable the SPI interface on the Pi
 
         sudo raspi-config
-        Navigate to "5 Interfacing Options"
+        
+        Select "5 Interfacing Options"
         Select "P4 SPI"
         Enable the SPI interface
         
