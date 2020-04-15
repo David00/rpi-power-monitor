@@ -42,37 +42,37 @@ You should assign a static IP address to your Pi and issue the following command
 
         sudo apt-get update && sudo apt-get upgrade
 
-1. Install Python 3.7, Git, Pip, and Nginx:
+2. Install Python 3.7, Git, Pip, and Nginx:
 
         sudo apt-get install python3.7 python3-pip git nginx
 
-1. Install Docker
+3. Install Docker
 
         curl -fsSL https://get.docker.com -o get-docker.sh
         sudo sh get-docker.sh
 
-1. Add the default Pi user to the docker group. If you are using a different username, replace Pi with your username:
+4. Add the default Pi user to the docker group. If you are using a different username, replace Pi with your username:
 
         sudo usermod -aG docker pi
         
 
-1. Enable the SPI interface on the Pi
+5. Enable the SPI interface on the Pi
 
         sudo raspi-config
         Navigate to "5 Interfacing Options"
         Select "P4 SPI"
         Enable the SPI interface
         
-1. Reboot your Pi:
+6. Reboot your Pi:
 
         sudo reboot 0
 
-1. Download and run the Grafana and InfluxDB Docker images
+7. Download and run the Grafana and InfluxDB Docker images
         
         docker run -d --name grafana -p 3000:3000 grafana/grafana
         docker run -d --name influx -p 8086:8086 -v data:/var/lib/influxdb influxdb
 
-1. Run `docker ps` and confirm that the two docker containers are running. Here is what the output should look like. Your container IDs will be different, but the rest should be the same.
+8. Run `docker ps` and confirm that the two docker containers are running. Here is what the output should look like. Your container IDs will be different, but the rest should be the same.
 
         pi@raspberrypi:~ $ docker ps
         CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                               NAMES
@@ -81,12 +81,12 @@ You should assign a static IP address to your Pi and issue the following command
 
         Note: If you get a permission error when executing the `docker ps` command, make sure you entered the correct username in step #4 and that you have either logged out and back in, or simply rebooted your Pi.
 
-1. Download the source code for this project
+9. Download the source code for this project
 
         git clone https://github.com/David00/rpi-power-monitor.git
 
 
-1. Navigate into the `rpi-power-monitor` directory and install the Python library dependencies.
+10. Navigate into the `rpi-power-monitor` directory and install the Python library dependencies.
 
         cd rpi-power-monitor
         pip3 install -r requirements.txt 
