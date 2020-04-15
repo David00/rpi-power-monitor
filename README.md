@@ -36,14 +36,14 @@ In summary, the following steps will:
 * Download the source code for this project
 * Install the Python dependencies for the source code
 
-For simplicity, I've chosen to *not* include the optional Python virtual environment setup in these steps. It is not required, but it is always recommended to create a Python virtual environment. This will be covered in the project Wiki.
+You should assign a static IP address to your Pi and issue the following commands over an SSH connection. There are countless guides on the internet to do this... [here](https://pimylifeup.com/raspberry-pi-static-ip-address/) is one. 
 
 
 1. Update and upgrade your system:
 
         sudo apt-get update && sudo apt-get upgrade
 
-2. Install Python 3.7, Git, and Nginx:
+2. Install Python 3.7, Git, Pip, and Nginx:
 
         sudo apt-get install python3.7 python3-pip git nginx
 
@@ -65,12 +65,14 @@ For simplicity, I've chosen to *not* include the optional Python virtual environ
         git clone https://github.com/David00/rpi-power-monitor.git
 
 
-7. Navigate into the `rpi-power-monitor` directory and install the Python library dependencies
+7. Navigate into the `rpi-power-monitor` directory and install the Python library dependencies.
 
         cd rpi-power-monitor
         pip3 install -r requirements.txt 
 
-8. That's it! Head to the project Wiki's Quickstart section to get started with some real measurements! (Note: The Wiki is still being constructed as of April 13, 2020. Check back frequently for updates).
+### Next Steps
+
+Head to the project Wiki's [Quickstart section](https://github.com/David00/rpi-power-monitor/wiki#quick-start--table-of-contents) to get started on the rest of the setup process.
 
 
 ---
