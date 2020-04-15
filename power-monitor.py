@@ -10,6 +10,7 @@ import influx_interface as infl
 from datetime import datetime
 from plotting import plot_data
 import pickle
+import os
 
 #Define Variables
 ct0_channel = 0             # Orange Pair           | House main (leg 1 - left)  (orange pair)
