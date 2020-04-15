@@ -53,18 +53,26 @@ You should assign a static IP address to your Pi and issue the following command
 
 4. Add the default Pi user to the docker group. If you are using a different username, replace Pi with your username:
 
-        sudo usermod -aG docker Pi
+        sudo usermod -aG docker pi
 
-5. Reboot your Pi:
+5. Enable the SPI interface on the Pi
+
+        sudo raspi-config
+        Navigate to "5 Interfacing Options"
+        Select "P4 SPI"
+        Enable the SPI interface
+        
+6. Reboot your Pi:
 
         sudo reboot 0
+        
 
-6. Download the source code for this project
+7. Download the source code for this project
 
         git clone https://github.com/David00/rpi-power-monitor.git
 
 
-7. Navigate into the `rpi-power-monitor` directory and install the Python library dependencies.
+8. Navigate into the `rpi-power-monitor` directory and install the Python library dependencies.
 
         cd rpi-power-monitor
         pip3 install -r requirements.txt 
