@@ -46,6 +46,7 @@ You should assign a static IP address to your Pi and issue the following command
 
         sudo apt-get install python3.7 python3-pip git nginx
 
+
 3. Install Docker
 
         curl -fsSL https://get.docker.com -o get-docker.sh
