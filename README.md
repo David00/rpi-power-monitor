@@ -46,7 +46,6 @@ You should assign a static IP address to your Pi and issue the following command
 
         sudo apt-get install python3.7 python3-pip git nginx
 
-
 3. Install Docker
 
         curl -fsSL https://get.docker.com -o get-docker.sh
@@ -61,11 +60,45 @@ You should assign a static IP address to your Pi and issue the following command
 
         sudo raspi-config
         
-        Select "5 Interfacing Options"
-        Select "P4 SPI"
-        Enable the SPI interface
+    Use the arrow keys and the Enter key to:
+    * Select "5 Interfacing Options"
+    * Select "P4 SPI"
+    * Enable the SPI interface
+    * Press Tab twice to move the selector to Finish
         
-6. Reboot your Pi:
+6. Modify the permissions of the webroot so that Python can write to it. If you're not using the `pi` username, be sure to change it before executing the commands below:
+
+        sudo chown -R pi /var/www/html/
+        sudo chgrp -R www-data /var/www/html/
+        sudo chmod -R 750 /var/www/html/
+
+7. Update the Nginx configuration to turn file indexing on, and remove the default Nginx index file:
+        
+        sudo nano /etc/nginx/sites-enabled/default
+        
+    Find the section that looks like:
+
+        location / {
+                 # First attempt to serve request as file, then
+                 # as directory, then fall back to displaying a 404.
+                 try_files $uri $uri/ =404;
+                 }
+                 
+    ... and add `autoindex on;` underneath the `try_files` line. The block should look like this:
+    
+        location / {
+                 # First attempt to serve request as file, then
+                 # as directory, then fall back to displaying a 404.
+                 try_files $uri $uri/ =404;
+                 autoindex on;
+                 }
+                 
+    Lastly, remove the default index.html file:
+    
+        rm /var/www/html/index.nginx-debian.html
+        
+        
+8. Reboot your Pi:
 
         sudo reboot 0
 
