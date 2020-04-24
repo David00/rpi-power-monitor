@@ -105,7 +105,7 @@ You should assign a static IP address to your Pi and issue the following command
 7. Download and run the Grafana and InfluxDB Docker images
         
         docker run -d --name grafana -p 3000:3000 grafana/grafana
-        docker run -d --name influx -p 8086:8086 -v data:/var/lib/influxdb influxdb
+        docker run -d --name influx -p 8086:8086 -v /opt/influxdb:/var/lib/influxdb influxdb
 
 8. Run `docker ps` and confirm that the two docker containers are running. Here is what the output should look like. Your container IDs will be different, but the rest should be the same.
 
@@ -143,4 +143,4 @@ Head to the project Wiki's [Quickstart section](https://github.com/David00/rpi-p
 ---
 
 
-###### Last Updated:  April 13, 2020
+###### Last Updated:  April 23, 2020
