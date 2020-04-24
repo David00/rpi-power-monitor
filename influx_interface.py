@@ -2,6 +2,7 @@ from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBServerError
 from datetime import datetime
 import random
+from time import sleep
 
 # InfluxDB connection settings
 client = InfluxDBClient(host='localhost', port=8086, username='root', password='password', database='power_monitor')
@@ -63,6 +64,8 @@ class Point():
                 status = 'Producing'
             elif self.power > 0:
                 status = 'Consuming'
+            else:
+                status = "No data"
             data = {
                 "measurement" : "net",
                 "fields" : {
@@ -94,6 +97,8 @@ class Point():
 def init_db():
     client.create_database('power_monitor')
     print("DB created")  
+    
+
 
 def close_db():
     client.close()
