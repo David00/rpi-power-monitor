@@ -562,12 +562,29 @@ if __name__ == '__main__':
             except IndexError:
                 title = None
         # Create the data/samples directory:
-        os.makedirs('data/samples/')
+        try:
+            os.makedirs('data/samples/')
+        except FileExistsError:
+            pass
     else:
         MODE = None
 
     if not MODE:
-        infl.init_db()
+        # Try to establish a connection to the DB for 5 seconds:
+        x = 0
+        connection_established = False
+        while x < 5:
+            try:
+                infl.init_db()
+                connection_established = True
+                break
+            except:
+                sleep(1)
+                x += 1
+
+        if not connection_established:
+            raise Exception("Could not connect to InfluxDB. Check that the container is running!")
+
         run_main()
 
     elif 'help' in MODE.lower() or '-h' in MODE.lower():
