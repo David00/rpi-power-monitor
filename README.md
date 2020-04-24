@@ -128,7 +128,7 @@ You should assign a static IP address to your Pi and issue the following command
 
 ### Next Steps
 
-Head to the project Wiki's [Quickstart section](https://github.com/David00/rpi-power-monitor/wiki#quick-start--table-of-contents) to get started on the rest of the setup process.
+Head to the project Wiki (https://github.com/David00/rpi-power-monitor/wiki) to get started on the rest of the setup process.
 
 
 ---
