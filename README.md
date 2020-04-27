@@ -114,7 +114,8 @@ You should assign a static IP address to your Pi and issue the following command
         013caaf13240        influxdb            "/entrypoint.sh infl…"   19 seconds ago      Up 16 seconds       0.0.0.0:8086->8086/tcp              influx
         8e763709b515        grafana/grafana     "/run.sh"                3 minutes ago       Up 3 minutes        3000/tcp, 0.0.0.0:3000->3000/tcp   grafana
 
-        Note: If you get a permission error when executing the `docker ps` command, make sure you entered the correct username in step #4 and that you have either logged out and back in, or simply rebooted your Pi.
+
+    >Note: If you get a permission error when executing the `docker ps` command, make sure you entered the correct username in step #4 and that you have either logged out and back in, or simply rebooted your Pi.
 
 9. Download the source code for this project
 
@@ -143,4 +144,4 @@ Head to the [project Wiki](https://github.com/David00/rpi-power-monitor/wiki) to
 ---
 
 
-###### Last Updated:  April 23, 2020
+###### Last Updated:  April 26, 2020
