@@ -131,8 +131,6 @@ You should assign a static IP address to your Pi and issue the following command
 
 Head to the [project Wiki](https://github.com/David00/rpi-power-monitor/wiki) to get started on the rest of the setup process.
 
-Make sure to visit the [Software 1. Running as a Service](https://github.com/David00/rpi-power-monitor/wiki/Software-1.-Running-as-a-Service) section to configure the monitoring system to start automatically on boot and restart itself if any errors are encountered!
-
 
 ---
 
