@@ -146,7 +146,7 @@ Head to the [project Wiki](https://github.com/David00/rpi-power-monitor/wiki) to
 
 ### Like my project? Donations are welcome!
 
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](YOUR_EMAIL_CODE)
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=L6LNLM92MTUY2&currency_code=USD&source=url)
 
 BTC:  1Go1YKgdxAYUjwGM1u3JRXzdyRM938RQ95
 
