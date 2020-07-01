@@ -103,7 +103,7 @@ def init_db():
 def close_db():
     client.close()
 
-def write_to_influx(solar_power_values, home_load_values, net_power_values, ct0_dict, ct1_dict, ct2_dict, ct3_dict, ct4_dict, poll_time, length):
+def write_to_influx(solar_power_values, home_load_values, net_power_values, ct0_dict, ct1_dict, ct2_dict, ct3_dict, ct4_dict, ct5_dict, poll_time, length):
     
     # Calculate Averages
     avg_solar_power = sum(solar_power_values['power']) / length
@@ -128,6 +128,9 @@ def write_to_influx(solar_power_values, home_load_values, net_power_values, ct0_
     ct4_avg_power = sum(ct4_dict['power']) / length
     ct4_avg_current = sum(ct4_dict['current']) / length
     ct4_avg_pf = sum(ct4_dict['pf']) / length
+    ct5_avg_power = sum(ct5_dict['power']) / length
+    ct5_avg_current = sum(ct5_dict['current']) / length
+    ct5_avg_pf = sum(ct5_dict['pf']) / length
 
     # Create Points
     home_load = Point('home_load', power=avg_home_power, current=avg_home_current, time=poll_time)
@@ -138,6 +141,7 @@ def write_to_influx(solar_power_values, home_load_values, net_power_values, ct0_
     ct2 = Point('ct', power=ct2_avg_power, current=ct2_avg_current, pf=ct2_avg_pf, time=poll_time, num=2)
     ct3 = Point('ct', power=ct3_avg_power, current=ct3_avg_current, pf=ct3_avg_pf, time=poll_time, num=3)
     ct4 = Point('ct', power=ct4_avg_power, current=ct4_avg_current, pf=ct4_avg_pf, time=poll_time, num=4)
+    ct5 = Point('ct', power=ct5_avg_power, current=ct5_avg_current, pf=ct5_avg_pf, time=poll_time, num=5)
 
     points = [
         home_load.to_dict(),
@@ -148,6 +152,7 @@ def write_to_influx(solar_power_values, home_load_values, net_power_values, ct0_
         ct2.to_dict(),
         ct3.to_dict(),
         ct4.to_dict(),
+        ct5.to_dict(),
     ]
 
     try:    

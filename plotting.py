@@ -17,6 +17,7 @@ def plot_data(samples, title):
     ct2 = samples['ct2']
     ct3 = samples['ct3']
     ct4 = samples['ct4']
+    ct5 = samples['ct5']
     voltage = samples['voltage']
     x = [x for x in range(1, len(ct0))]
 
@@ -26,6 +27,7 @@ def plot_data(samples, title):
     fig.add_trace(go.Scatter(x=x, y=ct2, mode='lines', name='CT2'), secondary_y=False)
     fig.add_trace(go.Scatter(x=x, y=ct3, mode='lines', name='CT3'), secondary_y=False)
     fig.add_trace(go.Scatter(x=x, y=ct4, mode='lines', name='CT4'), secondary_y=False)
+    fig.add_trace(go.Scatter(x=x, y=ct5, mode='lines', name='CT5'), secondary_y=False)
     fig.add_trace(go.Scatter(x=x, y=voltage, mode='lines', name='AC Voltage'), secondary_y=True)
 
     if 'vWave_ct0' in samples.keys():
@@ -39,8 +41,8 @@ def plot_data(samples, title):
     fig.update_layout(
         title=title,
         xaxis_title='Sample Number',
-        yaxis_title='ADC Value'        
-
+        yaxis_title='ADC Value (CTs)',
+        yaxis2_title="ADC Value (Voltage)",
     )
 
     div = plotly.offline.plot(fig, show_link=False, output_type='div', include_plotlyjs='cdn')
