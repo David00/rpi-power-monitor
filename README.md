@@ -144,4 +144,10 @@ Head to the [project Wiki](https://github.com/David00/rpi-power-monitor/wiki) to
 ---
 
 
-###### Last Updated:  April 26, 2020
+### Like my project? Donations are welcome!
+
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=L6LNLM92MTUY2&currency_code=USD&source=url)
+
+BTC:  1Go1YKgdxAYUjwGM1u3JRXzdyRM938RQ95
+
+###### Last Updated:  June 26, 2020
