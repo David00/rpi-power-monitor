@@ -13,6 +13,9 @@ import pickle
 import os
 from socket import socket, AF_INET, SOCK_DGRAM
 import fcntl
+from prettytable import PrettyTable
+import logging
+from config import logger
 
 
 #Define Variables
@@ -116,7 +119,7 @@ def dump_data(dump_type, samples):
             ct5_data = samples[5]
             v_data = samples[-1]
             writer.writerow([i, ct0_data[i], ct1_data[i], ct2_data[i], ct3_data[i], ct4_data[i], ct5_data[i], v_data[i]])
-    print(f"CSV written to {filename}.")
+    logger.info(f"CSV written to {filename}.")
 
 def get_board_voltage():
     # Take 10 sample readings and return the average board voltage from the +3.3V rail. 
@@ -447,7 +450,7 @@ def rebuild_waves(samples, PHASECAL_0, PHASECAL_1, PHASECAL_2, PHASECAL_3, PHASE
 
 
 def run_main():
-    print("Press Ctrl-c to quit...")
+    logger.info("Press Ctrl-c to quit...")
     # The following empty dictionaries will hold the respective calculated values at the end of each polling cycle, which are then averaged prior to storing the value to the DB.
     solar_power_values = dict(power=[], pf=[], current=[])
     home_load_values = dict(power=[], pf=[], current=[])
@@ -495,13 +498,13 @@ def run_main():
             # diff_3 = phase_corrected_power_3 - rms_power_3
 
             # Phase Corrected Results
-            # print("\n")
-            # print(f"CT0 Real Power: {round(results['ct0']['power'], 2):>10} W | Amps: {round(results['ct0']['current'], 2):<7} | RMS Power: {round(results['ct0']['current'] * results['ct0']['voltage'], 2):<6} W | PF: {round(results['ct0']['pf'], 5)}")
-            # print(f"CT1 Real Power: {round(results['ct1']['power'], 2):>10} W | Amps: {round(results['ct1']['current'], 2):<7} | RMS Power: {round(results['ct1']['current'] * results['ct1']['voltage'], 2):<6} W | PF: {round(results['ct1']['pf'], 5)}")
-            # print(f"CT2 Real Power: {round(results['ct2']['power'], 2):>10} W | Amps: {round(results['ct2']['current'], 2):<7} | RMS Power: {round(results['ct2']['current'] * results['ct2']['voltage'], 2):<6} W | PF: {round(results['ct2']['pf'], 5)}")
-            # print(f"CT3 Real Power: {round(results['ct3']['power'], 2):>10} W | Amps: {round(results['ct3']['current'], 2):<7} | RMS Power: {round(results['ct3']['current'] * results['ct3']['voltage'], 2):<6} W | PF: {round(results['ct3']['pf'], 5)}")
-            # print(f"CT4 Real Power: {round(results['ct4']['power'], 2):>10} W | Amps: {round(results['ct4']['current'], 2):<7} | RMS Power: {round(results['ct4']['current'] * results['ct4']['voltage'], 2):<6} W | PF: {round(results['ct4']['pf'], 5)}")
-            # print(f"Line Voltage: {round(results['voltage'], 2)} V")
+            # logger.debug("\n")
+            # logger.debug(f"CT0 Real Power: {round(results['ct0']['power'], 2):>10} W | Amps: {round(results['ct0']['current'], 2):<7} | RMS Power: {round(results['ct0']['current'] * results['ct0']['voltage'], 2):<6} W | PF: {round(results['ct0']['pf'], 5)}")
+            # logger.debug(f"CT1 Real Power: {round(results['ct1']['power'], 2):>10} W | Amps: {round(results['ct1']['current'], 2):<7} | RMS Power: {round(results['ct1']['current'] * results['ct1']['voltage'], 2):<6} W | PF: {round(results['ct1']['pf'], 5)}")
+            # logger.debug(f"CT2 Real Power: {round(results['ct2']['power'], 2):>10} W | Amps: {round(results['ct2']['current'], 2):<7} | RMS Power: {round(results['ct2']['current'] * results['ct2']['voltage'], 2):<6} W | PF: {round(results['ct2']['pf'], 5)}")
+            # logger.debug(f"CT3 Real Power: {round(results['ct3']['power'], 2):>10} W | Amps: {round(results['ct3']['current'], 2):<7} | RMS Power: {round(results['ct3']['current'] * results['ct3']['voltage'], 2):<6} W | PF: {round(results['ct3']['pf'], 5)}")
+            # logger.debug(f"CT4 Real Power: {round(results['ct4']['power'], 2):>10} W | Amps: {round(results['ct4']['current'], 2):<7} | RMS Power: {round(results['ct4']['current'] * results['ct4']['voltage'], 2):<6} W | PF: {round(results['ct4']['pf'], 5)}")
+            # logger.debug(f"Line Voltage: {round(results['voltage'], 2)} V")
 
             # Prepare values for database storage 
             grid_0_power = results['ct0']['power']    # 200A Main (left)
@@ -545,11 +548,6 @@ def run_main():
                 current_status = "Producing"                                
             else:
                 current_status = "Consuming"                
-
-            # print(f'{"Solar Output:":<20} {round(solar_power, 2):>10} W | {round(solar_current, 2):>10} A')
-            # print(f'{"Home Consumption:":<20} {round(home_consumption_power, 2):>10} W | {round(home_consumption_current, 2):>10} A')
-            # print(f'{"Current Status:":<20} {current_status:>10} {abs(round(net_power, 2))} W | {round(net_current, 2):>10} A')
-
 
             # Average 2 readings before sending to db
             if i < 2:
@@ -606,12 +604,31 @@ def run_main():
                 ct4_dict = dict(power=[], pf=[], current=[])
                 ct5_dict = dict(power=[], pf=[], current=[])
                 i = 0
-            
-            sleep(0.1)
+
+                if logger.handlers[0].level == 10:
+                    t = PrettyTable(['', 'CT0', 'CT1', 'CT2', 'CT3', 'CT4', 'CT5'])
+                    t.add_row(['Watts', round(results['ct0']['power'], 3), round(results['ct1']['power'], 3), round(results['ct2']['power'], 3), round(results['ct3']['power'], 3), round(results['ct4']['power'], 3), round(results['ct5']['power'], 3)])
+                    t.add_row(['Current', round(results['ct0']['current'], 3), round(results['ct1']['current'], 3), round(results['ct2']['current'], 3), round(results['ct3']['current'], 3), round(results['ct4']['current'], 3), round(results['ct5']['current'], 3)])
+                    t.add_row(['P.F.', round(results['ct0']['pf'], 3), round(results['ct1']['pf'], 3), round(results['ct2']['pf'], 3), round(results['ct3']['pf'], 3), round(results['ct4']['pf'], 3), round(results['ct5']['pf'], 3)])
+                    t.add_row(['Voltage', round(results['voltage'], 3), '', '', '', '', ''])
+                    s = t.get_string()
+                    logger.debug('\n' + s)
+
+            #sleep(0.1)
 
         except KeyboardInterrupt:
             infl.close_db()
             sys.exit()
+
+def print_results(results):
+    t = PrettyTable(['', 'CT0', 'CT1', 'CT2', 'CT3', 'CT4', 'CT5'])
+    t.add_row(['Watts', round(results['ct0']['power'], 3), round(results['ct1']['power'], 3), round(results['ct2']['power'], 3), round(results['ct3']['power'], 3), round(results['ct4']['power'], 3), round(results['ct5']['power'], 3)])
+    t.add_row(['Current', round(results['ct0']['current'], 3), round(results['ct1']['current'], 3), round(results['ct2']['current'], 3), round(results['ct3']['current'], 3), round(results['ct4']['current'], 3), round(results['ct5']['current'], 3)])
+    t.add_row(['P.F.', round(results['ct0']['pf'], 3), round(results['ct1']['pf'], 3), round(results['ct2']['pf'], 3), round(results['ct3']['pf'], 3), round(results['ct4']['pf'], 3), round(results['ct5']['pf'], 3)])
+    t.add_row(['Voltage', round(results['voltage'], 3), '', '', '', '', ''])
+    s = t.get_string()
+    logger.debug(s)
+
 
 def get_ip():
     # This function acquires your Pi's local IP address for use in providing the user with a copy-able link to view the charts.
@@ -662,84 +679,94 @@ if __name__ == '__main__':
 
         run_main()
 
-    elif 'help' in MODE.lower() or '-h' in MODE.lower():
-        print("\nSee the project Wiki for more detailed usage instructions: https://github.com/David00/rpi-power-monitor/wiki")
-        print("""\nUsage:
-            Start the program:                                  python3 power-monitor.py
+    else:
+        # Program launched in one of the non-main modes. Increase logging level.
+        logger.setLevel(logging.DEBUG)
+        logger.handlers[0].setLevel(logging.DEBUG)      
+        if 'help' in MODE.lower() or '-h' in MODE.lower():
 
-            Collect raw data and build an interactive plot:     python3 power-monitor.py debug "chart title here" 
+            logger.info("\nSee the project Wiki for more detailed usage instructions: https://github.com/David00/rpi-power-monitor/wiki")
+            logger.info("""\nUsage:
+                Start the program:                                  python3 power-monitor.py
 
-            Use the previously collected data to tune phase
-            correction:                                         python3 power-monitor.py phase "chart title here"
-            """)
+                Collect raw data and build an interactive plot:     python3 power-monitor.py debug "chart title here" 
 
-    elif MODE == 'debug':
-        # This mode is intended to take a look at the raw CT sensor data.  It will take 2000 samples from each CT sensor, plot them to a single chart, write the chart to an HTML file located in /var/www/html/, and then terminate.
-        # It also stores the samples to a file located in ./data/samples/last-debug.pkl so that the sample data can be read when this program is started in 'phase' mode.
-        samples = collect_data(2000)
-        ct0_samples = samples['ct0']
-        ct1_samples = samples['ct1']
-        ct2_samples = samples['ct2']
-        ct3_samples = samples['ct3']
-        ct4_samples = samples['ct4']
-        ct5_samples = samples['ct5']
-        v_samples = samples['voltage']
+                Use the previously collected data to tune phase
+                correction:                                         python3 power-monitor.py phase "chart title here"
+                """)
 
-        # Save samples to disk
-        with open('data/samples/last-debug.pkl', 'wb') as f:
-            pickle.dump(samples, f)
+        if MODE.lower() == 'debug':
+            # This mode is intended to take a look at the raw CT sensor data.  It will take 2000 samples from each CT sensor, plot them to a single chart, write the chart to an HTML file located in /var/www/html/, and then terminate.
+            # It also stores the samples to a file located in ./data/samples/last-debug.pkl so that the sample data can be read when this program is started in 'phase' mode.
+            samples = collect_data(2000)
+            ct0_samples = samples['ct0']
+            ct1_samples = samples['ct1']
+            ct2_samples = samples['ct2']
+            ct3_samples = samples['ct3']
+            ct4_samples = samples['ct4']
+            ct5_samples = samples['ct5']
+            v_samples = samples['voltage']
 
-        if not title:
-            title = input("Enter the title for this chart: ")
+            # Save samples to disk
+            with open('data/samples/last-debug.pkl', 'wb') as f:
+                pickle.dump(samples, f)
 
-        plot_data(samples, title)        
-        ip = get_ip()
-        if ip:
-            print(f"Chart created! Visit http://{ip}/{title}.html to view the chart. Or, simply visit http://{ip} to view all the charts created using 'debug' and/or 'phase' mode.")
-        else:
-            print("Chart created! I could not determine the IP address of this machine. Visit your device's IP address in a webrowser to view the list of charts you've created using 'debug' and/or 'phase' mode.")
+            if not title:
+                title = input("Enter the title for this chart: ")
 
-    elif MODE == 'phase':
-        # This mode is intended to be used for correcting the phase error in your CT sensors. Instead of reading the CT sensors, it will open the 'last-debug.pkl' file and read the contents, which
-        # contain the samples from the last time the program was ran in "debug" mode. This is to save electricity so you don't need to keep your resistive load device running while you calibrate.
-        # The function then continues to build 5 different variations of the raw AC voltage wave based on the ct#_phasecal variable.
-        # Finally, a single chart is constructed that shows all of the raw CT data points, the "as measured" voltage wave, and the phase corrected voltage wave. The chart is written to an HTML file
-        # in the webroot /var/www/html/.
+            plot_data(samples, title)        
+            ip = get_ip()
+            if ip:
+                logger.info(f"Chart created! Visit http://{ip}/{title}.html to view the chart. Or, simply visit http://{ip} to view all the charts created using 'debug' and/or 'phase' mode.")
+            else:
+                logger.info("Chart created! I could not determine the IP address of this machine. Visit your device's IP address in a webrowser to view the list of charts you've created using 'debug' and/or 'phase' mode.")
 
-        if not title:
-            title = input("Enter the title for this chart: ")
+        if MODE.lower() == 'phase':
+            # This mode is intended to be used for correcting the phase error in your CT sensors. Instead of reading the CT sensors, it will open the 'last-debug.pkl' file and read the contents, which
+            # contain the samples from the last time the program was ran in "debug" mode. This is to save electricity so you don't need to keep your resistive load device running while you calibrate.
+            # The function then continues to build 5 different variations of the raw AC voltage wave based on the ct#_phasecal variable.
+            # Finally, a single chart is constructed that shows all of the raw CT data points, the "as measured" voltage wave, and the phase corrected voltage wave. The chart is written to an HTML file
+            # in the webroot /var/www/html/.
 
-        # Read last sample set to disk to perform phase correction
-        try:
-            with open('data/samples/last-debug.pkl', 'rb') as f:
-                samples = pickle.load(f)
-        
-        except FileNotFoundError:
-            print("Please start the program in debug mode first so it can read from the CT sensors and save the data to disk.  Example:")
-            print('python3.7 power-monitor.py debug "Initialize debug mode"')
-            sys.exit()
+            if not title:
+                title = input("Enter the title for this chart: ")
 
-        rebuilt_waves = rebuild_waves(samples, ct0_phasecal, ct1_phasecal, ct2_phasecal, ct3_phasecal, ct4_phasecal)
-        board_voltage = get_board_voltage()
-        results = calculate_power(rebuilt_waves, board_voltage) 
+            # Read last sample set to disk to perform phase correction
+            try:
+                with open('data/samples/last-debug.pkl', 'rb') as f:
+                    samples = pickle.load(f)
+            
+            except FileNotFoundError:
+                logger.info("Please start the program in debug mode first so it can read from the CT sensors and save the data to disk.  Example:")
+                logger.info('python3.7 power-monitor.py debug "Initialize debug mode"')
+                sys.exit()
 
-        samples.update({
-            'vWave_ct0' : rebuilt_waves['v_ct0'],
-            'vWave_ct1' : rebuilt_waves['v_ct1'],
-            'vWave_ct2' : rebuilt_waves['v_ct2'],
-            'vWave_ct3' : rebuilt_waves['v_ct3'],
-            'vWave_ct4' : rebuilt_waves['v_ct4'],
-        })
+            rebuilt_waves = rebuild_waves(samples, ct0_phasecal, ct1_phasecal, ct2_phasecal, ct3_phasecal, ct4_phasecal)
+            board_voltage = get_board_voltage()
+            results = calculate_power(rebuilt_waves, board_voltage) 
+
+            samples.update({
+                'vWave_ct0' : rebuilt_waves['v_ct0'],
+                'vWave_ct1' : rebuilt_waves['v_ct1'],
+                'vWave_ct2' : rebuilt_waves['v_ct2'],
+                'vWave_ct3' : rebuilt_waves['v_ct3'],
+                'vWave_ct4' : rebuilt_waves['v_ct4'],
+            })
 
 
-        print(f"CT0 Real Power: {round(results['ct0']['power'] / 2, 2):>6} W | Amps: {round(results['ct0']['current'], 2):<6} | RMS Power: {round(results['ct0']['current'] * results['ct0']['voltage'], 2):<6} W | PF: {round(results['ct0']['pf'], 6)}")
-        print(f"CT1 Real Power: {round(results['ct1']['power'], 2):>6} W | Amps: {round(results['ct1']['current'], 2):<6} | RMS Power: {round(results['ct1']['current'] * results['ct1']['voltage'], 2):<6} W | PF: {round(results['ct1']['pf'], 6)}")
-        print(f"CT2 Real Power: {round(results['ct2']['power'], 2):>6} W | Amps: {round(results['ct2']['current'], 2):<6} | RMS Power: {round(results['ct2']['current'] * results['ct2']['voltage'], 2):<6} W | PF: {round(results['ct2']['pf'], 6)}")
-        print(f"CT3 Real Power: {round(results['ct3']['power'], 2):>6} W | Amps: {round(results['ct3']['current'], 2):<6} | RMS Power: {round(results['ct3']['current'] * results['ct3']['voltage'], 2):<6} W | PF: {round(results['ct3']['pf'], 6)}")
-        print(f"CT4 Real Power: {round(results['ct4']['power'], 2):>6} W | Amps: {round(results['ct4']['current'], 2):<6} | RMS Power: {round(results['ct4']['current'] * results['ct4']['voltage'], 2):<6} W | PF: {round(results['ct4']['pf'], 6)}")
-        print(f"Line Voltage: {round(results['voltage'], 2)} V")
+            logger.debug(f"CT0 Real Power: {round(results['ct0']['power'] / 2, 2):>6} W | Amps: {round(results['ct0']['current'], 2):<6} | RMS Power: {round(results['ct0']['current'] * results['ct0']['voltage'], 2):<6} W | PF: {round(results['ct0']['pf'], 6)}")
+            logger.debug(f"CT1 Real Power: {round(results['ct1']['power'], 2):>6} W | Amps: {round(results['ct1']['current'], 2):<6} | RMS Power: {round(results['ct1']['current'] * results['ct1']['voltage'], 2):<6} W | PF: {round(results['ct1']['pf'], 6)}")
+            logger.debug(f"CT2 Real Power: {round(results['ct2']['power'], 2):>6} W | Amps: {round(results['ct2']['current'], 2):<6} | RMS Power: {round(results['ct2']['current'] * results['ct2']['voltage'], 2):<6} W | PF: {round(results['ct2']['pf'], 6)}")
+            logger.debug(f"CT3 Real Power: {round(results['ct3']['power'], 2):>6} W | Amps: {round(results['ct3']['current'], 2):<6} | RMS Power: {round(results['ct3']['current'] * results['ct3']['voltage'], 2):<6} W | PF: {round(results['ct3']['pf'], 6)}")
+            logger.debug(f"CT4 Real Power: {round(results['ct4']['power'], 2):>6} W | Amps: {round(results['ct4']['current'], 2):<6} | RMS Power: {round(results['ct4']['current'] * results['ct4']['voltage'], 2):<6} W | PF: {round(results['ct4']['pf'], 6)}")
+            logger.debug(f"Line Voltage: {round(results['voltage'], 2)} V")
 
-        plot_data(samples, title)        
-        print("file written")
+            plot_data(samples, title)        
+            logger.info("file written")
 
+        if MODE.lower() == "terminal":
+            # This mode will read the sensors, perform the calculations, and print the wattage, current, power factor, and voltage to the terminal.
+            # Data is stored to the database in this mode!
+            logger.debug("Starting program in terminal mode")
+            run_main()
 

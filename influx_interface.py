@@ -3,6 +3,7 @@ from influxdb.exceptions import InfluxDBServerError
 from datetime import datetime
 import random
 from time import sleep
+from config import logger
 
 # InfluxDB connection settings
 client = InfluxDBClient(host='localhost', port=8086, username='root', password='password', database='power_monitor')
@@ -96,7 +97,7 @@ class Point():
 
 def init_db():
     client.create_database('power_monitor')
-    print("DB created")  
+    logger.info("DB initalized.")
     
 
 
@@ -158,7 +159,7 @@ def write_to_influx(solar_power_values, home_load_values, net_power_values, ct0_
     try:    
         client.write_points(points, time_precision='ms')
     except InfluxDBServerError as e:
-        print(f"Failed to write data to Influx. Reason: {e}")
+        logger.critical(f"Failed to write data to Influx. Reason: {e}")
 
 
 if __name__ == '__main__':
