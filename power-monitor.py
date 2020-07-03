@@ -481,14 +481,18 @@ def run_main():
 
             # # RMS calculation for phase correction only - this is not needed after everything is tuned. The following code is used to compare the RMS power to the calculated real power. 
             # # Ideally, you want the RMS power to equal the real power when you are measuring a purely resistive load.
-            # rms_power_0 = round(results['ct0']['current'] * results['ct0']['voltage'], 2)
-            # rms_power_1 = round(results['ct1']['current'] * results['ct1']['voltage'], 2)
-            # rms_power_2 = round(results['ct2']['current'] * results['ct2']['voltage'], 2)
-            # rms_power_3 = round(results['ct3']['current'] * results['ct3']['voltage'], 2)
+            # rms_power_0 = round(results['ct0']['current'] * results['ct0']['voltage'], 2)  # AKA apparent power
+            # rms_power_1 = round(results['ct1']['current'] * results['ct1']['voltage'], 2)  # AKA apparent power
+            # rms_power_2 = round(results['ct2']['current'] * results['ct2']['voltage'], 2)  # AKA apparent power
+            # rms_power_3 = round(results['ct3']['current'] * results['ct3']['voltage'], 2)  # AKA apparent power
+            # rms_power_4 = round(results['ct4']['current'] * results['ct4']['voltage'], 2)  # AKA apparent power
+            # rms_power_5 = round(results['ct5']['current'] * results['ct5']['voltage'], 2)  # AKA apparent power
             # phase_corrected_power_0 = results['ct0']['power']
             # phase_corrected_power_1 = results['ct1']['power']
             # phase_corrected_power_2 = results['ct2']['power']
             # phase_corrected_power_3 = results['ct3']['power']
+            # phase_corrected_power_4 = results['ct4']['power']
+            # phase_corrected_power_5 = results['ct5']['power']
 
             # # diff is the difference between the real_power (phase corrected) compared to the simple rms power calculation.
             # # This is used to calibrate for the "unknown" phase error in each CT.  The phasecal value for each CT input should be adjusted so that diff comes as close to zero as possible.
@@ -496,6 +500,8 @@ def run_main():
             # diff_1 = phase_corrected_power_1 - rms_power_1
             # diff_2 = phase_corrected_power_2 - rms_power_2
             # diff_3 = phase_corrected_power_3 - rms_power_3
+            # diff_4 = phase_corrected_power_4 - rms_power_4
+            # diff_5 = phase_corrected_power_5 - rms_power_5
 
             # Phase Corrected Results
             # logger.debug("\n")
@@ -504,6 +510,7 @@ def run_main():
             # logger.debug(f"CT2 Real Power: {round(results['ct2']['power'], 2):>10} W | Amps: {round(results['ct2']['current'], 2):<7} | RMS Power: {round(results['ct2']['current'] * results['ct2']['voltage'], 2):<6} W | PF: {round(results['ct2']['pf'], 5)}")
             # logger.debug(f"CT3 Real Power: {round(results['ct3']['power'], 2):>10} W | Amps: {round(results['ct3']['current'], 2):<7} | RMS Power: {round(results['ct3']['current'] * results['ct3']['voltage'], 2):<6} W | PF: {round(results['ct3']['pf'], 5)}")
             # logger.debug(f"CT4 Real Power: {round(results['ct4']['power'], 2):>10} W | Amps: {round(results['ct4']['current'], 2):<7} | RMS Power: {round(results['ct4']['current'] * results['ct4']['voltage'], 2):<6} W | PF: {round(results['ct4']['pf'], 5)}")
+            # logger.debug(f"CT5 Real Power: {round(results['ct5']['power'], 2):>10} W | Amps: {round(results['ct5']['current'], 2):<7} | RMS Power: {round(results['ct5']['current'] * results['ct5']['voltage'], 2):<6} W | PF: {round(results['ct5']['pf'], 5)}")
             # logger.debug(f"Line Voltage: {round(results['voltage'], 2)} V")
 
             # Prepare values for database storage 
