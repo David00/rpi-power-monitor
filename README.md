@@ -93,7 +93,7 @@ You should assign a static IP address to your Pi and issue the following command
                  autoindex on;
                  }
                  
-    Lastly, remove the default index.html file:
+    Close your text editor with Ctrl-x, then a "Y" to save the file.  Then, remove the default index.html file:
     
         rm /var/www/html/index.nginx-debian.html
         
