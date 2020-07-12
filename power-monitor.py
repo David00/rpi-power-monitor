@@ -638,15 +638,17 @@ if __name__ == '__main__':
         logger.handlers[0].setLevel(logging.DEBUG)      
         if 'help' in MODE.lower() or '-h' in MODE.lower():
 
-            logger.info("\nSee the project Wiki for more detailed usage instructions: https://github.com/David00/rpi-power-monitor/wiki")
-            logger.info("""\nUsage:
+            logger.info("See the project Wiki for more detailed usage instructions: https://github.com/David00/rpi-power-monitor/wiki")
+            logger.info(dedent("""Usage:
                 Start the program:                                  python3 power-monitor.py
 
                 Collect raw data and build an interactive plot:     python3 power-monitor.py debug "chart title here" 
 
-                Use the previously collected data to tune phase
-                correction:                                         python3 power-monitor.py phase "chart title here"
-                """)
+                Launch interactive phase correction mode:           python3 power-monitor.py phase
+
+                Start the program like normal, but print all        python3 power-monitor.py terminal
+                readings to the terminal window
+                """))
 
         if MODE.lower() == 'debug':
             # This mode is intended to take a look at the raw CT sensor data.  It will take 2000 samples from each CT sensor, plot them to a single chart, write the chart to an HTML file located in /var/www/html/, and then terminate.
@@ -675,11 +677,7 @@ if __name__ == '__main__':
                 logger.info("Chart created! I could not determine the IP address of this machine. Visit your device's IP address in a webrowser to view the list of charts you've created using 'debug' and/or 'phase' mode.")
 
         if MODE.lower() == 'phase':
-            # This mode is intended to be used for correcting the phase error in your CT sensors. Instead of reading the CT sensors, it will open the 'last-debug.pkl' file and read the contents, which
-            # contain the samples from the last time the program was ran in "debug" mode. This is to save electricity so you don't need to keep your resistive load device running while you calibrate.
-            # The function then continues to build 5 different variations of the raw AC voltage wave based on the ct#_phasecal variable.
-            # Finally, a single chart is constructed that shows all of the raw CT data points, the "as measured" voltage wave, and the phase corrected voltage wave. The chart is written to an HTML file
-            # in the webroot /var/www/html/.
+            # This mode is intended to be used for correcting the phase error in your CT sensors. Please ensure that you have a purely resistive load running through your CT sensors - that means no electric fans and no digital circuitry!
 
             PF_ROUNDING_DIGITS = 3      # This variable controls how many decimal places the PF will be rounded
 
