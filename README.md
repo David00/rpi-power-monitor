@@ -119,7 +119,7 @@ You should assign a static IP address to your Pi and issue the following command
 
 9. Download the source code for this project
 
-        git clone https://github.com/David00/rpi-power-monitor.git
+        git clone --single-branch -b master https://github.com/David00/rpi-power-monitor.git
 
 
 10. Navigate into the `rpi-power-monitor` directory and install the Python library dependencies.
