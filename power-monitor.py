@@ -683,7 +683,7 @@ if __name__ == '__main__':
 
             while True:
                 try:    
-                    ct_num = int(input("\nWhich CT number are you calibrating? Enter the number of the CT label [0 - 5], NOT the input channel that the CT is using: "))
+                    ct_num = int(input("\nWhich CT number are you calibrating? Enter the number of the CT label [0 - 5]: "))
                     if ct_num not in range(0, 6):
                         logger.error("Please choose from CT numbers 0, 1, 2, 3, 4, or 5.")
                     else:
@@ -723,13 +723,13 @@ if __name__ == '__main__':
                 input("[ENTER]")
                 # Check to make sure the CT was reversed properly by taking another batch of samples/calculations:
                 samples = collect_data(2000)
-                rebuilt_waves = rebuild_waves(samples, ct0_phasecal, ct1_phasecal, ct2_phasecal, ct3_phasecal, ct4_phasecal, ct5_phasecal)
+                rebuilt_wave = rebuild_wave(samples[ct_selection], samples['voltage'], 1)
                 board_voltage = get_board_voltage()
-                results = calculate_power(rebuilt_waves, board_voltage)
+                results = check_phasecal(rebuilt_wave['ct'], rebuilt_wave['new_v'], board_voltage)
                 pf = results[ct_selection]['pf']
                 if pf < 0:
-                    logger.info(dedent("It still looks like the current transformer is installed backwards.  Are you sure this is a resistive load?\
-                        Please consult the project documentation on https://github.com/david00/rpi-power-monitor/wiki and try again."))
+                    logger.info(dedent("""It still looks like the current transformer is installed backwards.  Are you sure this is a resistive load?\n
+                        Please consult the project documentation on https://github.com/david00/rpi-power-monitor/wiki and try again."""))
                     sys.exit()
 
             # Initialize phasecal values
@@ -740,17 +740,17 @@ if __name__ == '__main__':
             samples = collect_data(2000)
             board_voltage = get_board_voltage()
             best_pfs = find_phasecal(samples, ct_selection, PF_ROUNDING_DIGITS, board_voltage)
-            # best_pfs is a list of dictionaries: { 'pf' : 1.0 , 'cal' : <phasecal float> }
-            # for best_pf in best_pfs:
-            #     logger.debug(f"PF: {best_pf['pf']} | Phasecal: {best_pf['cal']}")
-
             avg_phasecal = sum([x['cal'] for x in best_pfs]) / len([x['cal'] for x in best_pfs])
             logger.info(f"Please update the value for {ct_selection} in ct_phase_calibration in config.py with the following value: {round(avg_phasecal, 8)}")
 
-            # report_title = f"{ct_selection}-calibration"
-            # logger.info("Please wait... building HTML plot...")
-            # plot_data(samples, report_title)        
-            # logger.info(f"file written to {ct_selection}-calibration.html")
+            report_title = f"{ct_selection}-calibration-result"
+            logger.info("Please wait... building HTML plot...")
+            # Get new set of samples using recommended phasecal value
+            samples = collect_data(2000)
+            rebuilt_wave = rebuild_wave(samples[ct_selection], samples['voltage'], avg_phasecal)
+
+            plot_data(rebuilt_wave, report_title, ct_selection)
+            logger.info(f"file written to {ct_selection}-calibration-result.html")
 
         if MODE.lower() == "terminal":
             # This mode will read the sensors, perform the calculations, and print the wattage, current, power factor, and voltage to the terminal.
