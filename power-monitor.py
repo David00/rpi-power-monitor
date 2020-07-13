@@ -1,6 +1,4 @@
 #!/usr/bin/python
-
-import spidev
 from time import sleep
 import timeit
 import csv
@@ -15,18 +13,12 @@ from socket import socket, AF_INET, SOCK_DGRAM
 import fcntl
 from prettytable import PrettyTable
 import logging
-from config import logger
+from config import logger, ct_phase_calibration, ct0_channel, ct1_channel, ct2_channel, ct3_channel, ct4_channel, board_voltage_channel, v_sensor_channel, ct5_channel
+from calibration import check_phasecal, rebuild_wave, find_phasecal
+from textwrap import dedent
+from common import collect_data, readadc
+from shutil import copyfile
 
-
-#Define Variables
-ct0_channel = 0             # Orange Pair           | House main (leg 1 - left)  (orange pair)
-ct1_channel = 1             # Green Pair            | House main (leg 2 - right) (green pair)
-ct2_channel = 2             # Blue Pair             | Subpanel main (leg 1 - top)
-ct3_channel = 3             # Brown Pair            | Solar Power 
-ct4_channel = 6             # 3.5mm Input #1        | Subpanel main (leg 2 - bottom)
-board_voltage_channel =  4  # Board voltage ~3.3V
-v_sensor_channel = 5        # 9V AC Voltage channel
-ct5_channel = 7             # 3.5mm Input #2        | Unused
 
 
 # Tuning Variables
@@ -36,69 +28,17 @@ ct2_accuracy_factor         = 0.9751
 ct3_accuracy_factor         = 0.985
 ct4_accuracy_factor         = 1
 ct5_accuracy_factor         = 1
-AC_voltage_accuracy_factor  = 1.075
+AC_voltage_accuracy_factor  = 1.08
 
 # Phase Calibration - note that these items are listed in the order they are sampled.
-ct0_phasecal = 1.3025    # Calculated  1.5              # TUNED 
-ct4_phasecal = 1.3       # Calculated 1.3333            # TUNED
-ct1_phasecal = 2.1995    # Calculated 1.166667          # TUNED 
-ct2_phasecal = 1.475     # Calculated 1.166667          # TUNED 
-ct3_phasecal = 1.775     # Calculated 1.3333            # TUNED 
-ct5_phasecal = 1
+# Changes to these values are made in config.py, in the ct_phase_calibration dictionary.
+ct0_phasecal = ct_phase_calibration['ct0']
+ct4_phasecal = ct_phase_calibration['ct4']
+ct1_phasecal = ct_phase_calibration['ct1']
+ct2_phasecal = ct_phase_calibration['ct2']
+ct3_phasecal = ct_phase_calibration['ct3']
+ct5_phasecal = ct_phase_calibration['ct5']
 
-#Create SPI
-spi = spidev.SpiDev()
-spi.open(0, 0)
-spi.max_speed_hz = 1750000          # Changing this value will require you to adjust the phasecal values above.
-
-
-def readadc(adcnum):
-    # read SPI data from the MCP3008, 8 channels in total
-    if adcnum > 7 or adcnum < 0:
-        return -1
-    r = spi.xfer2([1, 8 + adcnum << 4, 0])
-    data = ((r[1] & 3) << 8) + r[2]
-    return data
-
-def collect_data(numSamples):
-    # Get time of reading
-    now = datetime.utcnow()
-    
-    samples = []
-    ct0_data = []
-    ct1_data = []
-    ct2_data = []
-    ct3_data = []
-    ct4_data = []
-    ct5_data = []
-    v_data = []
-    while len(v_data) < numSamples:
-        ct0 = readadc(ct0_channel)
-        ct4 = readadc(ct4_channel)
-        ct1 = readadc(ct1_channel)
-        v = readadc(v_sensor_channel)
-        ct2 = readadc(ct2_channel)
-        ct3 = readadc(ct3_channel)
-        ct5 = readadc(ct5_channel)
-        ct0_data.append(ct0)
-        ct1_data.append(ct1)
-        ct2_data.append(ct2)
-        ct3_data.append(ct3)
-        ct4_data.append(ct4)
-        ct5_data.append(ct5)
-        v_data.append(v)
-
-    samples = {
-        'ct0' : ct0_data,
-        'ct1' : ct1_data,
-        'ct2' : ct2_data,
-        'ct3' : ct3_data,
-        'ct4' : ct4_data,
-        'ct5' : ct5_data,
-        'voltage' : v_data,
-        'time' : now,
-    }
-    return samples
 
 
 def dump_data(dump_type, samples):
@@ -446,7 +386,7 @@ def rebuild_waves(samples, PHASECAL_0, PHASECAL_1, PHASECAL_2, PHASECAL_3, PHASE
         'ct5' : samples['ct5'],
     }
 
-    return rebuilt_waves  
+    return rebuilt_waves
 
 
 def run_main():
@@ -652,6 +592,12 @@ def get_ip():
 
 
 if __name__ == '__main__':
+
+    # Backup config.py file
+    try:
+        copyfile('config.py', 'config.py.backup')
+    except FileNotFoundError:
+        logger.info("Could not create a backup of config.py file.")
     
     if len(sys.argv) > 1:
         MODE = sys.argv[1]
@@ -692,15 +638,17 @@ if __name__ == '__main__':
         logger.handlers[0].setLevel(logging.DEBUG)      
         if 'help' in MODE.lower() or '-h' in MODE.lower():
 
-            logger.info("\nSee the project Wiki for more detailed usage instructions: https://github.com/David00/rpi-power-monitor/wiki")
-            logger.info("""\nUsage:
+            logger.info("See the project Wiki for more detailed usage instructions: https://github.com/David00/rpi-power-monitor/wiki")
+            logger.info(dedent("""Usage:
                 Start the program:                                  python3 power-monitor.py
 
                 Collect raw data and build an interactive plot:     python3 power-monitor.py debug "chart title here" 
 
-                Use the previously collected data to tune phase
-                correction:                                         python3 power-monitor.py phase "chart title here"
-                """)
+                Launch interactive phase correction mode:           python3 power-monitor.py phase
+
+                Start the program like normal, but print all        python3 power-monitor.py terminal
+                readings to the terminal window
+                """))
 
         if MODE.lower() == 'debug':
             # This mode is intended to take a look at the raw CT sensor data.  It will take 2000 samples from each CT sensor, plot them to a single chart, write the chart to an HTML file located in /var/www/html/, and then terminate.
@@ -729,47 +677,80 @@ if __name__ == '__main__':
                 logger.info("Chart created! I could not determine the IP address of this machine. Visit your device's IP address in a webrowser to view the list of charts you've created using 'debug' and/or 'phase' mode.")
 
         if MODE.lower() == 'phase':
-            # This mode is intended to be used for correcting the phase error in your CT sensors. Instead of reading the CT sensors, it will open the 'last-debug.pkl' file and read the contents, which
-            # contain the samples from the last time the program was ran in "debug" mode. This is to save electricity so you don't need to keep your resistive load device running while you calibrate.
-            # The function then continues to build 5 different variations of the raw AC voltage wave based on the ct#_phasecal variable.
-            # Finally, a single chart is constructed that shows all of the raw CT data points, the "as measured" voltage wave, and the phase corrected voltage wave. The chart is written to an HTML file
-            # in the webroot /var/www/html/.
+            # This mode is intended to be used for correcting the phase error in your CT sensors. Please ensure that you have a purely resistive load running through your CT sensors - that means no electric fans and no digital circuitry!
 
-            if not title:
-                title = input("Enter the title for this chart: ")
+            PF_ROUNDING_DIGITS = 3      # This variable controls how many decimal places the PF will be rounded
 
-            # Read last sample set to disk to perform phase correction
-            try:
-                with open('data/samples/last-debug.pkl', 'rb') as f:
-                    samples = pickle.load(f)
+            while True:
+                try:    
+                    ct_num = int(input("\nWhich CT number are you calibrating? Enter the number of the CT label [0 - 5]: "))
+                    if ct_num not in range(0, 6):
+                        logger.error("Please choose from CT numbers 0, 1, 2, 3, 4, or 5.")
+                    else:
+                        ct_selection = f'ct{ct_num}'
+                        break
+                except ValueError:
+                    logger.error("Please enter an integer! Acceptable choices are: 0, 1, 2, 3, 4, 5.")
+
             
-            except FileNotFoundError:
-                logger.info("Please start the program in debug mode first so it can read from the CT sensors and save the data to disk.  Example:")
-                logger.info('python3.7 power-monitor.py debug "Initialize debug mode"')
+            cont = input(dedent(f"""
+                #------------------------------------------------------------------------------#
+                # IMPORTANT: Make sure that current transformer {ct_selection} is installed over          #
+                #            a purely resistive load and that the load is turned on            #
+                #            before continuing with the calibration!                           #
+                #------------------------------------------------------------------------------#
+
+                Continue? [y/yes/n/no]: """))
+                
+
+            if cont.lower() in ['n', 'no']:
+                logger.info("\nCalibration Aborted.\n")
                 sys.exit()
 
-            rebuilt_waves = rebuild_waves(samples, ct0_phasecal, ct1_phasecal, ct2_phasecal, ct3_phasecal, ct4_phasecal)
+            samples = collect_data(2000)
+            rebuilt_wave = rebuild_wave(samples[ct_selection], samples['voltage'], ct_phase_calibration[ct_selection])
             board_voltage = get_board_voltage()
-            results = calculate_power(rebuilt_waves, board_voltage) 
+            results = check_phasecal(rebuilt_wave['ct'], rebuilt_wave['new_v'], board_voltage)
 
-            samples.update({
-                'vWave_ct0' : rebuilt_waves['v_ct0'],
-                'vWave_ct1' : rebuilt_waves['v_ct1'],
-                'vWave_ct2' : rebuilt_waves['v_ct2'],
-                'vWave_ct3' : rebuilt_waves['v_ct3'],
-                'vWave_ct4' : rebuilt_waves['v_ct4'],
-            })
+            # Get the current power factor and check to make sure it is not negative. If it is, the CT is installed opposite to how it should be.
+            pf = results['pf']
+            initial_pf = pf  
+            if pf < 0:
+                logger.info(dedent('''
+                    Current transformer is installed backwards. Please reverse the direction that it is attached to your load. \n
+                    (Unclip it from your conductor, and clip it on so that the current flows the opposite direction from the CT's perspective) \n
+                    Press ENTER to continue when you've reversed your CT.'''))
+                input("[ENTER]")
+                # Check to make sure the CT was reversed properly by taking another batch of samples/calculations:
+                samples = collect_data(2000)
+                rebuilt_wave = rebuild_wave(samples[ct_selection], samples['voltage'], 1)
+                board_voltage = get_board_voltage()
+                results = check_phasecal(rebuilt_wave['ct'], rebuilt_wave['new_v'], board_voltage)
+                pf = results['pf']
+                if pf < 0:
+                    logger.info(dedent("""It still looks like the current transformer is installed backwards.  Are you sure this is a resistive load?\n
+                        Please consult the project documentation on https://github.com/david00/rpi-power-monitor/wiki and try again."""))
+                    sys.exit()
 
+            # Initialize phasecal values
+            new_phasecal = ct_phase_calibration[ct_selection]
+            previous_pf = 0
+            new_pf = pf
 
-            logger.debug(f"CT0 Real Power: {round(results['ct0']['power'] / 2, 2):>6} W | Amps: {round(results['ct0']['current'], 2):<6} | RMS Power: {round(results['ct0']['current'] * results['ct0']['voltage'], 2):<6} W | PF: {round(results['ct0']['pf'], 6)}")
-            logger.debug(f"CT1 Real Power: {round(results['ct1']['power'], 2):>6} W | Amps: {round(results['ct1']['current'], 2):<6} | RMS Power: {round(results['ct1']['current'] * results['ct1']['voltage'], 2):<6} W | PF: {round(results['ct1']['pf'], 6)}")
-            logger.debug(f"CT2 Real Power: {round(results['ct2']['power'], 2):>6} W | Amps: {round(results['ct2']['current'], 2):<6} | RMS Power: {round(results['ct2']['current'] * results['ct2']['voltage'], 2):<6} W | PF: {round(results['ct2']['pf'], 6)}")
-            logger.debug(f"CT3 Real Power: {round(results['ct3']['power'], 2):>6} W | Amps: {round(results['ct3']['current'], 2):<6} | RMS Power: {round(results['ct3']['current'] * results['ct3']['voltage'], 2):<6} W | PF: {round(results['ct3']['pf'], 6)}")
-            logger.debug(f"CT4 Real Power: {round(results['ct4']['power'], 2):>6} W | Amps: {round(results['ct4']['current'], 2):<6} | RMS Power: {round(results['ct4']['current'] * results['ct4']['voltage'], 2):<6} W | PF: {round(results['ct4']['pf'], 6)}")
-            logger.debug(f"Line Voltage: {round(results['voltage'], 2)} V")
+            samples = collect_data(2000)
+            board_voltage = get_board_voltage()
+            best_pfs = find_phasecal(samples, ct_selection, PF_ROUNDING_DIGITS, board_voltage)
+            avg_phasecal = sum([x['cal'] for x in best_pfs]) / len([x['cal'] for x in best_pfs])
+            logger.info(f"Please update the value for {ct_selection} in ct_phase_calibration in config.py with the following value: {round(avg_phasecal, 8)}")
 
-            plot_data(samples, title)        
-            logger.info("file written")
+            report_title = f"{ct_selection}-calibration-result"
+            logger.info("Please wait... building HTML plot...")
+            # Get new set of samples using recommended phasecal value
+            samples = collect_data(2000)
+            rebuilt_wave = rebuild_wave(samples[ct_selection], samples['voltage'], avg_phasecal)
+
+            plot_data(rebuilt_wave, report_title, ct_selection)
+            logger.info(f"file written to {ct_selection}-calibration-result.html")
 
         if MODE.lower() == "terminal":
             # This mode will read the sensors, perform the calculations, and print the wattage, current, power factor, and voltage to the terminal.
