@@ -1,7 +1,7 @@
 # This module contains functions that are used in both the main power-monitor code and the calibration code.
 
 from datetime import datetime
-from config import ct_phase_calibration, ct0_channel, ct1_channel, ct2_channel, ct3_channel, ct4_channel, board_voltage_channel, v_sensor_channel, ct5_channel
+from config import ct_phase_correction, ct0_channel, ct1_channel, ct2_channel, ct3_channel, ct4_channel, board_voltage_channel, v_sensor_channel, ct5_channel
 import spidev
 
 #Create SPI

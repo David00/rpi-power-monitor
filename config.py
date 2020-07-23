@@ -11,8 +11,10 @@ ch.setFormatter(formatter)
 logger.addHandler(ch)
 
 
-# Enter the voltage of your grid "as measured at the time of calibration".
+# Using a multimeter, measure the voltage of the receptacle where your 9V AC transformer will plug into. Enter the measured value below.
 GRID_VOLTAGE = 124.2
+# Using a multimeter, measure the output voltage of your AC transformer. Using the value on the label is not ideal and will lead to greater accuracy in the calculations.
+AC_TRANSFORMER_OUTPUT_VOLTAGE = 10.2
 
 
 # Define Variables
@@ -26,11 +28,22 @@ v_sensor_channel = 5        # 9V AC Voltage channel
 ct5_channel = 7             # 3.5mm Input #2        | Unused
 
 # The values from running the software in "phase" mode should go below!
-ct_phase_calibration = {
-    'ct0' : 1.069606140,
-    'ct1' : 1.3,
-    'ct2' : 1.475,
-    'ct3' : 1.775,
-    'ct4' : 1.0600186657237292,
-    'ct5' : 1.220857186171267,
+ct_phase_correction = {
+    'ct0' : 1,
+    'ct1' : 1,
+    'ct2' : 1,
+    'ct3' : 1,
+    'ct4' : 1,
+    'ct5' : 1,
+}
+
+# AFTER phase correction is completed, these values are used in the final calibration for accuracy. See the documentation for more information.
+accuracy_calibration = {
+    'ct0' : 1,
+    'ct1' : 1,
+    'ct2' : 1,
+    'ct3' : 1,
+    'ct4' : 1,
+    'ct5' : 1,
+    'AC'  : 1,
 }

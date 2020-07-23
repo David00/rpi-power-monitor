@@ -13,7 +13,7 @@ from socket import socket, AF_INET, SOCK_DGRAM
 import fcntl
 from prettytable import PrettyTable
 import logging
-from config import logger, ct_phase_calibration, ct0_channel, ct1_channel, ct2_channel, ct3_channel, ct4_channel, board_voltage_channel, v_sensor_channel, ct5_channel
+from config import logger, ct_phase_correction, ct0_channel, ct1_channel, ct2_channel, ct3_channel, ct4_channel, board_voltage_channel, v_sensor_channel, ct5_channel, GRID_VOLTAGE, AC_TRANSFORMER_OUTPUT_VOLTAGE, accuracy_calibration
 from calibration import check_phasecal, rebuild_wave, find_phasecal
 from textwrap import dedent
 from common import collect_data, readadc
@@ -22,22 +22,25 @@ from shutil import copyfile
 
 
 # Tuning Variables
-ct0_accuracy_factor         = 1.0151
-ct1_accuracy_factor         = 1.054
-ct2_accuracy_factor         = 0.9751
-ct3_accuracy_factor         = 0.985
-ct4_accuracy_factor         = 1
-ct5_accuracy_factor         = 1
-AC_voltage_accuracy_factor  = 1.08
 
+
+# Static Variables - these should not be changed by the end user
+AC_voltage_ratio            = (GRID_VOLTAGE / AC_TRANSFORMER_OUTPUT_VOLTAGE) * 11   # This is a rough approximation of the ratio
 # Phase Calibration - note that these items are listed in the order they are sampled.
-# Changes to these values are made in config.py, in the ct_phase_calibration dictionary.
-ct0_phasecal = ct_phase_calibration['ct0']
-ct4_phasecal = ct_phase_calibration['ct4']
-ct1_phasecal = ct_phase_calibration['ct1']
-ct2_phasecal = ct_phase_calibration['ct2']
-ct3_phasecal = ct_phase_calibration['ct3']
-ct5_phasecal = ct_phase_calibration['ct5']
+# Changes to these values are made in config.py, in the ct_phase_correction dictionary.
+ct0_phasecal = ct_phase_correction['ct0']
+ct4_phasecal = ct_phase_correction['ct4']
+ct1_phasecal = ct_phase_correction['ct1']
+ct2_phasecal = ct_phase_correction['ct2']
+ct3_phasecal = ct_phase_correction['ct3']
+ct5_phasecal = ct_phase_correction['ct5']
+ct0_accuracy_factor         = accuracy_calibration['ct0']
+ct1_accuracy_factor         = accuracy_calibration['ct1']
+ct2_accuracy_factor         = accuracy_calibration['ct2']
+ct3_accuracy_factor         = accuracy_calibration['ct3']
+ct4_accuracy_factor         = accuracy_calibration['ct4']
+ct5_accuracy_factor         = accuracy_calibration['ct5']
+AC_voltage_accuracy_factor  = accuracy_calibration['AC']
 
 
 
@@ -127,7 +130,8 @@ def calculate_power(samples, board_voltage):
     ct3_scaling_factor = vref * 100 * ct3_accuracy_factor
     ct4_scaling_factor = vref * 100 * ct4_accuracy_factor
     ct5_scaling_factor = vref * 100 * ct5_accuracy_factor
-    voltage_scaling_factor = vref * 126.5 * AC_voltage_accuracy_factor
+    voltage_scaling_factor = vref * AC_voltage_ratio * AC_voltage_accuracy_factor
+    
 
     num_samples = len(v_samples_0)
     
@@ -309,19 +313,19 @@ def calculate_power(samples, board_voltage):
         },
         'ct3' : {
             'type'      : 'production',
-            'power'     : real_power_3 * 2,         # NOTE: The 'power' and 'current' readings are multiplied by 2 for CT3 because
-            'current'   : rms_current_ct3 * 2,      # CT3 is measuring my solar input, and I'm only measuring a 120V single leg when the
-            'voltage'   : rms_voltage_3,            # solar input consists of two legs.  I trust that my inverter is equally distributing the
-            'pf'        : power_factor_3            # load evenly over both legs, hence why I've chosen to simply double this measurement instead of
-        },                                          # adding another CT sensor.  Check my implementation diagram for a visual depiction:
-        'ct4' : {                                   # https://raw.githubusercontent.com/David00/rpi-power-monitor/master/docs/Sample%20Electrical%20Panel%20with%20Solar%20PV%20Input.png
+            'power'     : real_power_3,         
+            'current'   : rms_current_ct3,
+            'voltage'   : rms_voltage_3,            
+            'pf'        : power_factor_3            
+        },                                          
+        'ct4' : {                                   
             'type'      : 'consumption',
             'power'     : real_power_4,
             'current'   : rms_current_ct4,
             'voltage'   : rms_voltage_4,
             'pf'        : power_factor_4
         },
-        'ct5' : {                                   # https://raw.githubusercontent.com/David00/rpi-power-monitor/master/docs/Sample%20Electrical%20Panel%20with%20Solar%20PV%20Input.png
+        'ct5' : {                                   
             'type'      : 'consumption',
             'power'     : real_power_5,
             'current'   : rms_current_ct5,
@@ -708,7 +712,7 @@ if __name__ == '__main__':
                 sys.exit()
 
             samples = collect_data(2000)
-            rebuilt_wave = rebuild_wave(samples[ct_selection], samples['voltage'], ct_phase_calibration[ct_selection])
+            rebuilt_wave = rebuild_wave(samples[ct_selection], samples['voltage'], ct_phase_correction[ct_selection])
             board_voltage = get_board_voltage()
             results = check_phasecal(rebuilt_wave['ct'], rebuilt_wave['new_v'], board_voltage)
 
@@ -733,7 +737,7 @@ if __name__ == '__main__':
                     sys.exit()
 
             # Initialize phasecal values
-            new_phasecal = ct_phase_calibration[ct_selection]
+            new_phasecal = ct_phase_correction[ct_selection]
             previous_pf = 0
             new_pf = pf
 
@@ -741,7 +745,7 @@ if __name__ == '__main__':
             board_voltage = get_board_voltage()
             best_pfs = find_phasecal(samples, ct_selection, PF_ROUNDING_DIGITS, board_voltage)
             avg_phasecal = sum([x['cal'] for x in best_pfs]) / len([x['cal'] for x in best_pfs])
-            logger.info(f"Please update the value for {ct_selection} in ct_phase_calibration in config.py with the following value: {round(avg_phasecal, 8)}")
+            logger.info(f"Please update the value for {ct_selection} in ct_phase_correction in config.py with the following value: {round(avg_phasecal, 8)}")
 
             report_title = f"{ct_selection}-calibration-result"
             logger.info("Please wait... building HTML plot...")
