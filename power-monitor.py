@@ -747,14 +747,14 @@ if __name__ == '__main__':
             avg_phasecal = sum([x['cal'] for x in best_pfs]) / len([x['cal'] for x in best_pfs])
             logger.info(f"Please update the value for {ct_selection} in ct_phase_correction in config.py with the following value: {round(avg_phasecal, 8)}")
 
-            report_title = f"{ct_selection}-calibration-result"
+            report_title = f"{ct_selection}-phase-correction-result"
             logger.info("Please wait... building HTML plot...")
             # Get new set of samples using recommended phasecal value
             samples = collect_data(2000)
             rebuilt_wave = rebuild_wave(samples[ct_selection], samples['voltage'], avg_phasecal)
 
             plot_data(rebuilt_wave, report_title, ct_selection)
-            logger.info(f"file written to {ct_selection}-calibration-result.html")
+            logger.info(f"file written to {report_title}.html")
 
         if MODE.lower() == "terminal":
             # This mode will read the sensors, perform the calculations, and print the wattage, current, power factor, and voltage to the terminal.
