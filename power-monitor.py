@@ -760,5 +760,6 @@ if __name__ == '__main__':
             # This mode will read the sensors, perform the calculations, and print the wattage, current, power factor, and voltage to the terminal.
             # Data is stored to the database in this mode!
             logger.debug("Starting program in terminal mode")
+            infl.init_db()
             run_main()
 
