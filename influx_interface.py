@@ -26,12 +26,27 @@ class Point():
             self.time    = kwargs['time']        
             
         elif p_type == 'net': 
+            '''
+            This type represents the current net power situation at the time of sampling. 
+            self.power   : the real net power
+            self.current : the rms current as measured
+            self.p_type  : the type of point [home_load, solar, net, ct, voltage]
+            self.time    : timestamp from when the data was sampled
+            '''
             self.power   = kwargs['power']
             self.current = kwargs['current']
             self.p_type  = p_type            
             self.time    = kwargs['time']
         
         elif p_type == 'ct':
+            '''
+            This type represents a CT reading.
+            self.power   : the real power as calculated in the calculate_power() function
+            self.current : the rms current as measured
+            self.p_type  : the type of point [home_load, solar, net, ct, voltage]
+            self.ct_num  : the CT number [0-6]
+            self.time    : timestamp from when the data was sampled
+            '''
             self.power   = kwargs['power']
             self.current = kwargs['current']
             self.p_type  = p_type            
@@ -39,6 +54,17 @@ class Point():
             self.ct_num  = kwargs['num']
             self.time    = kwargs['time']
 
+        elif p_type == 'voltage':
+            '''
+            This type represents a voltage reading. 
+            The self.voltage is self explanatory.
+            The v_input represents the identifier of the voltage input. This is setting up for multiple voltage inputs in the future.
+            '''
+            self.voltage = kwargs['voltage']
+            self.v_input = kwargs['v_input']
+            self.time    = kwargs['time']
+            self.p_type  = p_type
+ 
 
     def to_dict(self):
         if self.p_type == 'home_load':
@@ -91,6 +117,18 @@ class Point():
                 },
                 "time" : self.time
             }
+
+        elif self.p_type == 'voltage':
+            data = {
+                "measurement" : "voltages",
+                "fields" : {
+                    "voltage" : self.voltage,
+                },
+                "tags" : {
+                    'v_input' : self.v_input
+                },
+                "time" : self.time
+            }
         return data
 
 
@@ -104,7 +142,7 @@ def init_db():
 def close_db():
     client.close()
 
-def write_to_influx(solar_power_values, home_load_values, net_power_values, ct0_dict, ct1_dict, ct2_dict, ct3_dict, ct4_dict, ct5_dict, poll_time, length):
+def write_to_influx(solar_power_values, home_load_values, net_power_values, ct0_dict, ct1_dict, ct2_dict, ct3_dict, ct4_dict, ct5_dict, poll_time, length, voltages):
     
     # Calculate Averages
     avg_solar_power = sum(solar_power_values['power']) / length
@@ -132,6 +170,7 @@ def write_to_influx(solar_power_values, home_load_values, net_power_values, ct0_
     ct5_avg_power = sum(ct5_dict['power']) / length
     ct5_avg_current = sum(ct5_dict['current']) / length
     ct5_avg_pf = sum(ct5_dict['pf']) / length
+    avg_voltage = sum(voltages) / length
 
     # Create Points
     home_load = Point('home_load', power=avg_home_power, current=avg_home_current, time=poll_time)
@@ -143,6 +182,7 @@ def write_to_influx(solar_power_values, home_load_values, net_power_values, ct0_
     ct3 = Point('ct', power=ct3_avg_power, current=ct3_avg_current, pf=ct3_avg_pf, time=poll_time, num=3)
     ct4 = Point('ct', power=ct4_avg_power, current=ct4_avg_current, pf=ct4_avg_pf, time=poll_time, num=4)
     ct5 = Point('ct', power=ct5_avg_power, current=ct5_avg_current, pf=ct5_avg_pf, time=poll_time, num=5)
+    v = Point('voltage', voltage=avg_voltage, v_input=0, time=poll_time)
 
     points = [
         home_load.to_dict(),
@@ -154,6 +194,7 @@ def write_to_influx(solar_power_values, home_load_values, net_power_values, ct0_
         ct3.to_dict(),
         ct4.to_dict(),
         ct5.to_dict(),
+        v.to_dict(),
     ]
 
     try:    

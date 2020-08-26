@@ -312,7 +312,7 @@ def calculate_power(samples, board_voltage):
             'pf'        : power_factor_2
         },
         'ct3' : {
-            'type'      : 'production',
+            'type'      : 'consumption',
             'power'     : real_power_3,         
             'current'   : rms_current_ct3,
             'voltage'   : rms_voltage_3,            
@@ -405,7 +405,7 @@ def run_main():
     ct3_dict = dict(power=[], pf=[], current=[])
     ct4_dict = dict(power=[], pf=[], current=[])
     ct5_dict = dict(power=[], pf=[], current=[])
-    rms_voltage_values = []
+    rms_voltages = []
     i = 0   # Counter for aggregate function
     
     while True:        
@@ -431,48 +431,26 @@ def run_main():
             # rms_power_3 = round(results['ct3']['current'] * results['ct3']['voltage'], 2)  # AKA apparent power
             # rms_power_4 = round(results['ct4']['current'] * results['ct4']['voltage'], 2)  # AKA apparent power
             # rms_power_5 = round(results['ct5']['current'] * results['ct5']['voltage'], 2)  # AKA apparent power
-            # phase_corrected_power_0 = results['ct0']['power']
-            # phase_corrected_power_1 = results['ct1']['power']
-            # phase_corrected_power_2 = results['ct2']['power']
-            # phase_corrected_power_3 = results['ct3']['power']
-            # phase_corrected_power_4 = results['ct4']['power']
-            # phase_corrected_power_5 = results['ct5']['power']
-
-            # # diff is the difference between the real_power (phase corrected) compared to the simple rms power calculation.
-            # # This is used to calibrate for the "unknown" phase error in each CT.  The phasecal value for each CT input should be adjusted so that diff comes as close to zero as possible.
-            # diff_0 = phase_corrected_power_0 - rms_power_0
-            # diff_1 = phase_corrected_power_1 - rms_power_1
-            # diff_2 = phase_corrected_power_2 - rms_power_2
-            # diff_3 = phase_corrected_power_3 - rms_power_3
-            # diff_4 = phase_corrected_power_4 - rms_power_4
-            # diff_5 = phase_corrected_power_5 - rms_power_5
-
-            # Phase Corrected Results
-            # logger.debug("\n")
-            # logger.debug(f"CT0 Real Power: {round(results['ct0']['power'], 2):>10} W | Amps: {round(results['ct0']['current'], 2):<7} | RMS Power: {round(results['ct0']['current'] * results['ct0']['voltage'], 2):<6} W | PF: {round(results['ct0']['pf'], 5)}")
-            # logger.debug(f"CT1 Real Power: {round(results['ct1']['power'], 2):>10} W | Amps: {round(results['ct1']['current'], 2):<7} | RMS Power: {round(results['ct1']['current'] * results['ct1']['voltage'], 2):<6} W | PF: {round(results['ct1']['pf'], 5)}")
-            # logger.debug(f"CT2 Real Power: {round(results['ct2']['power'], 2):>10} W | Amps: {round(results['ct2']['current'], 2):<7} | RMS Power: {round(results['ct2']['current'] * results['ct2']['voltage'], 2):<6} W | PF: {round(results['ct2']['pf'], 5)}")
-            # logger.debug(f"CT3 Real Power: {round(results['ct3']['power'], 2):>10} W | Amps: {round(results['ct3']['current'], 2):<7} | RMS Power: {round(results['ct3']['current'] * results['ct3']['voltage'], 2):<6} W | PF: {round(results['ct3']['pf'], 5)}")
-            # logger.debug(f"CT4 Real Power: {round(results['ct4']['power'], 2):>10} W | Amps: {round(results['ct4']['current'], 2):<7} | RMS Power: {round(results['ct4']['current'] * results['ct4']['voltage'], 2):<6} W | PF: {round(results['ct4']['pf'], 5)}")
-            # logger.debug(f"CT5 Real Power: {round(results['ct5']['power'], 2):>10} W | Amps: {round(results['ct5']['current'], 2):<7} | RMS Power: {round(results['ct5']['current'] * results['ct5']['voltage'], 2):<6} W | PF: {round(results['ct5']['pf'], 5)}")
-            # logger.debug(f"Line Voltage: {round(results['voltage'], 2)} V")
 
             # Prepare values for database storage 
-            grid_0_power = results['ct0']['power']    # 200A Main (left)
-            grid_1_power = results['ct1']['power']    # 200A Main (right)
-            grid_2_power = results['ct2']['power']    # 100A Main (top)
-            grid_4_power = results['ct4']['power']    # 100A Main (bottom)
-            grid_5_power = results['ct5']['power']    # Unused
+            grid_0_power = results['ct0']['power']    # CT0 Real Power
+            grid_1_power = results['ct1']['power']    # CT1 Real Power
+            grid_2_power = results['ct2']['power']    # CT2 Real Power
+            grid_3_power = results['ct3']['power']    # CT3 Real Power
+            grid_4_power = results['ct4']['power']    # CT4 Real Power
+            grid_5_power = results['ct5']['power']    # CT5 Real Power
 
-            grid_0_current = results['ct0']['current']
-            grid_1_current = results['ct1']['current']
-            grid_2_current = results['ct2']['current']
-            grid_4_current = results['ct4']['current']
-            grid_5_current = results['ct5']['current']
+            grid_0_current = results['ct0']['current']  # CT0 Current
+            grid_1_current = results['ct1']['current']  # CT1 Current
+            grid_2_current = results['ct2']['current']  # CT2 Current
+            grid_3_current = results['ct3']['current']  # CT3 Current
+            grid_4_current = results['ct4']['current']  # CT4 Current
+            grid_5_current = results['ct5']['current']  # CT5 Current
 
             solar_power = results['ct3']['power']
             solar_current = results['ct3']['current']
             solar_pf = results['ct3']['pf']
+            voltage = results['voltage']
 
             # Set solar power and current to zero if the solar power is under 20W.
             if solar_power < 20:
@@ -529,6 +507,7 @@ def run_main():
                 ct5_dict['power'].append(results['ct5']['power'])
                 ct5_dict['current'].append(results['ct5']['current'])
                 ct5_dict['pf'].append(results['ct5']['pf'])
+                rms_voltages.append(voltage)
                 i += 1
             
             
@@ -544,7 +523,9 @@ def run_main():
                     ct4_dict,
                     ct5_dict,
                     poll_time,
-                    i)
+                    i,
+                    rms_voltages,
+                    )
                 solar_power_values = dict(power=[], pf=[], current=[])
                 home_load_values = dict(power=[], pf=[], current=[])
                 net_power_values = dict(power=[], current=[])
@@ -554,6 +535,7 @@ def run_main():
                 ct3_dict = dict(power=[], pf=[], current=[])
                 ct4_dict = dict(power=[], pf=[], current=[])
                 ct5_dict = dict(power=[], pf=[], current=[])
+                rms_voltages = []
                 i = 0
 
                 if logger.handlers[0].level == 10:
@@ -672,6 +654,8 @@ if __name__ == '__main__':
 
             if not title:
                 title = input("Enter the title for this chart: ")
+            
+            title = title.replace(" ","_")
 
             plot_data(samples, title)        
             ip = get_ip()
@@ -746,8 +730,6 @@ if __name__ == '__main__':
             best_pfs = find_phasecal(samples, ct_selection, PF_ROUNDING_DIGITS, board_voltage)
             avg_phasecal = sum([x['cal'] for x in best_pfs]) / len([x['cal'] for x in best_pfs])
             logger.info(f"Please update the value for {ct_selection} in ct_phase_correction in config.py with the following value: {round(avg_phasecal, 8)}")
-
-            report_title = f"{ct_selection}-phase-correction-result"
             logger.info("Please wait... building HTML plot...")
             # Get new set of samples using recommended phasecal value
             samples = collect_data(2000)
