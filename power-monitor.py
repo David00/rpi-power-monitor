@@ -735,6 +735,7 @@ if __name__ == '__main__':
             samples = collect_data(2000)
             rebuilt_wave = rebuild_wave(samples[ct_selection], samples['voltage'], avg_phasecal)
 
+            report_title = f'CT{ct_num}-phase-correction-result'
             plot_data(rebuilt_wave, report_title, ct_selection)
             logger.info(f"file written to {report_title}.html")
 
