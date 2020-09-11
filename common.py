@@ -89,8 +89,9 @@ def recover_influx_container():
                 if answer.lower() == "yes" or answer.lower() == "y":
                     container.restart()
                     logger.info("... restarting your docker container. Please wait... ")
-                    sleep(1)
+                    sleep(5)
                     logger.info("... checking to see if the container is running now...")
+                    sleep(0.5)
                     try:
                         influx_container = docker_client.containers.list( filters={'name' : name} )[0]
                     except IndexError:
