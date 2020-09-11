@@ -3,10 +3,20 @@ from influxdb.exceptions import InfluxDBServerError
 from datetime import datetime
 import random
 from time import sleep
-from config import logger
+from config import logger, db_settings
+from requests.exceptions import ConnectionError
 
-# InfluxDB connection settings
-client = InfluxDBClient(host='localhost', port=8086, username='root', password='password', database='power_monitor')
+# For development only
+import sys, traceback
+
+# Changes to these settings should be made in config.py!
+client = InfluxDBClient(
+    host=db_settings['host'],
+    port=db_settings['port'],
+    username=db_settings['username'],
+    password=db_settings['password'],
+    database=db_settings['database']
+    )
 
 
 
@@ -134,8 +144,20 @@ class Point():
 
 
 def init_db():
-    client.create_database('power_monitor')
-    logger.info("DB initalized.")
+    try:
+        client.create_database('power_monitor')
+        logger.info("... DB initalized.")
+        return True
+    except ConnectionRefusedError:
+        logger.debug("Could not connect to InfluxDB")
+        return False
+    
+    except Exception:
+        logger.debug(f"Could not connect to {db_settings['host']}:{db_settings['port']}")
+        return False
+        
+        
+    
     
 
 
@@ -201,6 +223,9 @@ def write_to_influx(solar_power_values, home_load_values, net_power_values, ct0_
         client.write_points(points, time_precision='ms')
     except InfluxDBServerError as e:
         logger.critical(f"Failed to write data to Influx. Reason: {e}")
+    except ConnectionError:
+        logger.info("Connection to InfluxDB lost. Please investigate!")
+        sys.exit()
 
 
 if __name__ == '__main__':

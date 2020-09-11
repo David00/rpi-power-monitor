@@ -13,10 +13,10 @@ from socket import socket, AF_INET, SOCK_DGRAM
 import fcntl
 from prettytable import PrettyTable
 import logging
-from config import logger, ct_phase_correction, ct0_channel, ct1_channel, ct2_channel, ct3_channel, ct4_channel, board_voltage_channel, v_sensor_channel, ct5_channel, GRID_VOLTAGE, AC_TRANSFORMER_OUTPUT_VOLTAGE, accuracy_calibration
+from config import logger, ct_phase_correction, ct0_channel, ct1_channel, ct2_channel, ct3_channel, ct4_channel, board_voltage_channel, v_sensor_channel, ct5_channel, GRID_VOLTAGE, AC_TRANSFORMER_OUTPUT_VOLTAGE, accuracy_calibration, db_settings
 from calibration import check_phasecal, rebuild_wave, find_phasecal
 from textwrap import dedent
-from common import collect_data, readadc
+from common import collect_data, readadc, recover_influx_container
 from shutil import copyfile
 
 
@@ -394,6 +394,7 @@ def rebuild_waves(samples, PHASECAL_0, PHASECAL_1, PHASECAL_2, PHASECAL_3, PHASE
 
 
 def run_main():
+    logger.info("... Starting Raspberry Pi Power Monitor")
     logger.info("Press Ctrl-c to quit...")
     # The following empty dictionaries will hold the respective calculated values at the end of each polling cycle, which are then averaged prior to storing the value to the DB.
     solar_power_values = dict(power=[], pf=[], current=[])
@@ -604,17 +605,22 @@ if __name__ == '__main__':
         # Try to establish a connection to the DB for 5 seconds:
         x = 0
         connection_established = False
+        logger.info(f"... Trying to connect to database at: {db_settings['host']}:{db_settings['port']}")
         while x < 5:
-            try:
-                infl.init_db()
-                connection_established = True
+            connection_established = infl.init_db()
+            if connection_established:
                 break
-            except:
+            else:
                 sleep(1)
                 x += 1
 
         if not connection_established:
-            raise Exception("Could not connect to InfluxDB. Check that the container is running!")
+            if db_settings['host'] == 'localhost' or '127.0' in db_settings['host'] or get_ip() in db_settings['host']:
+                recover_influx_container()
+        
+            else:
+                logger.info(f"Could not connect to your remote database at {db_settings['host']}:{db_settings['port']}")
+                sys.exit()
 
         run_main()
 
@@ -742,7 +748,19 @@ if __name__ == '__main__':
         if MODE.lower() == "terminal":
             # This mode will read the sensors, perform the calculations, and print the wattage, current, power factor, and voltage to the terminal.
             # Data is stored to the database in this mode!
-            logger.debug("Starting program in terminal mode")
-            infl.init_db()
+            logger.debug("... Starting program in terminal mode")
+            
+            connection_established = infl.init_db()
+            
+            if not connection_established:
+                # Check to see if the user's DB configuration points to this Pi:
+                if db_settings['host'] == 'localhost' or '127.0' in db_settings['host'] or get_ip() in db_settings['host']:
+                    recover_influx_container()
+                
+                else:
+                    logger.info("Could not connect to your remote database. Please verify this Pi can connect to your database and then try running the software again.")
+                    sys.exit()
+            
+            
             run_main()
 
