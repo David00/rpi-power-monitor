@@ -77,46 +77,40 @@ def recover_influx_container():
             if status.lower() != 'running':
                 # Ask the user to restart the container
                 answers = ['yes', 'no', 'y', 'n']
-                logger.info("It appears that your InfluxDB container is not running. Would you like me to try to restart it? Please enter yes or no: ")
-                try:
-                    answer = input()
-                except EOFError:
-                    # This EOFError will be raised if the user is running this as a service (and can't enter yes or no through stdin). We'll assume that the user does want to try starting the container.
-                    answer = 'yes'
-                while answer.lower() not in answers:
-                    answer = input("\nPlease type yes or no and press the return key: ")
+                logger.info(f"... It appears that your {name} container is not running. ")
 
-                if answer.lower() == "yes" or answer.lower() == "y":
-                    container.restart()
-                    logger.info("... restarting your docker container. Please wait... ")
-                    sleep(5)
-                    logger.info("... checking to see if the container is running now...")
-                    sleep(0.5)
+                logger.info(f"... restarting your {name} container. Please wait... ")
+                container.restart()
+
+                sleep(5)
+                logger.info("... checking to see if the container is running now...")
+                sleep(0.5)
+                for _ in range(0,2):
+                    # Make two attempts to see if the container is running now.
                     try:
                         influx_container = docker_client.containers.list( filters={'name' : name} )[0]
+                        container_found = True
                     except IndexError:
-                        logger.info("Couldn't find the container by name! Please open a Github issue as this is an unexpected result from this experimental implementation.")
-                        sys.exit()
-
-                    if influx_container.attrs['State']['Status'] != 'running':
-                        # Something must be wrong with the container - check for the exit code and grab the last few lines of logs to present to the user for further troubleshooting.
-                        exit_code = influx_container.attrs['State']['ExitCode']
-                        logs = influx_container.logs(tail=20)
-
-                        logger.info(dedent(f"""Sorry, I couldn't fix your InfluxDB container. Here's some information that may help you: 
-                        Container Exit Code: {exit_code}
-                        Logs:"""
-                        ))
-                        for line in logs.splitlines():
-                            logger.info(f"   {line}")
-                        
-                        sys.exit()
-
-                    else:
-                        logger.info("... container successfully started!")
-
-                
-                else:
-                    logger.info("Please ensure that the docker container is running, then try again.")
+                        sleep(0.5)
+                        continue
+                if not container_found:
+                    logger.info("Couldn't find the container by name! Please open a Github issue as this is an unexpected result from this experimental implementation.")
                     sys.exit()
 
+                if influx_container.attrs['State']['Status'] != 'running':
+                    # Something must be wrong with the container - check for the exit code and grab the last few lines of logs to present to the user for further troubleshooting.
+                    exit_code = influx_container.attrs['State']['ExitCode']
+                    logs = influx_container.logs(tail=20)
+
+                    logger.info(dedent(f"""Sorry, I couldn't fix your InfluxDB container. Here's some information that may help you: 
+                    Container Exit Code: {exit_code}
+                    Logs:"""
+                    ))
+                    for line in logs.splitlines():
+                        logger.info(f"   {line}")
+                    
+                    sys.exit()
+
+                else:
+                    logger.info("... container successfully started!")
+                    return True

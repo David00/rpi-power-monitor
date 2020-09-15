@@ -616,13 +616,16 @@ if __name__ == '__main__':
 
         if not connection_established:
             if db_settings['host'] == 'localhost' or '127.0' in db_settings['host'] or get_ip() in db_settings['host']:
-                recover_influx_container()
+                if recover_influx_container():
+                    infl.init_db()
+                    run_main()
         
             else:
-                logger.info(f"Could not connect to your remote database at {db_settings['host']}:{db_settings['port']}")
+                logger.info(f"Could not connect to your remote database at {db_settings['host']}:{db_settings['port']}. Please verify connectivity/credentials and try again.")
                 sys.exit()
 
-        run_main()
+        else:
+            run_main()
 
     else:
         # Program launched in one of the non-main modes. Increase logging level.
