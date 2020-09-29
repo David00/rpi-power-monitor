@@ -448,9 +448,13 @@ def run_main():
             grid_4_current = results['ct4']['current']  # CT4 Current
             grid_5_current = results['ct5']['current']  # CT5 Current
 
-            solar_power = results['ct3']['power']
-            solar_current = results['ct3']['current']
-            solar_pf = results['ct3']['pf']
+            # If you are monitoring solar/generator inputs to your panel, specify which CT number(s) you are using, and uncomment the commented lines.
+            solar_power = 0
+            solar_current = 0
+            soalr_pf = 0
+            # solar_power = results['ct3']['power']
+            # solar_current = results['ct3']['current']
+            # solar_pf = results['ct3']['pf']
             voltage = results['voltage']
 
             # Set solar power and current to zero if the solar power is under 20W.
@@ -469,10 +473,10 @@ def run_main():
                 solar_current = solar_current * -1
 
             # Unless your specific panel setup matches mine exactly, the following four lines will likely need to be re-written:
-            home_consumption_power = grid_2_power + grid_4_power + grid_0_power + grid_1_power + solar_power
+            home_consumption_power = grid_0_power + grid_1_power + grid_2_power + grid_3_power + grid_4_power + grid_5_power + solar_power
             net_power = home_consumption_power - solar_power
-            home_consumption_current = grid_2_current + grid_4_current + grid_0_current + grid_1_current - solar_current
-            net_current = grid_0_current + grid_1_current + grid_2_current + grid_4_current + solar_current
+            home_consumption_current = grid_2_current + grid_4_current + grid_0_current + grid_1_current + grid_5_current - solar_current
+            net_current = grid_0_current + grid_1_current + grid_2_current + grid_3_current + grid_4_current + grid_5_current + solar_current
 
             if net_power < 0:
                 current_status = "Producing"                                
