@@ -451,7 +451,7 @@ def run_main():
             # If you are monitoring solar/generator inputs to your panel, specify which CT number(s) you are using, and uncomment the commented lines.
             solar_power = 0
             solar_current = 0
-            soalr_pf = 0
+            solar_pf = 0
             # solar_power = results['ct3']['power']
             # solar_current = results['ct3']['current']
             # solar_pf = results['ct3']['pf']
