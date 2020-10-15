@@ -137,6 +137,12 @@ Head to the [project Wiki](https://github.com/David00/rpi-power-monitor/wiki) to
 
 ---
 
+## Contributing
+
+Would you like to help out? Shoot me an email at github@dalbrecht.tech to see what items I currently have pending.
+
+---
+
 ### Credits
 
 * [OpenEnergyMonitor](https://openenergymonitor.org) and forum member Robert.Wall for guidance and support
