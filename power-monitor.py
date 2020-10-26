@@ -653,6 +653,7 @@ if __name__ == '__main__':
             # This mode is intended to take a look at the raw CT sensor data.  It will take 2000 samples from each CT sensor, plot them to a single chart, write the chart to an HTML file located in /var/www/html/, and then terminate.
             # It also stores the samples to a file located in ./data/samples/last-debug.pkl so that the sample data can be read when this program is started in 'phase' mode.
             samples = collect_data(2000)
+            logger.debug("Finished Collecting Samples")
             ct0_samples = samples['ct0']
             ct1_samples = samples['ct1']
             ct2_samples = samples['ct2']
@@ -669,7 +670,7 @@ if __name__ == '__main__':
                 title = input("Enter the title for this chart: ")
             
             title = title.replace(" ","_")
-
+            logger.debug("Building plot.")
             plot_data(samples, title)        
             ip = get_ip()
             if ip:
