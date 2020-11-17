@@ -8,6 +8,8 @@ import docker
 import sys
 from time import sleep
 from textwrap import dedent
+import numpy as np
+import timeit
 
 #Create SPI
 spi = spidev.SpiDev()
@@ -16,8 +18,6 @@ spi.max_speed_hz = 1750000          # Changing this value will require you to ad
 
 def readadc(adcnum):
     # read SPI data from the MCP3008, 8 channels in total
-    if adcnum > 7 or adcnum < 0:
-        return -1
     r = spi.xfer2([1, 8 + adcnum << 4, 0])
     data = ((r[1] & 3) << 8) + r[2]
     return data
@@ -34,7 +34,8 @@ def collect_data(numSamples):
     ct4_data = []
     ct5_data = []
     v_data = []
-    while len(v_data) < numSamples:
+
+    for _ in range(numSamples):
         ct0 = readadc(ct0_channel)
         ct4 = readadc(ct4_channel)
         ct1 = readadc(ct1_channel)
@@ -48,8 +49,8 @@ def collect_data(numSamples):
         ct3_data.append(ct3)
         ct4_data.append(ct4)
         ct5_data.append(ct5)
-        v_data.append(v)
-
+        v_data.append(v)    
+    
     samples = {
         'ct0' : ct0_data,
         'ct1' : ct1_data,
