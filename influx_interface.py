@@ -121,6 +121,7 @@ class Point():
                 "fields" : {
                     "current" : self.current,
                     "power" : self.power,
+                    "pf" : self.pf,
                 },
                 "tags" : {
                     'ct' : self.ct_num
