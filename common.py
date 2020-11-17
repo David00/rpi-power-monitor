@@ -8,8 +8,6 @@ import docker
 import sys
 from time import sleep
 from textwrap import dedent
-import numpy as np
-import timeit
 
 #Create SPI
 spi = spidev.SpiDev()
