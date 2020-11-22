@@ -475,7 +475,7 @@ def run_main():
             # Unless your specific panel setup matches mine exactly, the following four lines will likely need to be re-written:
             home_consumption_power = grid_0_power + grid_1_power + grid_2_power + grid_3_power + grid_4_power + grid_5_power + solar_power
             net_power = home_consumption_power - solar_power
-            home_consumption_current = grid_2_current + grid_4_current + grid_0_current + grid_1_current + grid_5_current - solar_current
+            home_consumption_current = grid_0_current + grid_1_current + grid_2_current + grid_3_current + grid_4_current + grid_5_current - solar_current
             net_current = grid_0_current + grid_1_current + grid_2_current + grid_3_current + grid_4_current + grid_5_current + solar_current
 
             if net_power < 0:
