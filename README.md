@@ -2,56 +2,15 @@
 
 The Raspberry Pi Power Monitor is a combination of custom hardware and software that will allow you to monitor your unique power situation in real time (<0.5 second intervals), including accurate consumption, generation, and net-production. The data are stored to a database and displayed in a Grafana dashboard for monitoring and reporting purposes.
 
-This project is derived from and inspired by the resources located at https://learn.openenergymonitor.org. 
-
-
----
-
-## What does it do?
-
-This code accompanies DIY circuitry that supports monitoring of up to 6 current transformers and one AC voltage reading. The individual readings are then used in calculations to provide real data on consumption and generation, including the following key metrics:
-
-* Total home consumption
-* Total solar PV generation
-* Net home consumption
-* Net home generation
-* Total current, voltage, power, and power factor values
-* Individual current transformer readings
-* Harmonics inspection through a built in snapshot/plotting mechanism.
-
-The code takes tens of thousands of samples per second, corrects for phase errors in the measurements, calculates the instantaneous power for the tens of thousands of sampled points, and uses the instantaneous power calculations to determine real power, apparent power, and power factor. This means the project is able to monitor any type of load, including reactive, capacitive, and resisitve loads.
+This project is derived from and inspired by the resources located at https://learn.openenergymonitor.org and a fork from David's one: https://github.com/David00/rpi-power-monitor
 
 ---
 
-## Installation
+## My modifications
+The software has not been really modified. I just made my own board to implement 6 current transformers (used 15A one) without the RJ45 as all cables are very close to the PI. I have also added a French's teleinfo interface for some integration later, following this tutorial : http://hallard.me/pitinfov12/. And a simple push button to be added on the GPIO3 (SCL) to turn off the raspberry, following this tutorial : https://howchoo.com/g/mwnlytk3zmm/how-to-add-a-power-button-to-your-raspberry-pi.  
+> comment : this layout is made through EASYEDA to be able to purchase on JLCPCB. in realuty, the 6 jack connectors are really just spread, I have no margin as all male jack are really touching each others. I would recommend then to put 5 jack in a row and the 6th on the side. Also the teleinfo and voltage connectors are not on the right side as they touch the Ethernet connector. They shoudld be on the other side. 
+> last point I would like to find a very small voltage transfo to implement/solder it on the breadboard. But I did not find the correct one. If anybody has a proposal...
+> Maybe the voltage reference should be changed for a fixed voltage or a part that has already the integrated divider. Or some LDO to be fixed at 1.75V (not a common voltage) ? At the end, depending on your analog signal, a VREF at 1.5V would also work.
 
+### Please see the [project Wiki] for my board example and layout and David's wiki (https://github.com/David00/rpi-power-monitor/wiki#quick-start--table-of-contents) for detailed setup instructions.
 
-
-### Please see the [project Wiki](https://github.com/David00/rpi-power-monitor/wiki#quick-start--table-of-contents) for detailed setup instructions.
-
-
----
-
-## Contributing
-
-Would you like to help out? Shoot me an email at github@dalbrecht.tech to see what items I currently have pending.
-
----
-
-### Credits
-
-* [OpenEnergyMonitor](https://openenergymonitor.org) and forum member Robert.Wall for guidance and support
-
-* The `spidev` project on PyPi for providing the interface to read an analog to digital converter
-
-
----
-
-
-### Like my project? Donations are welcome!
-
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=L6LNLM92MTUY2&currency_code=USD&source=url)
-
-BTC:  1Go1YKgdxAYUjwGM1u3JRXzdyRM938RQ95
-
-###### Last Updated:  June 26, 2020
