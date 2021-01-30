@@ -17,3 +17,10 @@ The software has not been really modified. I just made my own board to implement
 
 ### Please see the [project Wiki] for my board example and layout and David's wiki (https://github.com/David00/rpi-power-monitor/wiki#quick-start--table-of-contents) for detailed setup instructions.
 
+Try to install on OranPiOne+ with Armbian 20.11.6 Buster with Linux 5.10.4-sunxi64.
+Issue to install from "requirements.txt"
+> Prettytable, usend only in PowerMonitor.PY (ModuleNotFoundError: No module named 'setuptools' --- Command "python setup.py egg_info" failed with error code 1 in /tmp/pip-install-q0zgebr9/prettytable/
+
+> spidev
+
+Had to install Setuptool (sudo apt-get install python3-setuptools)  and pip3 install wheel
