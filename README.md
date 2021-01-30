@@ -23,4 +23,4 @@ Issue to install from "requirements.txt"
 
 > spidev
 
-Had to install Setuptool (sudo apt-get install python3-setuptools)  and pip3 install wheel
+Had to install Setuptool (sudo apt-get install python3-setuptools)  + pip3 install wheel + sudo apt-get install libhdf5-dev 
