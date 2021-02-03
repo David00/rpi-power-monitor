@@ -15,7 +15,8 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 2,
+  "id": 1,
+  "iteration": 1612311056831,
   "links": [],
   "panels": [
     {
@@ -28,7 +29,14 @@
         "#d44a3a"
       ],
       "datasource": null,
-      "decimals": 1,
+      "decimals": 2,
+      "description": "This is the total amount of energy your solar panels have produced.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
       "format": "kwatth",
       "gauge": {
         "maxValue": 100,
@@ -61,7 +69,6 @@
       "maxDataPoints": 100,
       "nullPointMode": "connected",
       "nullText": null,
-      "options": {},
       "pluginVersion": "6.6.2",
       "postfix": "",
       "postfixFontSize": "50%",
@@ -142,8 +149,14 @@
         "#FFEE52"
       ],
       "datasource": null,
-      "decimals": 1,
-      "description": "",
+      "decimals": 2,
+      "description": "This is the total amount of energy your home has used.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
       "format": "kwatth",
       "gauge": {
         "maxValue": 100,
@@ -176,7 +189,6 @@
       "maxDataPoints": 100,
       "nullPointMode": "connected",
       "nullText": null,
-      "options": {},
       "pluginVersion": "6.6.2",
       "postfix": "",
       "postfixFontSize": "50%",
@@ -256,7 +268,13 @@
       ],
       "datasource": null,
       "decimals": 3,
-      "description": "",
+      "description": "For grid-tied solar system users only:\nThis is the amount of power you have either imported from or exported to the grid. Negative values means you overproduced. Positive values means you payed for power.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
       "format": "kwatth",
       "gauge": {
         "maxValue": 100,
@@ -289,7 +307,6 @@
       "maxDataPoints": 100,
       "nullPointMode": "connected",
       "nullText": null,
-      "options": {},
       "pluginVersion": "6.6.2",
       "postfix": "",
       "postfixFontSize": "50%",
@@ -372,7 +389,13 @@
       ],
       "datasource": null,
       "decimals": 3,
-      "description": "",
+      "description": "For grid-tied solar panel system users only:\n- Consuming means you are currently importing power from the grid\n- Producing means you are currently sending power back into the grid.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
       "format": "watt",
       "gauge": {
         "maxValue": 100,
@@ -405,7 +428,6 @@
       "maxDataPoints": 100,
       "nullPointMode": "connected",
       "nullText": null,
-      "options": {},
       "pluginVersion": "6.6.2",
       "postfix": "<br><br><br>",
       "postfixFontSize": "50%",
@@ -456,7 +478,7 @@
           "tags": []
         }
       ],
-      "thresholds": "Producing,Consuming",
+      "thresholds": "Producing,,Consuming",
       "timeFrom": "5s",
       "timeShift": null,
       "title": "Current Overall Status",
@@ -487,6 +509,13 @@
         "#d44a3a"
       ],
       "datasource": null,
+      "description": "The high instantaneous production value measured by your solar PV CT.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
       "format": "watt",
       "gauge": {
         "maxValue": 100,
@@ -519,7 +548,6 @@
       "maxDataPoints": 100,
       "nullPointMode": "connected",
       "nullText": null,
-      "options": {},
       "postfix": "",
       "postfixFontSize": "50%",
       "prefix": "",
@@ -587,6 +615,13 @@
         "#FF9830"
       ],
       "datasource": null,
+      "description": "The maximum measured consumption from \"Home Power Consumption\"",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
       "format": "watt",
       "gauge": {
         "maxValue": 100,
@@ -619,7 +654,6 @@
       "maxDataPoints": 100,
       "nullPointMode": "connected",
       "nullText": null,
-      "options": {},
       "postfix": "",
       "postfixFontSize": "50%",
       "prefix": "",
@@ -678,12 +712,111 @@
       "valueName": "max"
     },
     {
+      "datasource": null,
+      "description": "This is an approximate cost based on a fixed rate/kWh. Set your rate in Dashboard Settings -> Variables",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "decimals": 2,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 18,
+        "y": 0
+      },
+      "id": 23,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.7",
+      "targets": [
+        {
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "\nSELECT integral(\"power\") * [[cost_per_kWh]]/3600000 FROM \"net\" WHERE $timeFilter",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Today's Cost",
+      "transparent": true,
+      "type": "stat"
+    },
+    {
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
       "datasource": null,
       "description": "This panel shows the current power being used at home. ",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -710,9 +843,10 @@
       "linewidth": 1,
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.3.7",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -807,6 +941,14 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": null,
+      "description": "By default, this chart will show zero, because you have to set up solar integration in the code manually. See the Wiki section titled \"Solar PV Integration\"",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -831,9 +973,10 @@
       "linewidth": 1,
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.3.7",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -931,6 +1074,13 @@
       "dashes": false,
       "datasource": null,
       "description": "This panel shows net power consumption. \n\nPositive values are net consumption. \n\nNegative values are net production.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -964,9 +1114,10 @@
       ],
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.3.7",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -1062,6 +1213,13 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1087,9 +1245,10 @@
       "linewidth": 1,
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.3.7",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -1224,11 +1383,33 @@
     }
   ],
   "refresh": "30s",
-  "schemaVersion": 22,
+  "schemaVersion": 26,
   "style": "dark",
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "0.12",
+          "value": "0.12"
+        },
+        "error": null,
+        "hide": 2,
+        "label": "",
+        "name": "cost_per_kWh",
+        "options": [
+          {
+            "selected": true,
+            "text": "0.12",
+            "value": "0.12"
+          }
+        ],
+        "query": "0.12",
+        "skipUrlSync": false,
+        "type": "constant"
+      }
+    ]
   },
   "time": {
     "from": "now/d",
@@ -1252,5 +1433,5 @@
   "timezone": "",
   "title": "Home Power Dashboard",
   "uid": "e8pYJFzgk",
-  "version": 54
+  "version": 21
 }
