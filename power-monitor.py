@@ -652,8 +652,20 @@ if __name__ == '__main__':
         if MODE.lower() == 'debug':
             # This mode is intended to take a look at the raw CT sensor data.  It will take 2000 samples from each CT sensor, plot them to a single chart, write the chart to an HTML file located in /var/www/html/, and then terminate.
             # It also stores the samples to a file located in ./data/samples/last-debug.pkl so that the sample data can be read when this program is started in 'phase' mode.
+
+            # Time sample collection
+            start = timeit.default_timer()
             samples = collect_data(2000)
-            logger.debug("Finished Collecting Samples")
+            stop = timeit.default_timer()
+            duration = stop - start
+
+            # Calculate Sample Rate in Kilo-Samples Per Second.
+            sample_count = sum([ len(samples[x]) for x in samples.keys() if type(samples[x]) == list ])
+            
+            print(f"sample count is {sample_count}")
+            sample_rate = round((sample_count / duration) / 1000, 2)
+
+            logger.debug(f"Finished Collecting Samples. Sample Rate: {sample_rate} KSPS")
             ct0_samples = samples['ct0']
             ct1_samples = samples['ct1']
             ct2_samples = samples['ct2']
@@ -671,7 +683,7 @@ if __name__ == '__main__':
             
             title = title.replace(" ","_")
             logger.debug("Building plot.")
-            plot_data(samples, title)        
+            plot_data(samples, title, sample_rate=sample_rate)
             ip = get_ip()
             if ip:
                 logger.info(f"Chart created! Visit http://{ip}/{title}.html to view the chart. Or, simply visit http://{ip} to view all the charts created using 'debug' and/or 'phase' mode.")
