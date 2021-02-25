@@ -42,6 +42,12 @@ ct4_accuracy_factor         = accuracy_calibration['ct4']
 ct5_accuracy_factor         = accuracy_calibration['ct5']
 AC_voltage_accuracy_factor  = accuracy_calibration['AC']
 
+ct0_phase_min_power         = ct_phase_min_power['ct0']
+ct1_phase_min_power         = ct_phase_min_power['ct1']
+ct2_phase_min_power         = ct_phase_min_power['ct2']
+ct3_phase_min_power         = ct_phase_min_power['ct3']
+ct4_phase_min_power         = ct_phase_min_power['ct4']
+ct5_phase_min_power         = ct_phase_min_power['ct5']
 
 
 def dump_data(dump_type, samples):
@@ -228,6 +234,19 @@ def calculate_power(samples, board_voltage):
     real_power_4 = ((sum_inst_power_ct4 / num_samples) - (avg_raw_current_ct4 * avg_raw_voltage_4))  * ct4_scaling_factor * voltage_scaling_factor 
     real_power_5 = ((sum_inst_power_ct5 / num_samples) - (avg_raw_current_ct5 * avg_raw_voltage_5))  * ct5_scaling_factor * voltage_scaling_factor 
 
+    if abs(real_power_0) < ct0_phase_min_power:
+        real_power_0 = 0
+    if abs(real_power_1) < ct1_phase_min_power:
+        real_power_1 = 0
+    if abs(real_power_2) < ct2_phase_min_power:
+        real_power_2 = 0
+    if abs(real_power_3) < ct3_phase_min_power:
+        real_power_3 = 0
+    if abs(real_power_4) < ct4_phase_min_power:
+        real_power_4 = 0
+    if abs(real_power_5) < ct5_phase_min_power:
+        real_power_5 = 0
+    
     mean_square_current_ct0 = sum_squared_current_ct0 / num_samples 
     mean_square_current_ct1 = sum_squared_current_ct1 / num_samples 
     mean_square_current_ct2 = sum_squared_current_ct2 / num_samples 
