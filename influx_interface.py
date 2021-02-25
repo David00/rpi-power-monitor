@@ -18,8 +18,6 @@ client = InfluxDBClient(
     database=db_settings['database']
     )
 
-
-
 class Point():
     def __init__(self, p_type, *args, **kwargs):
         if p_type == 'home_load':
@@ -167,6 +165,13 @@ def close_db():
 
 def write_to_influx(solar_power_values, home_load_values, net_power_values, ct0_dict, ct1_dict, ct2_dict, ct3_dict, ct4_dict, ct5_dict, poll_time, length, voltages):
     
+    # create timestampt to be added to CT number / [Weekday][Hour(1:0)][HourPortion][CT]
+    time_object = datetime.datetime(poll_time)   
+    time_weekday = time_object.weekday()           # 0 - Monday 1 - Tuesday 2 - Wednesday 3 - Thursday 4 - Friday 5 - Saturday 6 - Sunday
+    time_hour = time_object.hour
+    time_minut =  time_object.minute // 15          # return the subsection of one hour : 0~3 is //15 or 0~1 if //30. can be forced to 0 if useless   
+    add_offset = time_weekday * 10000 + time_hour * 100 + time_minut * 10
+                     
     # Calculate Averages
     avg_solar_power = sum(solar_power_values['power']) / length
     avg_solar_current = sum(solar_power_values['current']) / length
@@ -199,12 +204,12 @@ def write_to_influx(solar_power_values, home_load_values, net_power_values, ct0_
     home_load = Point('home_load', power=avg_home_power, current=avg_home_current, time=poll_time)
     solar = Point('solar', power=avg_solar_power, current=avg_solar_current, pf=avg_solar_pf, time=poll_time)
     net = Point('net', power=avg_net_power, current=avg_net_current, time=poll_time)
-    ct0 = Point('ct', power=ct0_avg_power, current=ct0_avg_current, pf=ct0_avg_pf, time=poll_time, num=0)
-    ct1 = Point('ct', power=ct1_avg_power, current=ct1_avg_current, pf=ct1_avg_pf, time=poll_time, num=1)
-    ct2 = Point('ct', power=ct2_avg_power, current=ct2_avg_current, pf=ct2_avg_pf, time=poll_time, num=2)
-    ct3 = Point('ct', power=ct3_avg_power, current=ct3_avg_current, pf=ct3_avg_pf, time=poll_time, num=3)
-    ct4 = Point('ct', power=ct4_avg_power, current=ct4_avg_current, pf=ct4_avg_pf, time=poll_time, num=4)
-    ct5 = Point('ct', power=ct5_avg_power, current=ct5_avg_current, pf=ct5_avg_pf, time=poll_time, num=5)
+    ct0 = Point('ct', power=ct0_avg_power, current=ct0_avg_current, pf=ct0_avg_pf, time=poll_time, num=(0+add_offset))
+    ct1 = Point('ct', power=ct1_avg_power, current=ct1_avg_current, pf=ct1_avg_pf, time=poll_time, num=(1+add_offset))
+    ct2 = Point('ct', power=ct2_avg_power, current=ct2_avg_current, pf=ct2_avg_pf, time=poll_time, num=(2+add_offset))
+    ct3 = Point('ct', power=ct3_avg_power, current=ct3_avg_current, pf=ct3_avg_pf, time=poll_time, num=(3+add_offset))
+    ct4 = Point('ct', power=ct4_avg_power, current=ct4_avg_current, pf=ct4_avg_pf, time=poll_time, num=(4+add_offset))
+    ct5 = Point('ct', power=ct5_avg_power, current=ct5_avg_current, pf=ct5_avg_pf, time=poll_time, num=(5+add_offset))
     v = Point('voltage', voltage=avg_voltage, v_input=0, time=poll_time)
 
     points = [
