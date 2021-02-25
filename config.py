@@ -56,3 +56,14 @@ accuracy_calibration = {
     'ct5' : 1,
     'AC'  : 1,
 }
+
+# minimum "real" power threshold : if the measured power is below, will store 0W. This is to get a clean graph. Usefull to remove noise when we know that only an electrocal heater is connected on the CT ("full power or nothing") .
+
+ct_phase_min_power = {
+    'ct0' : 3,
+    'ct1' : 3,
+    'ct2' : 3,
+    'ct3' : 3,
+    'ct4' : 3,
+    'ct5' : 3
+}
