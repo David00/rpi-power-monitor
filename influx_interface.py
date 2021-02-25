@@ -146,7 +146,7 @@ class Point():
 
 def init_db():
     try:
-        client.create_database('power_monitor')
+        client.create_database(db_settings['database'])
         logger.info("... DB initalized.")
         return True
     except ConnectionRefusedError:
