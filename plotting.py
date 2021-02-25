@@ -10,8 +10,16 @@ from datetime import datetime
 webroot = '/var/www/html'
 
 
-def plot_data(samples, title, *args):
+def plot_data(samples, title, *args, **kwargs):
     # Plots the raw sample data from the individual CT channels and the AC voltage channel.
+    
+    # Check to see if the sample rate was included in the parameters passed in.
+    if kwargs:
+        if 'sample_rate' in kwargs.keys():
+            sample_rate = kwargs['sample_rate']
+    
+    else:
+        sample_rate = None
 
     if args:    # Make plot for a single CT channel
         ct_selection = args[0]
@@ -23,7 +31,7 @@ def plot_data(samples, title, *args):
         fig.add_trace(go.Scatter(x=x, y=voltage, mode='lines', name='Original Voltage Wave'), secondary_y=True)
 
         # Get the phase shifted voltage wave
-        fig.add_trace(go.Scatter(x=x, y=samples['new_v'], mode='lines', name=f'Phase corrected voltage wave ({ct_selection})'), secondary_y=True)
+        fig.add_trace(go.Scatter(x=x, y=samples['new_v'], mode='lines', name=f'Phase corrected voltage wave ({ct_selection})'), secondary_y=True)    
 
     else:       # Make plot for all CT channels
         ct0 = samples['ct0']
@@ -63,6 +71,10 @@ def plot_data(samples, title, *args):
     div = plotly.offline.plot(fig, show_link=False, output_type='div', include_plotlyjs='cdn')
     home_link = '<a href="/">Back to Index</a>'
     div = home_link + div
+    if sample_rate:
+        sample_rate = f'<p>Sample Rate: {sample_rate} KSPS</p>'
+        div += sample_rate
+    
 
     with open(f"{webroot}/{title.replace(' ', '_')}.html", 'w') as f:
         f.write(div)
