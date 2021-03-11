@@ -15,12 +15,4 @@ The software has not been really modified. I just made my own board to implement
 
 > Maybe the voltage reference should be changed for a fixed voltage or a part that has already the integrated divider. Or some LDO to be fixed at 1.75V (not a common voltage) ? At the end, depending on your analog signal, a VREF at 1.5V would also work.
 
-### Please see the [project Wiki] for my board example and layout and David's wiki (https://github.com/David00/rpi-power-monitor/wiki#quick-start--table-of-contents) for detailed setup instructions. I also added there some usefull command under putty to get access to Influg and try some queries
-
-Try to install on OranPiOne+ with Armbian 20.11.6 Buster with Linux 5.10.4-sunxi64.
-Issue to install from "requirements.txt"
-> Prettytable, usend only in PowerMonitor.PY (ModuleNotFoundError: No module named 'setuptools' --- Command "python setup.py egg_info" failed with error code 1 in /tmp/pip-install-q0zgebr9/prettytable/
-
-> spidev
-
-Had to install Setuptool (sudo apt-get install python3-setuptools)  + pip3 install wheel + sudo apt-get install libhdf5-dev 
+### Please see the [project Wiki] for my board example + layout. I also added there some usefull command under putty to get access to Influg without using Grafana and try there some queries. You will also find usefull comment for a Cost of Use dashboard under Grafana. Keep aneye on David's wiki (https://github.com/David00/rpi-power-monitor/wiki#quick-start--table-of-contents) for detailed setup instructions. 
