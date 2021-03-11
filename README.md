@@ -15,4 +15,6 @@ The software has not been really modified. I just made my own board to implement
 
 > Maybe the voltage reference should be changed for a fixed voltage or a part that has already the integrated divider. Or some LDO to be fixed at 1.75V (not a common voltage) ? At the end, depending on your analog signal, a VREF at 1.5V would also work.
 
-### Please see the [project Wiki] for my board example + layout. I also added there some usefull command under putty to get access to Influg without using Grafana and try there some queries. You will also find usefull comment for a Cost of Use dashboard under Grafana. Keep aneye on David's wiki (https://github.com/David00/rpi-power-monitor/wiki#quick-start--table-of-contents) for detailed setup instructions. 
+### Please see the [project Wiki] for my board example + layout. I also added there some usefull command under putty to get access to Influg without using Grafana and try there some queries. You will also find usefull comment for a Cost of Use dashboard under Grafana. 
+
+### Keep an eye on David's wiki (https://github.com/David00/rpi-power-monitor/wiki#quick-start--table-of-contents) for detailed setup instructions. 
