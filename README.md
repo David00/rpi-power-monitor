@@ -23,4 +23,7 @@ It would be also possibel to move the LED to TX pin, to get some RPI monitoring 
 
 ### Please see the [project Wiki] for my board example + layout. I also added there some usefull command under putty to get access to Influg without using Grafana and try there some queries. You will also find usefull comment for a Cost of Use dashboard under Grafana. 
 
-### Keep an eye on David's wiki (https://github.com/David00/rpi-power-monitor/wiki#quick-start--table-of-contents) for detailed setup instructions. 
+### Keep an eye on David's wiki (https://github.com/David00/rpi-power-monitor/wiki#quick-start--table-of-contents) for detailed setup instructions and update. 
+
+### If you are interested in the cost of use dashboard, see below the result. The dashboards (JSON format) are available in the DOC folder. See also the wiki to tweak them.
+![](https://github.com/DuduNord/rpi-power-monitor/blob/master/docs/Grafana%20global.png)
