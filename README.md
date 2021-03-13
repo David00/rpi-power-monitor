@@ -25,5 +25,5 @@ It would be also possibel to move the LED to TX pin, to get some RPI monitoring 
 
 ### Keep an eye on David's wiki (https://github.com/David00/rpi-power-monitor/wiki#quick-start--table-of-contents) for detailed setup instructions and update. 
 
-### If you are interested in the cost of use dashboard, see below the result. The dashboards (JSON format) are available in the DOC folder. See also the wiki to tweak them.
+### If you are interested in the cost of use dashboard, see below the result. The dashboards (JSON format) are available in the USEFULFILES folder. See also the wiki to tweak them.
 ![](https://github.com/DuduNord/rpi-power-monitor/blob/master/docs/Grafana%20global.png)
