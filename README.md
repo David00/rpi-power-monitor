@@ -23,6 +23,14 @@ The code takes tens of thousands of samples per second, corrects for phase error
 
 ---
 
+## Where can I get it?
+
+I am offering DIY kits, presoldered PCBs, and a variety of current transformers to use with my project. 
+
+Please see https://power-monitor.dalbrecht.tech/ for more information.
+
+---
+
 ## Installation
 
 
