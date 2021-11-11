@@ -62,4 +62,4 @@ Would you like to help out? Shoot me an email at github@dalbrecht.tech to see wh
 
 BTC:  1Go1YKgdxAYUjwGM1u3JRXzdyRM938RQ95
 
-###### Last Updated:  June 26, 2020
+###### Last Updated:  November 2021
