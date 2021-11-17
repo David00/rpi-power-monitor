@@ -1,6 +1,6 @@
-# Raspberry Pi Power Monitor
+# Power Monitor HAT (for Raspberry Pi)
 
-The Raspberry Pi Power Monitor is a combination of custom hardware and software that will allow you to monitor your unique power situation in real time (<0.5 second intervals), including accurate consumption, generation, and net-production. The data are stored to a database and displayed in a Grafana dashboard for monitoring and reporting purposes.
+This project is a combination of custom hardware and software that will allow you to monitor your unique power situation in real time, including accurate consumption, generation, and net-production. The data are stored to a database and displayed in a Grafana dashboard for monitoring and reporting purposes.
 
 This project is derived from and inspired by the resources located at https://learn.openenergymonitor.org. 
 
@@ -25,13 +25,13 @@ The code takes tens of thousands of samples per second, corrects for phase error
 
 ## Where can I get it?
 
-I am offering DIY kits, presoldered PCBs, and a variety of current transformers to use with my project. 
+I am offering DIY kits, presoldered PCBs, and a variety of current transformers to use with my project.
 
 Please see https://power-monitor.dalbrecht.tech/ for more information.
 
 ---
 
-## Installation
+## Installation & Documentation
 
 
 
