@@ -25,6 +25,14 @@ db_settings = {
     'database' : 'power_monitor'
 }
 
+# db_settings = {
+#     'version': 2,
+#     'url': 'https://[ip]:[port]',
+#     'org': '',
+#     'token': '',
+#     'bucket': "Power Monitor"
+# }
+
 
 # Define Variables
 ct0_channel = 0             # Orange Pair           | House main (leg 1 - left)  (orange pair)
