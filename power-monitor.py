@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 from time import sleep
 import timeit
 import csv
@@ -609,7 +609,7 @@ if __name__ == '__main__':
         # Try to establish a connection to the DB for 5 seconds:
         x = 0
         connection_established = False
-        logger.info(f"... Trying to connect to database at: {db_settings['host']}:{db_settings['port']}")
+        # logger.info(f"... Trying to connect to database at: {db_settings['host']}:{db_settings['port']}")
         while x < 5:
             connection_established = infl.init_db()
             if connection_established:

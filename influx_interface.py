@@ -1,4 +1,6 @@
 from influxdb import InfluxDBClient
+from influxdb_client import InfluxDBClient as InfluxDBClient2
+from influxdb_client.client.write_api import ASYNCHRONOUS
 from influxdb.exceptions import InfluxDBServerError
 from datetime import datetime
 import random
@@ -9,14 +11,24 @@ from requests.exceptions import ConnectionError
 # For development only
 import sys, traceback
 
+is_version2 = db_settings['version'] == 2
+
 # Changes to these settings should be made in config.py!
-client = InfluxDBClient(
-    host=db_settings['host'],
-    port=db_settings['port'],
-    username=db_settings['username'],
-    password=db_settings['password'],
-    database=db_settings['database']
+
+if is_version2:
+    client = InfluxDBClient2(
+        url=db_settings['url'],
+        org=db_settings['org'],
+        token=db_settings['token']
     )
+else:
+    client = InfluxDBClient(
+        host=db_settings['host'],
+        port=db_settings['port'],
+        username=db_settings['username'],
+        password=db_settings['password'],
+        database=db_settings['database']
+        )
 
 
 
@@ -146,9 +158,17 @@ class Point():
 
 def init_db():
     try:
-        client.create_database(db_settings['database'])
-        logger.info("... DB initalized.")
-        return True
+        if is_version2:
+            # client.buckets_api().create_bucket(
+            #     bucket_name=db_settings['bucket'],
+            #     org_id=db_settings['org']
+            #     )
+            # logger.info("... Bucket Created")
+            return True
+        else:
+            client.create_database(db_settings['database'])
+            logger.info("... DB initalized.")
+            return True
     except ConnectionRefusedError:
         logger.debug("Could not connect to InfluxDB")
         return False
@@ -164,6 +184,12 @@ def init_db():
 
 def close_db():
     client.close()
+
+def client_write_points(points):
+    if is_version2:
+        client.write_api(write_options=ASYNCHRONOUS).write(bucket=db_settings['bucket'], org=db_settings['org'], record=points)
+    else:
+        client.write_points(points, time_precision='ms')
 
 def write_to_influx(solar_power_values, home_load_values, net_power_values, ct0_dict, ct1_dict, ct2_dict, ct3_dict, ct4_dict, ct5_dict, poll_time, length, voltages):
     
@@ -221,7 +247,7 @@ def write_to_influx(solar_power_values, home_load_values, net_power_values, ct0_
     ]
 
     try:    
-        client.write_points(points, time_precision='ms')
+        client_write_points(points)
     except InfluxDBServerError as e:
         logger.critical(f"Failed to write data to Influx. Reason: {e}")
     except ConnectionError:
