@@ -11,7 +11,7 @@ from requests.exceptions import ConnectionError
 # For development only
 import sys, traceback
 
-is_version2 = db_settings['version'] == 2
+is_version2 = db_settings.get('version', 1) == 2
 
 # Changes to these settings should be made in config.py!
 
