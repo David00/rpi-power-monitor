@@ -165,7 +165,7 @@ def init_db():
 def close_db():
     client.close()
 
-def write_to_influx(solar_power_values, home_load_values, net_power_values, ct0_dict, ct1_dict, ct2_dict, ct3_dict, ct4_dict, ct5_dict, poll_time, length, voltages):
+def write_to_influx(solar_power_values, home_load_values, net_power_values, ct1_dict, ct2_dict, ct3_dict, ct4_dict, ct5_dict, ct6_dict, poll_time, length, voltages):
     
     # Calculate Averages
     avg_solar_power = sum(solar_power_values['power']) / length
@@ -175,9 +175,6 @@ def write_to_influx(solar_power_values, home_load_values, net_power_values, ct0_
     avg_home_current = sum(home_load_values['current']) / length
     avg_net_power = sum(net_power_values['power']) / length
     avg_net_current = sum(net_power_values['current']) / length
-    ct0_avg_power = sum(ct0_dict['power']) / length
-    ct0_avg_current = sum(ct0_dict['current']) / length
-    ct0_avg_pf = sum(ct0_dict['pf']) / length
     ct1_avg_power = sum(ct1_dict['power']) / length
     ct1_avg_current = sum(ct1_dict['current']) / length
     ct1_avg_pf = sum(ct1_dict['pf']) / length
@@ -193,30 +190,33 @@ def write_to_influx(solar_power_values, home_load_values, net_power_values, ct0_
     ct5_avg_power = sum(ct5_dict['power']) / length
     ct5_avg_current = sum(ct5_dict['current']) / length
     ct5_avg_pf = sum(ct5_dict['pf']) / length
+    ct6_avg_power = sum(ct6_dict['power']) / length
+    ct6_avg_current = sum(ct6_dict['current']) / length
+    ct6_avg_pf = sum(ct6_dict['pf']) / length
     avg_voltage = sum(voltages) / length
 
     # Create Points
     home_load = Point('home_load', power=avg_home_power, current=avg_home_current, time=poll_time)
     solar = Point('solar', power=avg_solar_power, current=avg_solar_current, pf=avg_solar_pf, time=poll_time)
     net = Point('net', power=avg_net_power, current=avg_net_current, time=poll_time)
-    ct0 = Point('ct', power=ct0_avg_power, current=ct0_avg_current, pf=ct0_avg_pf, time=poll_time, num=0)
     ct1 = Point('ct', power=ct1_avg_power, current=ct1_avg_current, pf=ct1_avg_pf, time=poll_time, num=1)
     ct2 = Point('ct', power=ct2_avg_power, current=ct2_avg_current, pf=ct2_avg_pf, time=poll_time, num=2)
     ct3 = Point('ct', power=ct3_avg_power, current=ct3_avg_current, pf=ct3_avg_pf, time=poll_time, num=3)
     ct4 = Point('ct', power=ct4_avg_power, current=ct4_avg_current, pf=ct4_avg_pf, time=poll_time, num=4)
     ct5 = Point('ct', power=ct5_avg_power, current=ct5_avg_current, pf=ct5_avg_pf, time=poll_time, num=5)
+    ct6 = Point('ct', power=ct6_avg_power, current=ct6_avg_current, pf=ct6_avg_pf, time=poll_time, num=6)
     v = Point('voltage', voltage=avg_voltage, v_input=0, time=poll_time)
 
     points = [
         home_load.to_dict(),
         solar.to_dict(),
         net.to_dict(),
-        ct0.to_dict(),
         ct1.to_dict(),
         ct2.to_dict(),
         ct3.to_dict(),
         ct4.to_dict(),
         ct5.to_dict(),
+        ct6.to_dict(),
         v.to_dict(),
     ]
 

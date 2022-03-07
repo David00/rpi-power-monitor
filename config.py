@@ -27,32 +27,32 @@ db_settings = {
 
 
 # Define Variables
-ct0_channel = 0             # Orange Pair           | House main (leg 1 - left)  (orange pair)
-ct1_channel = 1             # Green Pair            | House main (leg 2 - right) (green pair)
-ct2_channel = 2             # Blue Pair             | Subpanel main (leg 1 - top)
-ct3_channel = 3             # Brown Pair            | Solar Power 
-ct4_channel = 6             # 3.5mm Input #1        | Subpanel main (leg 2 - bottom)
+ct1_channel = 0             # Orange Pair           | House main (leg 1 - left)  (orange pair)
+ct2_channel = 1             # Green Pair            | House main (leg 2 - right) (green pair)
+ct3_channel = 2             # Blue Pair             | Subpanel main (leg 1 - top)
+ct4_channel = 3             # Brown Pair            | Solar Power 
+ct5_channel = 6             # 3.5mm Input #1        | Subpanel main (leg 2 - bottom)
 board_voltage_channel =  4  # Board voltage ~3.3V
 v_sensor_channel = 5        # 9V AC Voltage channel
-ct5_channel = 7             # 3.5mm Input #2        | Unused
+ct6_channel = 7             # 3.5mm Input #2        | Unused
 
 # The values from running the software in "phase" mode should go below!
 ct_phase_correction = {
-    'ct0' : 1,
     'ct1' : 1,
     'ct2' : 1,
     'ct3' : 1,
     'ct4' : 1,
     'ct5' : 1,
+    'ct6' : 1,
 }
 
 # AFTER phase correction is completed, these values are used in the final calibration for accuracy. See the documentation for more information.
 accuracy_calibration = {
-    'ct0' : 1,
     'ct1' : 1,
     'ct2' : 1,
     'ct3' : 1,
     'ct4' : 1,
     'ct5' : 1,
+    'ct6' : 1,
     'AC'  : 1,
 }
