@@ -696,14 +696,14 @@ if __name__ == '__main__':
 
             while True:
                 try:    
-                    ct_num = int(input("\nWhich CT number are you calibrating? Enter the number of the CT label [0 - 5]: "))
-                    if ct_num not in range(0, 6):
-                        logger.error("Please choose from CT numbers 0, 1, 2, 3, 4, or 5.")
+                    ct_num = int(input("\nWhich CT number are you calibrating? Enter the number of the CT label [1 - 6]: "))
+                    if ct_num not in range(1, 7):
+                        logger.error("Please choose from CT numbers 1, 2, 3, 4, 5, or 6.")
                     else:
                         ct_selection = f'ct{ct_num}'
                         break
                 except ValueError:
-                    logger.error("Please enter an integer! Acceptable choices are: 0, 1, 2, 3, 4, 5.")
+                    logger.error("Please enter an integer! Acceptable choices are: 1, 2, 3, 4, 5, 6.")
 
             
             cont = input(dedent(f"""
