@@ -17,26 +17,26 @@ from time import sleep
 import spidev
 from prettytable import PrettyTable
 
-import influx_interface as infl
-from calibration import check_phasecal
-from calibration import find_phasecal
-from calibration import rebuild_wave
-from common import recover_influx_container
-from config import AC_TRANSFORMER_OUTPUT_VOLTAGE
-from config import CT_PHASE_CORRECTION
-from config import GRID_VOLTAGE
-from config import ACCURACY_CALIBRATION
-from config import board_voltage_channel
-from config import ct1_channel
-from config import ct2_channel
-from config import ct3_channel
-from config import ct4_channel
-from config import ct5_channel
-from config import ct6_channel
-from config import db_settings
-from config import logger
-from config import v_sensor_channel
-from plotting import plot_data
+import power_monitor.influx_interface as infl
+from power_monitor.calibration import check_phasecal
+from power_monitor.calibration import find_phasecal
+from power_monitor.calibration import rebuild_wave
+from power_monitor.common import recover_influx_container
+from power_monitor.config import AC_TRANSFORMER_OUTPUT_VOLTAGE
+from power_monitor.config import CT_PHASE_CORRECTION
+from power_monitor.config import GRID_VOLTAGE
+from power_monitor.config import ACCURACY_CALIBRATION
+from power_monitor.config import board_voltage_channel
+from power_monitor.config import ct1_channel
+from power_monitor.config import ct2_channel
+from power_monitor.config import ct3_channel
+from power_monitor.config import ct4_channel
+from power_monitor.config import ct5_channel
+from power_monitor.config import ct6_channel
+from power_monitor.config import db_settings
+from power_monitor.config import logger
+from power_monitor.config import v_sensor_channel
+from power_monitor.plotting import plot_data
 
 
 class RPiPowerMonitor:

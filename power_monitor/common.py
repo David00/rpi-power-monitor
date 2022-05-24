@@ -4,7 +4,7 @@ from time import sleep
 
 import docker
 
-from config import logger
+from power_monitor.config import logger
 
 
 def recover_influx_container():

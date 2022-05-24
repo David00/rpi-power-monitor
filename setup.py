@@ -30,7 +30,7 @@ setup(
     # Author details
     author="David00",
     author_email="github@dalbrecht.tech",
-    install_requires=["spidev"],
+    install_requires=["spidev==3.5"],
     # Choose your license
     license="GNU General Public License (GPLv3)",
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
