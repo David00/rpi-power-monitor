@@ -1,7 +1,8 @@
 from math import sqrt
 
-from config import logger
 from rpi_power_monitor.rpi_power_monitor import RPiPowerMonitor
+
+from rpi_power_monitor.config import logger
 
 
 def rebuild_wave(samples, v_wave, PHASECAL):

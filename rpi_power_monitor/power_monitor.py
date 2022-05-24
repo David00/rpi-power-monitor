@@ -22,10 +22,10 @@ from rpi_power_monitor.calibration import check_phasecal
 from rpi_power_monitor.calibration import find_phasecal
 from rpi_power_monitor.calibration import rebuild_wave
 from rpi_power_monitor.common import recover_influx_container
+from rpi_power_monitor.config import ACCURACY_CALIBRATION
 from rpi_power_monitor.config import AC_TRANSFORMER_OUTPUT_VOLTAGE
 from rpi_power_monitor.config import CT_PHASE_CORRECTION
 from rpi_power_monitor.config import GRID_VOLTAGE
-from rpi_power_monitor.config import ACCURACY_CALIBRATION
 from rpi_power_monitor.config import board_voltage_channel
 from rpi_power_monitor.config import ct1_channel
 from rpi_power_monitor.config import ct2_channel
