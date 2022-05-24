@@ -1,13 +1,11 @@
+# For development only
+import sys
+
 from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBServerError
-from datetime import datetime
-import random
-from time import sleep
-from config import logger, db_settings
 from requests.exceptions import ConnectionError
 
-# For development only
-import sys, traceback
+from config import logger, db_settings
 
 # Changes to these settings should be made in config.py!
 client = InfluxDBClient(
@@ -15,25 +13,23 @@ client = InfluxDBClient(
     port=db_settings['port'],
     username=db_settings['username'],
     password=db_settings['password'],
-    database=db_settings['database']
-    )
+    database=db_settings['database'])
 
 
-
-class Point():
+class Point:
     def __init__(self, p_type, *args, **kwargs):
         if p_type == 'home_load':
-            self.power   = kwargs['power']
+            self.power = kwargs['power']
             self.current = kwargs['current']
-            self.p_type  = p_type
-            self.time    = kwargs['time']
+            self.p_type = p_type
+            self.time = kwargs['time']
         
         elif p_type == 'solar':
-            self.power   = kwargs['power']
+            self.power = kwargs['power']
             self.current = kwargs['current']
-            self.pf      = kwargs['pf']
-            self.p_type  = p_type    
-            self.time    = kwargs['time']        
+            self.pf = kwargs['pf']
+            self.p_type = p_type
+            self.time = kwargs['time']
             
         elif p_type == 'net': 
             '''
@@ -43,10 +39,10 @@ class Point():
             self.p_type  : the type of point [home_load, solar, net, ct, voltage]
             self.time    : timestamp from when the data was sampled
             '''
-            self.power   = kwargs['power']
+            self.power = kwargs['power']
             self.current = kwargs['current']
-            self.p_type  = p_type            
-            self.time    = kwargs['time']
+            self.p_type = p_type
+            self.time = kwargs['time']
         
         elif p_type == 'ct':
             '''
@@ -57,12 +53,12 @@ class Point():
             self.ct_num  : the CT number [0-6]
             self.time    : timestamp from when the data was sampled
             '''
-            self.power   = kwargs['power']
+            self.power = kwargs['power']
             self.current = kwargs['current']
-            self.p_type  = p_type            
-            self.pf      = kwargs['pf']
-            self.ct_num  = kwargs['num']
-            self.time    = kwargs['time']
+            self.p_type = p_type
+            self.pf = kwargs['pf']
+            self.ct_num = kwargs['num']
+            self.time = kwargs['time']
 
         elif p_type == 'voltage':
             '''
@@ -72,29 +68,28 @@ class Point():
             '''
             self.voltage = kwargs['voltage']
             self.v_input = kwargs['v_input']
-            self.time    = kwargs['time']
-            self.p_type  = p_type
- 
+            self.time = kwargs['time']
+            self.p_type = p_type
 
     def to_dict(self):
         if self.p_type == 'home_load':
             data = {
                 "measurement": 'home_load',
-                "fields" : {
-                    "current" : self.current,
+                "fields": {
+                    "current": self.current,
                     "power": self.power
                 },
-                "time" : self.time
+                "time": self.time
             }
         elif self.p_type == 'solar': 
             data = {
-                "measurement" : "solar",
-                "fields" : {
-                    "current" : self.current,
+                "measurement": "solar",
+                "fields": {
+                    "current": self.current,
                     "power": self.power,
                     "pf": self.pf
                 },
-                "time" : self.time
+                "time": self.time
             }
         elif self.p_type == 'net':
             if self.power < 0:
@@ -104,69 +99,77 @@ class Point():
             else:
                 status = "No data"
             data = {
-                "measurement" : "net",
-                "fields" : {
-                    "current" : self.current,
-                    "power" : self.power,
+                "measurement": "net",
+                "fields": {
+                    "current": self.current,
+                    "power": self.power,
                 },
-                "tags" : {
-                    "status" : status,
+                "tags": {
+                    "status": status,
                 },
-                "time" : self.time
+                "time": self.time
             }
 
         elif self.p_type == 'ct':
             data = {
-                "measurement" : "raw_cts",
-                "fields" : {
-                    "current" : self.current,
-                    "power" : self.power,
-                    "pf" : self.pf,
+                "measurement": "raw_cts",
+                "fields": {
+                    "current": self.current,
+                    "power": self.power,
+                    "pf": self.pf,
                 },
-                "tags" : {
-                    'ct' : self.ct_num
+                "tags": {
+                    "ct": self.ct_num
                 },
-                "time" : self.time
+                "time": self.time
             }
 
         elif self.p_type == 'voltage':
             data = {
-                "measurement" : "voltages",
-                "fields" : {
-                    "voltage" : self.voltage,
+                "measurement": "voltages",
+                "fields": {
+                    "voltage": self.voltage,
                 },
-                "tags" : {
-                    'v_input' : self.v_input
+                "tags": {
+                    "v_input": self.v_input
                 },
-                "time" : self.time
+                "time": self.time
             }
-        return data
+        else:
+            return
 
+        return data
 
 
 def init_db():
     try:
         client.create_database(db_settings['database'])
-        logger.info("... DB initalized.")
+        logger.info("... DB initialized.")
         return True
     except ConnectionRefusedError:
         logger.debug("Could not connect to InfluxDB")
         return False
-    
     except Exception:
         logger.debug(f"Could not connect to {db_settings['host']}:{db_settings['port']}")
         return False
-        
-        
-    
-    
 
 
 def close_db():
     client.close()
 
-def write_to_influx(solar_power_values, home_load_values, net_power_values, ct1_dict, ct2_dict, ct3_dict, ct4_dict, ct5_dict, ct6_dict, poll_time, length, voltages):
-    
+
+def write_to_influx(solar_power_values,
+                    home_load_values,
+                    net_power_values,
+                    ct1_dict,
+                    ct2_dict,
+                    ct3_dict,
+                    ct4_dict,
+                    ct5_dict,
+                    ct6_dict,
+                    poll_time,
+                    length,
+                    voltages):
     # Calculate Averages
     avg_solar_power = sum(solar_power_values['power']) / length
     avg_solar_current = sum(solar_power_values['current']) / length
@@ -231,4 +234,4 @@ def write_to_influx(solar_power_values, home_load_values, net_power_values, ct1_
 
 if __name__ == '__main__':
     client = InfluxDBClient(host='localhost', port=8086, username='root', password='password', database='example')
-    test_insert_and_retrieve(client)
+    # test_insert_and_retrieve(client)

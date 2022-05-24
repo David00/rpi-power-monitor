@@ -1,17 +1,18 @@
 from math import sqrt
+
 from config import logger
-from common import collect_data
+from power_monitor import RPiPowerMonitor
+
 
 def rebuild_wave(samples, v_wave, PHASECAL):
     # This function will rebuild a single voltage wave according to a single phasecal value.
-    ''' samples: a list containing raw ADC readings from a single CT input 
+    """ samples: a list containing raw ADC readings from a single CT input
         v_wave: a list contianing raw ADC readings from the original voltage waveform
         PHASECAL: a float represnting the current phase correction value.
-    ''' 
+    """
 
     # The following empty lists will hold the phase corrected voltage wave that corresponds to each individual CT sensor.
     wave = []
-    
 
     wave.append(v_wave[0])
     previous_point = v_wave[0]
@@ -22,24 +23,25 @@ def rebuild_wave(samples, v_wave, PHASECAL):
         previous_point = current_point
 
     rebuilt_wave = {        
-        'new_v' : wave,                     # Rebuilt voltage wave
-        'ct' : samples,                     # Raw ADC output for a single CT
-        'original_v' : v_wave,              # Original voltage wave samples
+        'new_v': wave,                     # Rebuilt voltage wave
+        'ct': samples,                     # Raw ADC output for a single CT
+        'original_v': v_wave,              # Original voltage wave samples
     }
     return rebuilt_wave
+
 
 def check_phasecal(samples, rebuilt_wave, board_voltage):
     # This function is a trimmed down version of the calculate_power().
     # Instead of calculating the power for all CTs at once, it will calculate the data for one CT at a time.
     # samples is a list of raw CT samples
-    '''
+    """
     samples         : list, raw ADC output values for a single CT
 
     rebuilt_wave    : list, phase-corrected voltage wave for the single CT
 
     board_voltage   : float, current reading of the reference voltage from the +3.3V rail
 
-    '''
+    """
 
     # Variable Initialization    
     sum_inst_power = 0    
@@ -96,7 +98,6 @@ def check_phasecal(samples, rebuilt_wave, board_voltage):
         power_factor = real_power / apparent_power
     except ZeroDivisionError:
         power_factor = 0
-
     
     results = {
         'power'     : real_power,
@@ -131,9 +132,9 @@ def find_phasecal(samples, ct_selection, accuracy_digits, board_voltage):
 
     for i, _ in enumerate(range(3), start=1):
         best_pf = {
-        'pf' : 0,
-        'cal' : 0,
-    }
+            'pf': 0,
+            'cal': 0
+        }
         for _ in range(75):
 
             if round(pf, 4) == 1.0:
@@ -158,7 +159,8 @@ def find_phasecal(samples, ct_selection, accuracy_digits, board_voltage):
                 action = 'decremented'
 
             # Collect a live sample and calculate PF using new_phasecal
-            samples = collect_data(2000)
+            rpm = RPiPowerMonitor()
+            samples = rpm.collect_data(2000)
             rebuilt_wave = rebuild_wave(samples[ct_selection], samples['voltage'], new_phasecal)
             results = check_phasecal(rebuilt_wave['ct'], rebuilt_wave['new_v'], board_voltage)
             pf = results['pf']
@@ -194,7 +196,6 @@ def find_phasecal(samples, ct_selection, accuracy_digits, board_voltage):
                             # Increment instead
                             new_phasecal = previous_phasecal * increment
 
-
                 if trends[1] > 0:
                     trend = 'better'
 
@@ -208,8 +209,6 @@ def find_phasecal(samples, ct_selection, accuracy_digits, board_voltage):
                 else:
                     new_phasecal = previous_phasecal * decrement
 
-
-            
             previous_pf = pf
 
         logger.debug(f"Wave {i}/3 results: ")
