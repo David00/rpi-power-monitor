@@ -4,6 +4,42 @@ This project is a combination of custom hardware and software that will allow yo
 
 This project is derived from and inspired by the resources located at https://learn.openenergymonitor.org. 
 
+---
+
+## How do I install?
+
+There are two ways to install.
+
+### Clone the repository
+
+```bash
+git clone https://github.com/David00/rpi-power-monitor
+```
+
+Then, to run, for example:
+
+```bash
+cd rpi-power-monitor
+python -m virtualenv ./venv
+./venv/bin/python -m pip install -r requirements.txt
+./venv/bin/python ./rpi_power_monitor/power_monitor.py terminal
+```
+
+### Install python package
+
+```bash
+python -m virtualenv ./venv
+./venv/bin/python -m pip install git+https://github.com/David00/rpi-power-monitor.git
+```
+
+Then, to run, for example:
+
+```python
+from rpi_power_monitor import power_monitor
+
+rpm = power_monitor.RPiPowerMonitor()
+rpm.run_main()
+```
 
 ---
 

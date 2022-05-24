@@ -28,7 +28,12 @@ setup(
     author="David00",
     author_email="github@dalbrecht.tech",
     install_requires=[
-        "spidev==3.5"
+        "influxdb==5.2.3",
+        "prettytable==0.7.2",
+        "plotly==4.5.4",
+        "spidev==3.5",
+        "requests==2.21.0",
+        "docker_py==1.10.6"
     ],
     license="GNU General Public License (GPLv3)",
     packages=["rpi_power_monitor"],
