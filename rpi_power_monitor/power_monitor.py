@@ -53,7 +53,6 @@ class RPiPowerMonitor:
             self.spi = spi
         else:
             self.spi = spidev.SpiDev()  # Create SPI
-            self.spi = spi
             self.spi.open(0, 0)
             self.spi.max_speed_hz = 1750000  # Changing this value will require you to adjust the phasecal values above.
 
