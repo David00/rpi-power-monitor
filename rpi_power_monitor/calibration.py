@@ -1,6 +1,6 @@
 from math import sqrt
 
-from rpi_power_monitor.rpi_power_monitor import RPiPowerMonitor
+from rpi_power_monitor.power_monitor import RPiPowerMonitor
 
 from rpi_power_monitor.config import logger
 
