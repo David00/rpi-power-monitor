@@ -5,7 +5,7 @@ from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBServerError
 from requests.exceptions import ConnectionError
 
-from config import logger, db_settings
+from rpi_power_monitor.config import logger, db_settings
 
 # Changes to these settings should be made in config.py!
 client = InfluxDBClient(
