@@ -27,15 +27,17 @@ db_settings = {
     'database': 'power_monitor'
 }
 
-# Define Variables
-ct1_channel = 0             # Orange Pair           | House main (leg 1 - left)  (orange pair)
-ct2_channel = 1             # Green Pair            | House main (leg 2 - right) (green pair)
-ct3_channel = 2             # Blue Pair             | Subpanel main (leg 1 - top)
-ct4_channel = 3             # Brown Pair            | Solar Power 
-ct5_channel = 6             # 3.5mm Input #1        | Subpanel main (leg 2 - bottom)
-board_voltage_channel = 4   # Board voltage ~3.3V
-v_sensor_channel = 5        # 9V AC Voltage channel
-ct6_channel = 7             # 3.5mm Input #2        | Unused
+# ADC pins/channels
+ADC_CHANNELS = {
+    'ct1_channel': 0,
+    'ct2_channel': 1,
+    'ct3_channel': 2,
+    'ct4_channel': 3,
+    'ct5_channel': 6,
+    'ct6_channel': 7,
+    'board_voltage_channel': 4,
+    'v_sensor_channel': 5
+}
 
 # The values from running the software in "phase" mode should go below!
 CT_PHASE_CORRECTION = {
@@ -56,5 +58,5 @@ ACCURACY_CALIBRATION = {
     'ct4': 1,
     'ct5': 1,
     'ct6': 1,
-    'AC' : 1,
+    'AC': 1,
 }

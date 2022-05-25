@@ -53,7 +53,7 @@ def recover_influx_container():
                     ))
                     for line in logs.splitlines():
                         logger.info(f"   {line}")
-                    
+
                     sys.exit()
 
                 else:

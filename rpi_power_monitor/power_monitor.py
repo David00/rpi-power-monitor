@@ -21,18 +21,11 @@ import rpi_power_monitor.influx_interface as infl
 from rpi_power_monitor.common import recover_influx_container
 from rpi_power_monitor.config import ACCURACY_CALIBRATION
 from rpi_power_monitor.config import AC_TRANSFORMER_OUTPUT_VOLTAGE
+from rpi_power_monitor.config import ADC_CHANNELS
 from rpi_power_monitor.config import CT_PHASE_CORRECTION
 from rpi_power_monitor.config import GRID_VOLTAGE
-from rpi_power_monitor.config import board_voltage_channel
-from rpi_power_monitor.config import ct1_channel
-from rpi_power_monitor.config import ct2_channel
-from rpi_power_monitor.config import ct3_channel
-from rpi_power_monitor.config import ct4_channel
-from rpi_power_monitor.config import ct5_channel
-from rpi_power_monitor.config import ct6_channel
 from rpi_power_monitor.config import db_settings
 from rpi_power_monitor.config import logger
-from rpi_power_monitor.config import v_sensor_channel
 from rpi_power_monitor.plotting import plot_data
 
 
@@ -43,11 +36,14 @@ class RPiPowerMonitor:
                  grid_voltage=GRID_VOLTAGE,
                  ac_transformer_output_voltage=AC_TRANSFORMER_OUTPUT_VOLTAGE,
                  ct_phase_correction=CT_PHASE_CORRECTION,
-                 accuracy_calibration=ACCURACY_CALIBRATION):
+                 accuracy_calibration=ACCURACY_CALIBRATION,
+                 adc_channels=ADC_CHANNELS
+                 ):
         self.grid_voltage = grid_voltage
         self.ac_transformer_output_voltage = ac_transformer_output_voltage
         self.ct_phase_correction = ct_phase_correction
         self.accuracy_calibration = accuracy_calibration
+        self.adc_channels = adc_channels
 
         if spi:
             self.spi = spi
@@ -80,16 +76,16 @@ class RPiPowerMonitor:
         """ Take 10 sample readings and return the average board voltage from the +3.3V rail. """
         samples = []
         while len(samples) <= 10:
-            data = self.read_adc(board_voltage_channel)
+            data = self.read_adc(self.adc_channels['board_voltage_channel'])
             samples.append(data)
 
         avg_reading = sum(samples) / len(samples)
         board_voltage = (avg_reading / 1024) * 3.31 * 2
         return board_voltage
 
-    def read_adc(self, adcnum):
+    def read_adc(self, adc_num):
         """ Read SPI data from the MCP3008, 8 channels in total. """
-        r = self.spi.xfer2([1, 8 + adcnum << 4, 0])
+        r = self.spi.xfer2([1, 8 + adc_num << 4, 0])
         data = ((r[1] & 3) << 8) + r[2]
         return data
 
@@ -105,13 +101,13 @@ class RPiPowerMonitor:
         v_data = []
 
         for _ in range(num_samples):
-            ct1 = self.read_adc(ct1_channel)
-            ct5 = self.read_adc(ct5_channel)
-            ct2 = self.read_adc(ct2_channel)
-            v = self.read_adc(v_sensor_channel)
-            ct3 = self.read_adc(ct3_channel)
-            ct4 = self.read_adc(ct4_channel)
-            ct6 = self.read_adc(ct6_channel)
+            ct1 = self.read_adc(self.adc_channels['ct1_channel'])
+            ct5 = self.read_adc(self.adc_channels['ct5_channel'])
+            ct2 = self.read_adc(self.adc_channels['ct2_channel'])
+            v = self.read_adc(self.adc_channels['v_sensor_channel'])
+            ct3 = self.read_adc(self.adc_channels['ct3_channel'])
+            ct4 = self.read_adc(self.adc_channels['ct4_channel'])
+            ct6 = self.read_adc(self.adc_channels['ct6_channel'])
             ct1_data.append(ct1)
             ct2_data.append(ct2)
             ct3_data.append(ct3)
