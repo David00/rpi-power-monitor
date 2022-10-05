@@ -13,11 +13,14 @@ from socket import socket, AF_INET, SOCK_DGRAM
 import fcntl
 from prettytable import PrettyTable
 import logging
-from config import logger, ct_phase_correction, ct2_channel, ct3_channel, ct4_channel, ct5_channel, ct6_channel, ct6_channel, board_voltage_channel, v_sensor_channel, GRID_VOLTAGE, AC_TRANSFORMER_OUTPUT_VOLTAGE, accuracy_calibration, db_settings
+from config import logger, ct_phase_correction, ct2_channel, ct3_channel, ct4_channel, ct5_channel, ct6_channel, ct6_channel, board_voltage_channel, v_sensor_channel, GRID_VOLTAGE, AC_TRANSFORMER_OUTPUT_VOLTAGE, accuracy_calibration, db_settings, board_voltage_channel
 from calibration import check_phasecal, rebuild_wave, find_phasecal
 from textwrap import dedent
 from common import collect_data, readadc, recover_influx_container
 from shutil import copyfile
+import plotly
+import plotly.graph_objs as go
+from plotly.subplots import make_subplots
 
 
 
@@ -782,4 +785,27 @@ if __name__ == '__main__':
             
             
             run_main()
+
+        if MODE.lower() == "pcbtest":
+            logger.debug("... Testing the ADC")
+            samples = []
+            for _ in range(100):
+                samples.append(readadc(board_voltage_channel))
+
+            x = [x for x in range(1, len(samples))]
+            title = "PCB-Test"
+            fig = make_subplots()
+            fig.add_trace(go.Scatter(x=x, y=samples, mode='lines', name="Board Voltage"))
+            fig.update_layout(
+                title=title,
+                xaxis_title='Sample Number',
+                yaxis_title='Board Voltage Reading',
+            )
+            div = plotly.offline.plot(fig, show_link=False, output_type='div', include_plotlyjs='cdn')
+            with open(f"/var/www/html/{title}.html", 'w') as f:
+                f.write(div)
+
+            ip = get_ip()
+            print(f"Done! Visit http://{ip}/{title}.html")
+            quit()
 
