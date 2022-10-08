@@ -30,7 +30,7 @@ from rpi_power_monitor.plotting import plot_data
 
 
 class RPiPowerMonitor:
-    """ Class to measure voltages from the MCP3008 and calculate power """
+    """ Class to take readings from the MCP3008 and calculate power """
     def __init__(self,
                  spi=None,
                  grid_voltage=GRID_VOLTAGE,
@@ -50,9 +50,10 @@ class RPiPowerMonitor:
         else:
             self.spi = spidev.SpiDev()  # Create SPI
             self.spi.open(0, 0)
-            self.spi.max_speed_hz = 1750000  # Changing this value will require you to adjust the phasecal values above.
+            self.spi.max_speed_hz = 1750000  # Changing this value will require you to adjust the phasecal values in config.py.
 
     def dump_data(self, dump_type, samples):
+        """ Writes raw data to a CSV file titled 'data-dump-<current_time>.csv' """
         speed_kHz = self.spi.max_speed_hz / 1000
         now = datetime.now().strftime('%m-%d-%Y-%H-%M')
         filename = f'data-dump-{now}.csv'
@@ -90,6 +91,13 @@ class RPiPowerMonitor:
         return data
 
     def collect_data(self, num_samples):
+        """  Takes <num_samples> readings from the ADC for each ADC channel and returns a dictionary containing the CT channel number as the key, and a list of that channel's sample data.
+        
+        Arguments:
+        num_samples -- int, the number of samples to collect for each channel.
+
+        Returns a dictionary where the keys are ct1 - ct6, voltage, and time, and the value of each key is a list of that channel's samples (except for 'time', which is a UTC datetime)
+        """
         now = datetime.utcnow()  # Get time of reading
 
         ct1_data = []
@@ -129,7 +137,24 @@ class RPiPowerMonitor:
         return samples
 
     def calculate_power(self, samples, board_voltage):
-        """ Phase corrected power calculation. """
+        """ Calculates amperage, real power, power factor, and voltage
+        
+        Arguments:
+        samples -- dict, a dictionary containing lists of each channel's sample data, and a tailored voltage wave that's been phase corrected for each corresponding channel. See rebuild_waves() for more info.
+
+        Returns a dictionary containing a dictionary for each channel, with the following structure:
+        {
+            'ct1': {
+                'type': 'consumption',
+                'power': <Real Power (float) for this channel>,
+                'current': <RMS Current (float) for this channel>,
+                'voltage': <RMS Voltage (float)>,
+                'pf': <Power Factor (float) for this channel>
+            },
+            ... ,
+            'ct6' : { ... }
+        }
+        """
         ct1_samples = samples['ct1']        # current samples for ct1
         ct2_samples = samples['ct2']        # current samples for ct2
         ct3_samples = samples['ct3']        # current samples for ct3
@@ -389,7 +414,20 @@ class RPiPowerMonitor:
 
     @staticmethod
     def rebuild_waves(samples, PHASECAL_1, PHASECAL_2, PHASECAL_3, PHASECAL_4, PHASECAL_5, PHASECAL_6):
-        """ Build dictionary with phase corrected voltage wave that corresponds to each individual CT sensor. """
+        """ Adjusts the sampled voltage wave to correct for the phase error introduced by time differences between the voltage sample and each channel's current sample.
+        
+        Arguments:
+        samples     -- dict, a dictionary containing lists of each channel's sample data, and a tailored voltage wave that's been phase corrected for each corresponding channel.
+        PHASE_CAL_1 -- float, the phase correction constant for channel 1
+        PHASE_CAL_2 -- float, the phase correction constant for channel 2
+        PHASE_CAL_3 -- float, the phase correction constant for channel 3
+        PHASE_CAL_4 -- float, the phase correction constant for channel 4
+        PHASE_CAL_5 -- float, the phase correction constant for channel 5
+        PHASE_CAL_6 -- float, the phase correction constant for channel 6
+
+        Returns a dictionary where the keys are ct1 through ct6, v_ct1 through v_ct6, and voltage. The ct1 - ct6 keys contains a list of the original current samples taken for each channel. 
+        The v_ct1 - v_ct6 keys contain a list of the phase-corrected voltage samples corresponding to each channel.
+        """
         wave_1 = []
         wave_2 = []
         wave_3 = []
@@ -443,6 +481,7 @@ class RPiPowerMonitor:
         return rebuilt_waves
 
     def run_main(self):
+        """ Starts the main power monitor loop. """
         logger.info("... Starting Raspberry Pi Power Monitor")
         logger.info("Press Ctrl-c to quit...")
         # The following empty dictionaries will hold the respective calculated values at the end
@@ -621,12 +660,15 @@ class RPiPowerMonitor:
                 sys.exit()
 
     @staticmethod
-    def rebuild_wave( samples, v_wave, PHASECAL):
-        # This function will rebuild a single voltage wave according to a single phasecal value.
-        """ samples: a list containing raw ADC readings from a single CT input
-            v_wave: a list contianing raw ADC readings from the original voltage waveform
-            PHASECAL: a float represnting the current phase correction value.
+    def rebuild_wave(samples, v_wave, PHASECAL):
+        """ Rebuilds a single voltage wave by applying the PHASECAL constant to the voltage samples contained in v_wave.
+
+        Arguments:
+        samples     -- list, contains the raw ADC readings from a single CT input
+        v_wave      -- list, contians raw ADC readings from the original voltage waveform
+        PHASECAL:   -- float, the phase correction constant for this channel.
         """
+        
 
         # The following empty lists will hold the phase corrected voltage wave that corresponds to each individual CT sensor.
         wave = []
@@ -648,16 +690,16 @@ class RPiPowerMonitor:
 
     @staticmethod
     def check_phasecal(samples, rebuilt_wave, board_voltage):
-        # This function is a trimmed down version of the calculate_power().
-        # Instead of calculating the power for all CTs at once, it will calculate the data for one CT at a time.
-        # samples is a list of raw CT samples
-        """
-        samples         : list, raw ADC output values for a single CT
+        """ This function is a trimmed down version of the calculate_power(). It's primary purpose is to aid in the finding of the ideal
+        PHASECAL constant for this channel by calculating the power using the already-phase-corrected rebuilt_wave.
+        
+        Arguments:
+        samples         -- list, raw ADC output values for a single CT
+        rebuilt_wave    -- list, phase-corrected voltage wave for the single CT
+        board_voltage   -- float, current reading of the reference voltage from the +3.3V rail
 
-        rebuilt_wave    : list, phase-corrected voltage wave for the single CT
-
-        board_voltage   : float, current reading of the reference voltage from the +3.3V rail
-
+        Returns a dictionary containing the power, current, voltage, and power factor (pf) for this channel so that the caller can determine if the
+        PHASECAL constant applied for this check was better than the previous PHASECAL constant.
         """
 
         # Variable Initialization
@@ -709,7 +751,6 @@ class RPiPowerMonitor:
         rms_current = sqrt(mean_square_current - (avg_raw_current * avg_raw_current)) * ct_scaling_factor
         rms_voltage = sqrt(mean_square_voltage - (avg_raw_voltage * avg_raw_voltage)) * voltage_scaling_factor
 
-        # Power Factor
         apparent_power = rms_voltage * rms_current
 
         try:
@@ -727,6 +768,16 @@ class RPiPowerMonitor:
         return results
 
     def find_phasecal(self, samples, ct_selection, accuracy_digits, board_voltage):
+        """ Determines the indeal PHASECAL constant to achieve a power factor closest to 1.  Assumes that the user is measuring a purely resistive load.
+        
+        Arguments:
+        samples         -- dict, a dictionary containing lists of each channel's sample data
+        ct_selection    -- int, the channel number selected by the user
+        accuracy_digits -- int, currently unused, but would control the rounding of the measured PF. It's currently hardcoded to 4 below.
+        board_voltage   -- float, the latest measured board voltage from the +3.3 rail.
+
+        Returns a list of dicts, where each dict holds the best power factor values and the corresponding PHASECAL constant that was used to calculate the PF.
+        """
         # This controls how many times the calibration process is repeated for this particular CT.
         num_calibration_attempts = 20
 
@@ -777,8 +828,7 @@ class RPiPowerMonitor:
                     action = 'decremented'
 
                 # Collect a live sample and calculate PF using new_phasecal
-                rpm = RPiPowerMonitor()
-                samples = rpm.collect_data(2000)
+                samples = self.collect_data(2000)
                 rebuilt_wave = self.rebuild_wave(samples[ct_selection], samples['voltage'], new_phasecal)
                 results = self.check_phasecal(rebuilt_wave['ct'], rebuilt_wave['new_v'], board_voltage)
                 pf = results['pf']
@@ -861,14 +911,15 @@ class RPiPowerMonitor:
                    round(results['ct6']['pf'], 3)])
         t.add_row(['Voltage', round(results['voltage'], 3), '', '', '', '', ''])
         s = t.get_string()
-        logger.debug(s)
+        logger.debug(f"\n{s}")
 
     @staticmethod
     def get_ip():
-        # This function acquires your Pi's local IP address for use in providing the
-        # user with a copy-able link to view the charts.
-        # It does so by trying to connect to a non-existent private IP address,
-        # but in doing so, it is able to detect the IP address associated with the default route.
+        """ Determines your Pi's local IP address so that it can be displayed to the user for ease of accessing generated plots. 
+        
+        Returns a string representing the Pi's local IP address that's associated with the default route.
+        """
+        
         s = socket(AF_INET, SOCK_DGRAM)
         try:
             s.connect(('10.255.255.255', 1))
@@ -1014,7 +1065,7 @@ if __name__ == '__main__':
                 except ValueError:
                     logger.error("Please enter an integer! Acceptable choices are: 1, 2, 3, 4, 5, 6.")
 
-            cont = input(dedent(f"""
+            cont = input(dedent(f"""\n
                 #--------------------------------------------------------------------------------#
                 # IMPORTANT: Make sure that current transformer {ct_selection} is installed over #
                 #            a purely resistive load and that the load is turned on              #

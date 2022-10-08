@@ -3,4 +3,3 @@ prettytable==0.7.2
 plotly==4.5.4
 spidev==3.5
 requests==2.21.0
-docker_py==1.10.6

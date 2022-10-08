@@ -6,6 +6,14 @@ This project is derived from and inspired by the resources located at https://le
 
 ---
 
+## Where can I get it?
+
+I am offering DIY kits, factory-assembled PCBs, and a variety of current transformers to use with this project.
+
+Please see https://power-monitor.dalbrecht.tech/ for more information.
+
+---
+
 ## How do I install?
 
 There are two ways to install.
@@ -166,4 +174,4 @@ Would you like to help out? Shoot me an email at github@dalbrecht.tech to see wh
 
 BTC:  1Go1YKgdxAYUjwGM1u3JRXzdyRM938RQ95
 
-###### Last Updated:  November 2021
+###### Last Updated:  October 2022

@@ -1,6 +1,3 @@
-# For development only
-import sys
-
 from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBServerError
 from requests.exceptions import ConnectionError
@@ -230,7 +227,7 @@ def write_to_influx(solar_power_values,
         logger.critical(f"Failed to write data to Influx. Reason: {e}")
     except ConnectionError:
         logger.info("Connection to InfluxDB lost. Please investigate!")
-        sys.exit()
+        quit()
 
 
 if __name__ == '__main__':
