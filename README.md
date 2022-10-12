@@ -28,16 +28,16 @@ Then, to run, for example:
 
 ```bash
 cd rpi-power-monitor
-python -m virtualenv ./venv
-./venv/bin/python -m pip install -r requirements.txt
-./venv/bin/python ./rpi_power_monitor/power_monitor.py terminal
+
+python3 -m pip install -r requirements.txt
+python3 power_monitor.py terminal
 ```
 
 ### Install python package
 
 ```bash
-python -m virtualenv ./venv
-./venv/bin/python -m pip install git+https://github.com/David00/rpi-power-monitor.git
+
+python3 -m pip install git+https://github.com/David00/rpi-power-monitor.git
 ```
 
 Then, to run, for example:
@@ -140,13 +140,6 @@ The code takes tens of thousands of samples per second, corrects for phase error
 
 ---
 
-## Where can I get it?
-
-I am offering DIY kits, presoldered PCBs, and a variety of current transformers to use with my project.
-
-Please see https://power-monitor.dalbrecht.tech/ for more information.
-
----
 
 ## Installation & Documentation
 
