@@ -18,7 +18,6 @@ import spidev
 from prettytable import PrettyTable
 
 import rpi_power_monitor.influx_interface as infl
-from rpi_power_monitor.common import recover_influx_container
 from rpi_power_monitor.config import ACCURACY_CALIBRATION
 from rpi_power_monitor.config import AC_TRANSFORMER_OUTPUT_VOLTAGE
 from rpi_power_monitor.config import ADC_CHANNELS
@@ -970,9 +969,8 @@ if __name__ == '__main__':
             if (db_settings['host'] == 'localhost' or
                     '127.0' in db_settings['host'] or
                     rpm.get_ip() in db_settings['host']):
-                if recover_influx_container():
-                    infl.init_db()
-                    rpm.run_main()
+                logger.critical(f"Could not connect to InfluxDB on this Pi. Please check the status of Influx with 'sudo systemctl status influxdb'.")
+                sys.exit()
             else:
                 logger.info(
                     f"Could not connect to your remote database at {db_settings['host']}:{db_settings['port']}. "
