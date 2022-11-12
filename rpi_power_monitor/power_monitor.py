@@ -1136,7 +1136,8 @@ if __name__ == '__main__':
                 if (db_settings['host'] == 'localhost' or
                         '127.0' in db_settings['host'] or
                         rpm.get_ip() in db_settings['host']):
-                    recover_influx_container()
+                    logger.critical("Unable to connect to InfluxDB on this Pi. Please check the database status with 'sudo systemctl status influxdb' to diagnose the issue.")
+                    sys.exit()
                 else:
                     logger.info(
                         "Could not connect to your remote database. "
