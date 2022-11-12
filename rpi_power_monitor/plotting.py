@@ -1,23 +1,21 @@
 import plotly
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
-from datetime import datetime
-
 
 # This package is imported by power-monitor.py
-# plot_data will be called when power-monitor.py is started in debug mode. See the documentation for more information about debug mode.
+# plot_data will be called when power-monitor.py is started in debug mode.
+# See the documentation for more information about debug mode.
 
 webroot = '/var/www/html'
 
 
 def plot_data(samples, title, *args, **kwargs):
-    # Plots the raw sample data from the individual CT channels and the AC voltage channel.
+    """ Plots the raw sample data from the individual CT channels and the AC voltage channel. """
     
     # Check to see if the sample rate was included in the parameters passed in.
     if kwargs:
         if 'sample_rate' in kwargs.keys():
             sample_rate = kwargs['sample_rate']
-    
     else:
         sample_rate = None
 
@@ -60,7 +58,6 @@ def plot_data(samples, title, *args, **kwargs):
             fig.add_trace(go.Scatter(x=x, y=samples['vWave_ct5'], mode='lines', name='New V wave (ct5)'), secondary_y=True)
             fig.add_trace(go.Scatter(x=x, y=samples['vWave_ct6'], mode='lines', name='New V wave (ct6)'), secondary_y=True)
 
-
     fig.update_layout(
         title=title,
         xaxis_title='Sample Number',
@@ -74,7 +71,6 @@ def plot_data(samples, title, *args, **kwargs):
     if sample_rate:
         sample_rate = f'<p>Sample Rate: {sample_rate} KSPS</p>'
         div += sample_rate
-    
 
     with open(f"{webroot}/{title.replace(' ', '_')}.html", 'w') as f:
         f.write(div)
