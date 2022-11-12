@@ -21,15 +21,15 @@ There are two ways to install.
 ### Clone the repository
 
 ```bash
-git clone https://github.com/David00/rpi-power-monitor
+git clone https://github.com/David00/rpi-power-monitor rpi_power_monitor
 ```
 
 Then, to run, for example:
 
 ```bash
-cd rpi-power-monitor
+cd rpi_power_monitor
 
-python3 -m pip install -r requirements.txt
+python3 -m pip install .
 python3 power_monitor.py terminal
 ```
 
