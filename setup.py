@@ -31,7 +31,7 @@ setup(
         "influxdb==5.2.3",
         "prettytable==0.7.2",
         "plotly==4.5.4",
-        "spidev==3.5",
+        "spidev==3.6",
         "requests==2.21.0",
     ],
     license="GNU General Public License (GPLv3)",
