@@ -2,7 +2,7 @@
 
 The best and most reliable way to do this is to first have your Home Assistant server using storage that isnt a micro SD card (common for basic HA set-ups using a Raspberry Pi). The issue with SD cards is they burn out quickly when they are constantly being written to. My setup, for example, is a Raspberry Pi 4b 8gb in an Argon One M.2 case with a 240gb m.2 Sata Drive. Really, any USB drive will do (hard disk or SSD). You'll need to set your RPi to boot from USB. I wont get into how to set that up. There is plenty of documentation on how to do this. This also isnt the only way, but again, I wont get into it. IF you have your HA set up a different way, you're already way smarter than I am and already know how to setup things up with your rig.
 
-The other option is to continue to use the RPi Power Monitor as your influxdb "server" but again, keep in mind you're on borrowed time with your SD card. Make sure you have a high quality name brand SD card rated at A1 or higher. If you plan to use your RPi Power Monitor as the InfluxDB server, scroll down to the "Setting Up Sensors" section.
+The other option is to continue to use the RPi Power Monitor as your influxdb "server" but again, keep in mind you're on borrowed time with your SD card. Make sure you have a high quality name brand SD card rated at A1 or higher. If you plan to use your RPi Power Monitor as the InfluxDB server, scroll down to the [Setting Up Sensors](https://github.com/emersonsc/rpi-power-monitor/tree/master/Home%20Assistant#setting-up-sensors) section.
 
 ---
 
