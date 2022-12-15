@@ -8,53 +8,55 @@ The other option is to continue to use the RPi Power Monitor as your influxdb "s
 
 ## Using You Home Assistant Server
 
-1.) You'll need to first install the InfluxDB Add-On. The installation of this add-on is pretty straightforward and not different in comparison to installing any other add-on.
+1. You'll need to first install the InfluxDB Add-On. The installation of this add-on is pretty straightforward and not different in comparison to installing any other add-on.
 
-    A.) Search for the “InfluxDB” add-on in the add-on store and install it.
-    B.) Start the “InfluxDB” add-on.
-    C.) Make sure "Start on Boot" and "Show in Side Bar" are turned on
-    D.) Check the logs of the “InfluxDB” to see if everything went well.
-    E.) Click the “OPEN WEB UI” button!
+   - Search for the “InfluxDB” add-on in the add-on store and install it.
+   - Start the “InfluxDB” add-on.
+   - Make sure "Start on Boot" and "Show in Side Bar" are turned on
+   - Check the logs of the “InfluxDB” to see if everything went well.
+   - Click the “OPEN WEB UI” button!
   
-2.) Next you need to set up a database.
+2. Next you need to set up a database.
 
-    A.) Click the Crown Icon (InfluxDB Admin)
-    B.) Within the Database tab, click "Create Database"
-    C.) Name the new database power_meter
-    D.) Click the green check mark
+    - Click the Crown Icon (InfluxDB Admin)
+    - Within the Database tab, click "Create Database"
+    - Name the new database power_meter
+    - Click the green check mark
     
-3.) Now you need to set up a user
+3. Now you need to set up a user
 
-    A.) Click the Users tab within the InfluxDB Admin menu (tab below Database)
-    B.) create username and password. DO NOT USE SPECIAL CHARACTERS.
-    C.) click the green check mark
-    D.) click the -- under permissions and set to all
-    E.) click apply
+    - Click the Users tab within the InfluxDB Admin menu (tab below Database)
+    - create username and password. DO NOT USE SPECIAL CHARACTERS.
+    - click the green check mark
+    - click the -- under permissions and set to all
+    - click apply
     
-4.) Tell your RPi Power Monitor what InFluxDB server to use
+4. Tell your RPi Power Monitor what InFluxDB server to use
 
-    A.) SSH into your RPi Power Monitor
-    B.) run the command  nano ~/rpi_power_monitor/rpi_power_monitor/config.py
-    C.) scroll to the # InfluxDB Settings
-    D.) change the host from 'localhost' to what ever your local IP address is for you HA server. Example '192.168.1.20'
-    E.) change the username to what ever you created in step 3-B. Example 'homeassistant'
-    F.) change the password to what ever you created in step 3-B. Example 'password'
-    G.) exit and save the file
-    H.) Update the rpi_power_monitor module with the changes you just applied:
+    - SSH into your RPi Power Monitor
+    - run the following command: ``` nano ~/rpi_power_monitor/rpi_power_monitor/config.py ```
+    - scroll to the # InfluxDB Settings
+    - change the host from 'localhost' to what ever your local IP address is for you HA server. Example '192.168.1.20'
+    - change the username to what ever you created in step 3-B. Example 'homeassistant'
+    - change the password to what ever you created in step 3-B. Example 'password'
+    - exit and save the file
+    - Update the rpi_power_monitor module with the changes you just applied:
     
-        cd ~/rpi_power_monitor
-        pip install .
+```    
+cd ~/rpi_power_monitor
+pip install .
+``` 
  
             
-5.) Lets now verify you have data flowing into the HA InfluxDB
+5. Lets now verify you have data flowing into the HA InfluxDB
 
-    A.) On your HA home page, open up the InfluxDB GUI.
-    B.) Click the line graph icon (explore)
-    C.) Click Add a Query
-    D.) under DB.RetentionPolicy, you should see the list autopopulate. Click power_monitor.autogen
-    E.) under "Measurements & Tags" you should see home_load, net, raw_cts, solar, voltages. net and raw_cts will have sub options.
-    F.) each one should have at least on option under "Fields" depending on the measurement chosen.
-    G.) make sure each field for each measurement is populating data
+    - On your HA home page, open up the InfluxDB GUI.
+    - Click the line graph icon (explore)
+    - Click Add a Query
+    - under DB.RetentionPolicy, you should see the list autopopulate. Click power_monitor.autogen
+    - under "Measurements & Tags" you should see home_load, net, raw_cts, solar, voltages. net and raw_cts will have sub options.
+    - each one should have at least on option under "Fields" depending on the measurement chosen.
+    - make sure each field for each measurement is populating data
     
 ---
     
