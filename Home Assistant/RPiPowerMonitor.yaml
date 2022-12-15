@@ -1,0 +1,125 @@
+sensor:
+  - platform: influxdb
+    host: 
+    database: power_monitor
+    username: !secret influxdb_user
+    password: !secret influxdb_pass
+    queries:
+    - name: CT-1 Power
+      where: '"ct" = ''1'' and time > now() - 1m'
+      measurement: raw_cts
+      field: "power"
+      group_function: mean
+      database: power_monitor
+      unit_of_measurement: W
+      value_template: '{{ value | round(1) }}'
+    - name: CT-2 Power
+      where: '"ct" = ''2'' and time > now() - 1m'
+      measurement: raw_cts
+      field: "power"
+      group_function: mean
+      database: power_monitor
+      unit_of_measurement: W
+      value_template: '{{ value | round(1) }}'
+    - name: CT-3 Power
+      where: '"ct" = ''3'' and time > now() - 1m'
+      measurement: raw_cts
+      field: "power"
+      group_function: mean
+      database: power_monitor
+      unit_of_measurement: W
+      value_template: '{{ value | round(1) }}'
+    - name: CT-4 Power
+      where: '"ct" = ''4'' and time > now() - 1m'
+      measurement: raw_cts
+      field: "power"
+      group_function: mean
+      database: power_monitor
+      unit_of_measurement: W
+      value_template: '{{ value | round(1) }}'
+    - name: CT-5 Power
+      where: '"ct" = ''5'' and time > now() - 1m'
+      measurement: raw_cts
+      field: "power"
+      group_function: mean
+      database: power_monitor
+      unit_of_measurement: W
+      value_template: '{{ value | round(1) }}'
+    - name: CT-6 Power
+      where: '"ct" = ''6'' and time > now() - 1m'
+      measurement: raw_cts
+      field: "power"
+      group_function: mean
+      database: power_monitor
+      unit_of_measurement: W
+      value_template: '{{ value | round(1) }}'
+    - name: Home Power Use
+      where: 'true and time > now() - 1m'
+      measurement: home_load
+      field: "power"
+      group_function: mean
+      database: power_monitor
+      unit_of_measurement: W
+      value_template: '{{ value | round(1) }}'
+    - name: Home Input Voltage
+      where: 'true and time > now() - 1m'
+      measurement: voltages
+      field: "voltage"
+      group_function: last
+      database: power_monitor
+      unit_of_measurement: V
+      value_template: '{{ value | round(1) }}'
+    - name: CT-1 Amperes
+      where: '"ct" = ''1'' and time > now() - 1m'
+      measurement: raw_cts
+      field: "current"
+      group_function: mean
+      database: power_monitor
+      unit_of_measurement: A
+      value_template: '{{ value | round(1) }}'
+    - name: CT-2 Amperes
+      where: '"ct" = ''2'' and time > now() - 1m'
+      measurement: raw_cts
+      field: "current"
+      group_function: mean
+      database: power_monitor
+      unit_of_measurement: A
+      value_template: '{{ value | round(1) }}'
+    - name: CT-3 Amperes
+      where: '"ct" = ''3'' and time > now() - 1m'
+      measurement: raw_cts
+      field: "current"
+      group_function: mean
+      database: power_monitor
+      unit_of_measurement: A
+      value_template: '{{ value | round(1) }}'
+    - name: CT-4 Amperes
+      where: '"ct" = ''4'' and time > now() - 1m'
+      measurement: raw_cts
+      field: "current"
+      group_function: mean
+      database: power_monitor
+      unit_of_measurement: A
+      value_template: '{{ value | round(1) }}'
+    - name: CT-5 Amperes
+      where: '"ct" = ''5'' and time > now() - 1m'
+      measurement: raw_cts
+      field: "current"
+      group_function: mean
+      database: power_monitor
+      unit_of_measurement: A
+      value_template: '{{ value | round(1) }}'
+    - name: CT-6 Amperes
+      where: '"ct" = ''6'' and time > now() - 1m'
+      measurement: raw_cts
+      field: "current"
+      group_function: mean
+      database: power_monitor
+      unit_of_measurement: A
+      value_template: '{{ value | round(1) }}'
+      
+  - platform: integration
+    source: sensor.home_power_use
+    name: Home Power Useage
+    unit_prefix: k
+    round: 6
