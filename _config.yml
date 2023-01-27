@@ -1,3 +1,17 @@
-remote_theme: pages-themes/slate@v0.2.0
-plugins:
-- jekyll-remote-theme
+# remote_theme: pages-themes/slate@v0.2.0
+# plugins:
+# - jekyll-remote-theme
+
+# defaults:
+#   -
+
+
+collections:
+  v0.2.0:
+    output: true
+    version: v0.2.0
+  v0.3.0:
+    output: true
+    version: v0.3.0
+
+  
