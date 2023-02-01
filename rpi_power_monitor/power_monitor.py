@@ -144,6 +144,12 @@ class RPiPowerMonitor:
         self.consumption_channels = [int(channel.split('_')[-1]) for channel, settings in config['current_transformers'].items() if settings['type'] == 'consumption' and settings['enabled'] == True]
         logger.debug(f"Identified {len(self.consumption_channels)} consumption channels: ({self.consumption_channels})")
 
+        # Two-pole validation
+        for channel, settings in config['current_transformers'].items():
+            if 'two_pole' not in settings.keys():
+                logger.critical(f"{channel.capitalize()} is missing the two_pole setting in the config file. Please make sure the config has an entry for 'two_pole' and try again.")
+                self.cleanup(-1)
+
     def get_db_client(self):
         '''Creates an InfluxDB Client using the loaded configuration.'''
 
@@ -422,7 +428,7 @@ class RPiPowerMonitor:
                 sq_ct6 = ct6 * ct6
                 sum_squared_current_ct6 += sq_ct6
 
-        
+        results = dict()
 
         if ct1_samples:
             avg_raw_current_ct1 = sum_raw_current_ct1 / num_samples
@@ -433,10 +439,20 @@ class RPiPowerMonitor:
             rms_current_ct1 = sqrt(mean_square_current_ct1 - (avg_raw_current_ct1 * avg_raw_current_ct1)) * ct1_scaling_factor
             rms_voltage_1 = sqrt(mean_square_voltage_1 - (avg_raw_voltage_1 * avg_raw_voltage_1)) * voltage_scaling_factor
             apparent_power_1 = rms_voltage_1 * rms_current_ct1
+            if self.config['current_transformers']['channel_1']['two_pole']:
+                real_power_1 = real_power_1 * 2
+                rms_current_ct1 = rms_current_ct1 * 2
             try:
                 power_factor_1 = real_power_1 / apparent_power_1
             except ZeroDivisionError:
                 power_factor_1 = 0
+            results[1] = {
+                'type': self.config['current_transformers']['channel_1']['type'],
+                'power': real_power_1,
+                'current': rms_current_ct1,
+                'voltage': rms_voltage_1,
+                'pf': power_factor_1
+            }
 
         if ct2_samples:
             avg_raw_current_ct2 = sum_raw_current_ct2 / num_samples
@@ -447,10 +463,20 @@ class RPiPowerMonitor:
             rms_current_ct2 = sqrt(mean_square_current_ct2 - (avg_raw_current_ct2 * avg_raw_current_ct2)) * ct2_scaling_factor
             rms_voltage_2 = sqrt(mean_square_voltage_2 - (avg_raw_voltage_2 * avg_raw_voltage_2)) * voltage_scaling_factor
             apparent_power_2 = rms_voltage_2 * rms_current_ct2
+            if self.config['current_transformers']['channel_2']['two_pole']:
+                real_power_2 = real_power_2 * 2
+                rms_current_ct2 = rms_current_ct2 * 2
             try:
                 power_factor_2 = real_power_2 / apparent_power_2
             except ZeroDivisionError:
                 power_factor_2 = 0
+            results[2] = {
+                'type': self.config['current_transformers']['channel_2']['type'],
+                'power': real_power_2,
+                'current': rms_current_ct2,
+                'voltage': rms_voltage_2,
+                'pf': power_factor_2
+            }
 
         if ct3_samples:
             avg_raw_current_ct3 = sum_raw_current_ct3 / num_samples
@@ -461,10 +487,20 @@ class RPiPowerMonitor:
             rms_current_ct3 = sqrt(mean_square_current_ct3 - (avg_raw_current_ct3 * avg_raw_current_ct3)) * ct3_scaling_factor
             rms_voltage_3 = sqrt(mean_square_voltage_3 - (avg_raw_voltage_3 * avg_raw_voltage_3)) * voltage_scaling_factor
             apparent_power_3 = rms_voltage_3 * rms_current_ct3
+            if self.config['current_transformers']['channel_3']['two_pole']:
+                real_power_3 = real_power_3 * 2
+                rms_current_ct3 = rms_current_ct3 * 2
             try:
                 power_factor_3 = real_power_3 / apparent_power_3
             except ZeroDivisionError:
                 power_factor_3 = 0
+            results[3] = {
+                'type': self.config['current_transformers']['channel_3']['type'],
+                'power': real_power_3,
+                'current': rms_current_ct3,
+                'voltage': rms_voltage_3,
+                'pf': power_factor_3
+            }
 
         if ct4_samples:
             avg_raw_current_ct4 = sum_raw_current_ct4 / num_samples
@@ -475,10 +511,20 @@ class RPiPowerMonitor:
             rms_current_ct4 = sqrt(mean_square_current_ct4 - (avg_raw_current_ct4 * avg_raw_current_ct4)) * ct4_scaling_factor
             rms_voltage_4 = sqrt(mean_square_voltage_4 - (avg_raw_voltage_4 * avg_raw_voltage_4)) * voltage_scaling_factor
             apparent_power_4 = rms_voltage_4 * rms_current_ct4
+            if self.config['current_transformers']['channel_4']['two_pole']:
+                real_power_4 = real_power_4 * 2
+                rms_current_ct4 = rms_current_ct4 * 2
             try:
                 power_factor_4 = real_power_4 / apparent_power_4
             except ZeroDivisionError:
                 power_factor_4 = 0
+            results[4] = {
+                'type': self.config['current_transformers']['channel_4']['type'],
+                'power': real_power_4,
+                'current': rms_current_ct4,
+                'voltage': rms_voltage_4,
+                'pf': power_factor_4
+            }
 
         if ct5_samples:
             avg_raw_current_ct5 = sum_raw_current_ct5 / num_samples
@@ -489,10 +535,20 @@ class RPiPowerMonitor:
             rms_current_ct5 = sqrt(mean_square_current_ct5 - (avg_raw_current_ct5 * avg_raw_current_ct5)) * ct5_scaling_factor
             rms_voltage_5 = sqrt(mean_square_voltage_5 - (avg_raw_voltage_5 * avg_raw_voltage_5)) * voltage_scaling_factor
             apparent_power_5 = rms_voltage_5 * rms_current_ct5
+            if self.config['current_transformers']['channel_5']['two_pole']:
+                real_power_5 = real_power_5 * 2
+                rms_current_ct5 = rms_current_ct5 * 2
             try:
                 power_factor_5 = real_power_5 / apparent_power_5
             except ZeroDivisionError:
                 power_factor_5 = 0
+            results[5] = {
+                'type': self.config['current_transformers']['channel_5']['type'],
+                'power': real_power_5,
+                'current': rms_current_ct5,
+                'voltage': rms_voltage_5,
+                'pf': power_factor_5
+            }
 
         if ct6_samples:
             avg_raw_current_ct6 = sum_raw_current_ct6 / num_samples
@@ -503,58 +559,13 @@ class RPiPowerMonitor:
             rms_current_ct6 = sqrt(mean_square_current_ct6 - (avg_raw_current_ct6 * avg_raw_current_ct6)) * ct6_scaling_factor
             rms_voltage_6 = sqrt(mean_square_voltage_6 - (avg_raw_voltage_6 * avg_raw_voltage_6)) * voltage_scaling_factor
             apparent_power_6 = rms_voltage_6 * rms_current_ct6
+            if self.config['current_transformers']['channel_6']['two_pole']:
+                real_power_6 = real_power_6 * 2
+                rms_current_ct6 = rms_current_ct6 * 2
             try:
                 power_factor_6 = real_power_6 / apparent_power_6
             except ZeroDivisionError:
                 power_factor_6 = 0        
-
-        results = dict()
-        if ct1_samples:
-            results[1] = {
-                'type': self.config['current_transformers']['channel_1']['type'],
-                'power': real_power_1,
-                'current': rms_current_ct1,
-                'voltage': rms_voltage_1,
-                'pf': power_factor_1
-            }
-
-        if ct2_samples:
-            results[2] = {
-                'type': self.config['current_transformers']['channel_2']['type'],
-                'power': real_power_2,
-                'current': rms_current_ct2,
-                'voltage': rms_voltage_2,
-                'pf': power_factor_2
-            }
-
-        if ct3_samples:
-            results[3] = {
-                'type': self.config['current_transformers']['channel_3']['type'],
-                'power': real_power_3,
-                'current': rms_current_ct3,
-                'voltage': rms_voltage_3,
-                'pf': power_factor_3
-            }
-
-        if ct4_samples:
-            results[4] = {
-                'type': self.config['current_transformers']['channel_4']['type'],
-                'power': real_power_4,
-                'current': rms_current_ct4,
-                'voltage': rms_voltage_4,
-                'pf': power_factor_4
-            }
-
-        if ct5_samples:
-            results[5] = {
-                'type': self.config['current_transformers']['channel_5']['type'],
-                'power': real_power_5,
-                'current': rms_current_ct5,
-                'voltage': rms_voltage_5,
-                'pf': power_factor_5
-            }
-
-        if ct6_samples:
             results[6] = {
                 'type': self.config['current_transformers']['channel_6']['type'],
                 'power': real_power_6,
@@ -562,7 +573,6 @@ class RPiPowerMonitor:
                 'voltage': rms_voltage_6,
                 'pf': power_factor_6
             }
-
         
         # Grab the voltage from one of the enabled channels:
         results['voltage'] = results[self.enabled_channels[0]]['voltage']
