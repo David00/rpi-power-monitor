@@ -1,11 +1,14 @@
 ---
+title: v0.2.0
+parent: Documentation
+nav_order: 10
+has_children: true
 layout: default
-title: Introduction
 ---
 
-# v0.3.0 Documentation
+# v0.2.0 Documentation
 
-> Release Date: 
+Release Date: November 12, 2022
 
 ## Introduction
 

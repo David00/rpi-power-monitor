@@ -1,19 +1,23 @@
 ---
-layout: default
 title: Acquiring the Hardware
+parent: General
+grand_parent: Documentation
+nav_order: 2
+layout: default
 ---
 
 ## Acquiring the Hardware
 
 Here's a quick summary of everything you'll need:
 
-* Raspberry Pi 4B with 2GB+ of RAM. A 3B+ will also work, but is not ideal with the 1GB of RAM.
+* Raspberry Pi 4B with 2GB+ of RAM. A 3B+ will also work, but perform slower.
 * High Endurance microSD card at least 32GB.
 * [Factory assembled power monitor PCB](https://power-monitor.dalbrecht.tech/product/pre-soldered-pcb-v2/), or the [DIY self-assembly kit](https://power-monitor.dalbrecht.tech/product/diy-power-monitor-kit/)
 * [Current Transformers](https://power-monitor.dalbrecht.tech/product-category/current-transformers/) (see ["Selecting CTs"](#selecting-cts) below)
 * [9V AC to AC Supply](https://power-monitor.dalbrecht.tech/product/9v-ac-transformer-north-america-only/)
 
-Purchasing items directly from my shop in the links allows me to continuously maintain this open source project, work on improvements, and provide user support. I am very thankful for your support!
+
+Purchasing items directly from [my shop](https://power-monitor.dalbrecht.tech/) in the links above allows me to continuously maintain this open source project, work on improvements, and provide user support. I am very thankful for your support!
 
 
 ### Selecting CTs
@@ -29,7 +33,21 @@ When choosing a CT, select a CT with a rating that is at or slightly above the r
 It is possible that a conductor is too large for the sensor according to the breaker rating, so you should also have the electrician double check the diameter of each wire that you want to order and make sure the selected sensor will fit.
 
 
-### Using a different CT
+{: .example-cream }
+> Continuing the [example](/docs/general/create-your-plan#planning) from the planning section... I would purchase the following to meet the requirements, **after** ensuring the conductors will fit the diameter of the CT sensors:
+> >
+> Mains: 2x [200A sensors](https://power-monitor.dalbrecht.tech/product/sct-t24-200a-current-transformer-24mm/)
+> >
+> Solar: 1x [100A sensor](https://power-monitor.dalbrecht.tech/product/sct-t16-100a-current-transformer-16mm/)
+> >
+> AC Unit: 1x [30A sensor](https://power-monitor.dalbrecht.tech/product/sct-t10-30a-current-transformer-10mm/)
+> >
+> Master Bedroom: 1x [20A sensor](https://power-monitor.dalbrecht.tech/product/sct-t10/)
+> >
+> EV Charger: 1x [60A sensor](https://power-monitor.dalbrecht.tech/product/sct-t10-60a-current-transformer-10mm/)
+
+
+### Using a third-party CT
 
 The CTs in my shop are manufactured specifically for my project. It is possible to use other sensors, but it's not always ideal.  If using a sensor you have on hand, it should be of the "current-output" type with a maximum output of ~50mA.  If your sensor is the "voltage-output" type, the ideal (and absolute maximum) output is 1.65V.  Do not use a sensor that puts out 5V as this will likely cause damage to the ADC.
 

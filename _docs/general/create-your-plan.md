@@ -1,30 +1,49 @@
 ---
-layout: default
 title: Create Your Plan
+parent: General
+grand_parent: Documentation
+nav_order: 1
+layout: default
 ---
 
 ## Create Your Plan
 
 
 ### Introduction
-The power monitor supports six total current sensors, so you'll need to determine which six circuits you want to monitor.
+
+The power monitor supports six total current sensors. Here are three different monitoring approaches (you can combine all three of them)
+
+### Whole Home Monitoring
 
 For whole-home monitoring, you don't need to monitor every circuit. You can capture your entire home's usage just by measuring the main feed (or both main feeds if in North America). The "mains", as they're referred to, connect from the electrical meter to the main breaker in your panel.  I will assume that you are in North America with a 120V, 60Hz grid connection, delivered over two legs.  If you are outside North America and have a grid voltage of 230V at 50Hz, you will only have one main (unless you have three-phase service).
 
+
+### Circuit Monitoring
+
 If you are more interested in specific usage for items like electric-vehicle chargers, air-conditions & heat pumps, etc, make sure you can identify the circuit breakers that power those specific circuits. 
 
-Lastly, if you have a generator, or a grid-tied solar inverter, (or any other source of grid-tied production), make sure you have identified the breakers that connect to those systems.
+
+### Solar / Production Monitoring
+
+The power monitor supports monitoring production sources, like any grid-tied solar inverters, generators, or wind turbines. The data from these sources are used to calculate your net power, by default, but you can track them separately.  When planning to monitor production sources, make sure to identify the breakers that connect to those systems.
+
+{: .note-aqua }
+Only AC sources can be monitored with this project.
+
 
 ### Planning
-As mentioned above, whole-home monitoring requires only to measure the mains.  So, make a note the rating of the big main breaker that feeds the panel. The labels are often stamped directly into the toggle switch of the breaker, or on the circuit breaker body itself.
+As mentioned above, whole-home monitoring requires only to measure the mains.  So, note the rating of the big main breaker that feeds the panel. The labels are often stamped directly into the toggle switch of the breaker, or on the circuit breaker body itself.
 
-Next, make a note of the rating of any additional circuits you want to measure.  Also make note of the "width" of the breaker (is it 1-pole, or 2-pole?) You should have something like this:
+Next, make write down the rating of any additional circuits you want to measure.  Also make note of the "width" of the breaker (is it 1-pole, or 2-pole?) You should have something like this:
 
 * Mains: 200A (typically always 2-pole in North America)
 * Solar Inverter: 80A (2-pole)
 * AC Unit #1:     30A (2-pole)
-* AC Unit #2:     30A (2-pole)
-* Tesla Charger:  60A (2-pole)
+* Master Bedroom: 15A
+* Electric Vehicle (EV) Charger:  60A (2-pole)
+
+{: .note-aqua }
+The list above will be used as a sample configuration throughout the rest of the documentation.
 
 With the two mains, and four additional circuits, this will fully populate the monitor's six inputs.
 
