@@ -309,7 +309,7 @@ def rollup_data(last_completed=None):
             rs = client.query(query, database=TEMP_DB_NAME)
 
             # Net power, current
-            query = f'''SELECT mean(power) as power, mean(current) as current INTO {NEW_DB_NAME}.rp_5min.net_5m FROM net WHERE time > '{this_start}' and time < '{this_end}' GROUP BY TIME(5m)'''
+            query = f'''SELECT mean(power) as power, mean(current) as current INTO {NEW_DB_NAME}.rp_5min.net_power_5m FROM net WHERE time > '{this_start}' and time < '{this_end}' GROUP BY TIME(5m)'''
             rs = client.query(query, database=TEMP_DB_NAME)
             
             # Net energy
@@ -317,7 +317,7 @@ def rollup_data(last_completed=None):
             rs = client.query(query, database=TEMP_DB_NAME)
 
             # Solar power, current
-            query = f'''SELECT mean(power) AS power, mean(current) AS current INTO {NEW_DB_NAME}.rp_5min.solar_5m FROM solar WHERE time > '{this_start}' and time < '{this_end}' GROUP BY time(5m)'''
+            query = f'''SELECT mean(power) AS power, mean(current) AS current INTO {NEW_DB_NAME}.rp_5min.solar_power_5m FROM solar WHERE time > '{this_start}' and time < '{this_end}' GROUP BY time(5m)'''
             rs = client.query(query, database=TEMP_DB_NAME)
             
             # Solar energy
