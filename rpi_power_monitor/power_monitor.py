@@ -115,7 +115,7 @@ class RPiPowerMonitor:
             # Net Power, Energy
             if 'cq_net_power_5m' not in existing_cqs:
                 for duration, rp_name in retention_policies.items():
-                    self.client.create_continuous_query(f'cq_net_power_{duration}', f'SELECT mean("power") AS "power", mean("current") AS "current" INTO "{rp_name}"."net_{duration}" FROM "net" GROUP BY time({duration})')
+                    self.client.create_continuous_query(f'cq_net_power_{duration}', f'SELECT mean("power") AS "power", mean("current") AS "current" INTO "{rp_name}"."net_power_{duration}" FROM "net" GROUP BY time({duration})')
                     logger.debug(f"Created continuous query: cq_net_power_{duration}")
 
             if 'cq_net_energy_5m' not in existing_cqs:
@@ -126,7 +126,7 @@ class RPiPowerMonitor:
             # Solar Power, Energy
             if 'cq_solar_power_5m' not in existing_cqs:
                 for duration, rp_name in retention_policies.items():
-                    self.client.create_continuous_query(f'cq_solar_power_{duration}', f'SELECT mean("real_power") AS "power", mean("current") AS "current" INTO "{rp_name}"."solar_{duration}" FROM "solar" GROUP BY time({duration})')
+                    self.client.create_continuous_query(f'cq_solar_power_{duration}', f'SELECT mean("real_power") AS "power", mean("current") AS "current" INTO "{rp_name}"."solar_power_{duration}" FROM "solar" GROUP BY time({duration})')
                     logger.debug(f"Created continuous query: cq_solar_power_{duration}")
             
             if 'cq_solar_energy_5m' not in existing_cqs:
