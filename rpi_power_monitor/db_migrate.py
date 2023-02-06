@@ -51,6 +51,9 @@ client = InfluxDBClient(
     database=database
     )
 
+# Create the database
+client.create_database(NEW_DB_NAME)
+
 
 retention_policies = {
     'rp_5min' : {
