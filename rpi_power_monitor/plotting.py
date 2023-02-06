@@ -2,9 +2,7 @@ import plotly
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 
-# This package is imported by power-monitor.py
-# plot_data will be called when power-monitor.py is started in debug mode.
-# See the documentation for more information about debug mode.
+# This package is imported by power-monitor.py and is used to create interactive HTML plots of the raw data collected by the power monitor.
 
 webroot = '/var/www/html'
 
