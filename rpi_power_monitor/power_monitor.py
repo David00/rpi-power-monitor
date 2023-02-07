@@ -126,12 +126,12 @@ class RPiPowerMonitor:
             # Solar Power, Energy
             if 'cq_solar_power_5m' not in existing_cqs:
                 for duration, rp_name in retention_policies.items():
-                    self.client.create_continuous_query(f'cq_solar_power_{duration}', f'SELECT mean("real_power") AS "power", mean("current") AS "current" INTO "{rp_name}"."solar_power_{duration}" FROM "solar" GROUP BY time({duration})')
+                    self.client.create_continuous_query(f'cq_solar_power_{duration}', f'SELECT mean("power") AS "power", mean("current") AS "current" INTO "{rp_name}"."solar_power_{duration}" FROM "solar" GROUP BY time({duration})')
                     logger.debug(f"Created continuous query: cq_solar_power_{duration}")
             
             if 'cq_solar_energy_5m' not in existing_cqs:
                 for duration, rp_name in retention_policies.items():
-                    self.client.create_continuous_query(f'cq_solar_energy_{duration}', f'''SELECT integral("real_power") / 3600000 AS "energy" INTO "{rp_name}"."solar_energy_{duration}" FROM "sg_solar" GROUP BY time({duration})''')
+                    self.client.create_continuous_query(f'cq_solar_energy_{duration}', f'''SELECT integral("power") / 3600000 AS "energy" INTO "{rp_name}"."solar_energy_{duration}" FROM "solar" GROUP BY time({duration})''')
                     logger.debug(f"Created continuous query: cq_solar_energy_{duration}")
 
              # Individual CT Energies
@@ -144,7 +144,7 @@ class RPiPowerMonitor:
                 # Individual CT Power, Energy
                 if f'cq_ct{chan}_energy_5m' not in existing_cqs:
                     for duration, rp_name in retention_policies.items():
-                        self.client.create_continuous_query(f'cq_ct{chan}_energy_{duration}', f'''SELECT integral("real_power") / 3600000 AS "energy" INTO "{rp_name}"."ct{chan}_energy_{duration}" FROM "raw_cts" WHERE "ct" = '{chan}' GROUP BY time({duration})''')
+                        self.client.create_continuous_query(f'cq_ct{chan}_energy_{duration}', f'''SELECT integral("power") / 3600000 AS "energy" INTO "{rp_name}"."ct{chan}_energy_{duration}" FROM "raw_cts" WHERE "ct" = '{chan}' GROUP BY time({duration})''')
                         logger.debug(f"Created continuous query: cq_ct{chan}_energy_{duration}")
 
         except Exception as e:
