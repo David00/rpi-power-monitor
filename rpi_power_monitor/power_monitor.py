@@ -7,9 +7,7 @@ import sys
 import timeit
 from datetime import datetime
 from math import sqrt, cos
-from socket import AF_INET
-from socket import SOCK_DGRAM
-from socket import socket, getaddrinfo
+from socket import AF_INET, SOCK_DGRAM, socket, getaddrinfo
 import ipaddress
 from textwrap import dedent
 from time import sleep
@@ -18,10 +16,8 @@ import spidev
 from prettytable import PrettyTable
 import argparse
 import pathlib
-import urllib3
 
 from rpi_power_monitor.plotting import plot_data
-import rpi_power_monitor.influx_interface as infl
 from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBServerError
 
