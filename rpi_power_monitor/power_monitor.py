@@ -35,10 +35,13 @@ ch_formatter = logging.Formatter('%(levelname)s : %(message)s')
 ch.setFormatter(ch_formatter)
 logger.addHandler(ch)
 
+
+module_root = pathlib.Path(__file__).parent
+
 parser = argparse.ArgumentParser(description='Power Monitor CLI Interface', epilog='Please see the project documentation at https://github.com/david00/rpi-power-monitor#readme for further usage instructions.')
 parser.add_argument('--mode', type=str, help="Operating Mode. Defaults to 'main' if not specified.", default='main', required=False, choices=['main', 'terminal', 'plot'])
 parser.add_argument('--title', type=str, help="Optionally specify the title of the generated plot.", required=False)
-parser.add_argument('--config', type=pathlib.Path, help='path to config.toml file.', default='/home/pi/rpi-power-monitor/rpi_power_monitor/config.toml', required=False)
+parser.add_argument('--config', type=pathlib.Path, help='path to config.toml file.', default= os.path.join(module_root, 'config.toml'), required=False)
 parser.add_argument('-v', '--verbose', help='Increases verbosity of program output.', action='store_true')
 parser.add_argument('-V', '--version', help='Displays the power monitor software version and exits.', action='store_true')
 
@@ -173,7 +176,7 @@ class RPiPowerMonitor:
         
         return
 
-    def load_config(self, config_file=os.path.join('/home/pi/rpi-power-monitor/rpi_power_monitor', 'config.toml')):
+    def load_config(self, config_file=os.path.join(module_root, 'config.toml')):
         '''Loads the user's config.toml file and validates entries.'''
 
         logger.debug(f"Attempting to loading config from {config_file}")
