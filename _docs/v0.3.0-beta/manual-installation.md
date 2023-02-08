@@ -1,6 +1,6 @@
 ---
 title: Manual Software Installation
-parent: v0.3.0
+parent: v0.3.0-beta
 grand_parent: Documentation
 layout: default
 nav_order: 10
@@ -8,4 +8,4 @@ nav_order: 10
 
 # Manual Installation
 
-TBD
+Coming soon.

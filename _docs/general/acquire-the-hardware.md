@@ -6,21 +6,31 @@ nav_order: 2
 layout: default
 ---
 
-## Acquiring the Hardware
+# Acquiring the Hardware
+{: .no_toc }
+
+<details open markdown="block">
+<summary>Table of Contents</summary>
+{: .text-delta }
+- TOC
+{:toc}
+</details>
 
 Here's a quick summary of everything you'll need:
 
 * Raspberry Pi 4B with 2GB+ of RAM. A 3B+ will also work, but perform slower.
 * High Endurance microSD card at least 32GB.
+* USB flash drive, at least 4GB, for automatic backups.
 * [Factory assembled power monitor PCB](https://power-monitor.dalbrecht.tech/product/pre-soldered-pcb-v2/), or the [DIY self-assembly kit](https://power-monitor.dalbrecht.tech/product/diy-power-monitor-kit/)
 * [Current Transformers](https://power-monitor.dalbrecht.tech/product-category/current-transformers/) (see ["Selecting CTs"](#selecting-cts) below)
 * [9V AC to AC Supply](https://power-monitor.dalbrecht.tech/product/9v-ac-transformer-north-america-only/)
 
 
+{: .note-cream }
 Purchasing items directly from [my shop](https://power-monitor.dalbrecht.tech/) in the links above allows me to continuously maintain this open source project, work on improvements, and provide user support. I am very thankful for your support!
 
 
-### Selecting CTs
+## Selecting CTs
 
 With the list that you've written down from the [previous step](./create-your-plan), you should know the ratings of the circuits you intend to monitor.
 
@@ -47,19 +57,19 @@ It is possible that a conductor is too large for the sensor according to the bre
 > EV Charger: 1x [60A sensor](https://power-monitor.dalbrecht.tech/product/sct-t10-60a-current-transformer-10mm/)
 
 
-### Using a third-party CT
+## Using a third-party CT
 
 The CTs in my shop are manufactured specifically for my project. It is possible to use other sensors, but it's not always ideal.  If using a sensor you have on hand, it should be of the "current-output" type with a maximum output of ~50mA.  If your sensor is the "voltage-output" type, the ideal (and absolute maximum) output is 1.65V.  Do not use a sensor that puts out 5V as this will likely cause damage to the ADC.
 
 
-### 9V AC Supply
+## 9V AC Supply
 
 The 9V AC to AC transformer provides the grid voltage reading to the power monitor.  It does not power the Raspberry Pi.  I only stock North American compatible AC transformers, so if you have a different grid, you'll need to source one yourself.  The required specs are:
 
-Output: 9V AC, 500mA
+Output: 9V AC, at least 100mA. <br />
 Plug type: 2.1 x 5.5mm, center positive
 
 
-### Summary
+## Summary
 
 Once you have your Pi and microSD card, you can move onto [the software](./install-the-software).

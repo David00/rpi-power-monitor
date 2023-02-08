@@ -4,14 +4,30 @@
 
 theme: just-the-docs
 
-# defaults:
-#   -
-#     scope:
-#       path: ""  # an empty string here means all files in the project
-#     values:
-#       layout: "minimal"
+# Search Settings
+search_enabled: true
+# Search Granularity
+search.heading_level: 1
 
-latest-version: v0.3.0
+# Copy button
+enable_copy_code_button: true
+
+#defaults:
+#  -
+#    scope:
+#      path: "*.md"
+#    values:
+#      layout: "default"
+
+
+# Latest version for the documentation
+latest-version: v0.3.0-beta
+
+# Latest version for the custom OS image (needs to be updated to support the 'v' in the version name of the image). The v0.2.0 image path is:
+# https://github.com/David00/rpi-power-monitor/releases/download/v0.2.0/Raspberry-Pi-OS-Lite_rpi_power_monitor-0.2.0+release.zip
+# So the path contains the 'v', but the filename does not.
+
+latest-os-image: 0.2.0
 
 collections:
   docs:
@@ -33,9 +49,18 @@ callouts:
   note-cream:
     title: Note
     color: palette-cream
+  reference-cream:
+    title: Reference
+    color: palette-cream
   note-aqua:
     title: Note
     color: palette-aqua
+  pro-aqua:
+    title: Pro Tip
+    color: palette-aqua
+  note-yellow:
+    title: Note
+    color: palette-yellow
   note-blue:
     title: Note
     color: palette-blue
@@ -47,27 +72,34 @@ callouts:
     color: palette-red
   warning:
     title: Warning
-    color: red
+    color: palette-red
+  danger:
+    title: Danger!
+    color: palette-red
 
-# // Custom Colors - these were in the just-the-docs gem, in _sass/support/_variables.scss
+# // Custom Colors - these were in the just-the-docs gem, in /home/david/gems/gems/just-the-docs-0.4.0.rc4/_sass/support/_variables.scss
 # https://coolors.co/palette/e63946-f1faee-a8dadc-457b9d-1d3557
 # $palette-red-000: #e63946;
 # $palette-red-100: #b62c38;
 # $palette-red-200: #9d2832;
 # $palette-red-300: #781e25;
-# $pallet-cream-000: #F1FAEE;
-# $pallet-cream-100: #d7e7d2;
-# $pallet-cream-200: #c0ccbd;
-# $pallet-cream-300: #929e8e;
-# $pallet-aqua-000: #A8DADC;
-# $pallet-aqua-100: #9eced0;
-# $pallet-aqua-200: #82afb1;
-# $pallet-aqua-300: #418b8e;
-# $pallet-blue-000: #457B9D;
-# $pallet-blue-100: #457B9D;
-# $pallet-blue-200: #457B9D;
-# $pallet-blue-300: #457B9D;
-# $pallet-dark-blue-000: #1D3557;
-# $pallet-dark-blue-100: #1D3557;
-# $pallet-dark-blue-200: #1D3557;
-# $pallet-dark-blue-300: #1D3557;
+# $palette-cream-000: #F1FAEE;
+# $palette-cream-100: #d7e7d2;
+# $palette-cream-200: #c0ccbd;
+# $palette-cream-300: #929e8e;
+# $palette-yellow-000: #f2f7b1;
+# $palette-yellow-100: #d5da98;
+# $palette-yellow-200: #b3b87c;
+# $palette-yellow-300: #899122;
+# $palette-aqua-000: #A8DADC;
+# $palette-aqua-100: #9eced0;
+# $palette-aqua-200: #82afb1;
+# $palette-aqua-300: #418b8e;
+# $palette-blue-000: #457B9D;
+# $palette-blue-100: #457B9D;
+# $palette-blue-200: #457B9D;
+# $palette-blue-300: #457B9D;
+# $palette-dark-blue-000: #1D3557;
+# $palette-dark-blue-100: #1D3557;
+# $palette-dark-blue-200: #1D3557;
+# $palette-dark-blue-300: #1D3557;

@@ -1,11 +1,10 @@
+---
+nav_order: 1
+---
+
 ## Welcome to the Power Monitor for Raspberry Pi!
 
-This project is a combination of custom hardware and software that will allow you to monitor your unique power situation in real time, including accurate consumption, generation, and net-production. The data are stored to a database and displayed in a Grafana dashboard for monitoring and reporting purposes.
-
-
-## Introduction
-
-The Raspberry Pi Power Monitor is a combination of custom hardware and software that will allow you to monitor your unique power situation in real time (<0.5 second intervals), including consumption, generation, and net-production. The data are stored to a database and displayed in a Grafana dashboard for monitoring and reporting purposes.
+The Raspberry Pi Power Monitor is a combination of custom hardware and software that will allow you to monitor your unique power situation in real time, including power consumption, generation, and net-status. The data are stored to a database and displayed in a Grafana dashboard for monitoring and reporting purposes.
 
 This project is derived from and inspired by the resources located at https://learn.openenergymonitor.org.
 

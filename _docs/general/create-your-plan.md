@@ -6,12 +6,23 @@ nav_order: 1
 layout: default
 ---
 
-## Create Your Plan
+# Create Your Plan
+{: .no_toc }
+
+<details open markdown="block">
+<summary>Table of Contents</summary>
+{: .text-delta }
+- TOC
+{:toc}
+</details>
 
 
-### Introduction
+## Introduction
 
 The power monitor supports six total current sensors. Here are three different monitoring approaches (you can combine all three of them)
+
+{: .note-aqua }
+Only AC sources can be monitored with this project.
 
 ### Whole Home Monitoring
 
@@ -27,11 +38,8 @@ If you are more interested in specific usage for items like electric-vehicle cha
 
 The power monitor supports monitoring production sources, like any grid-tied solar inverters, generators, or wind turbines. The data from these sources are used to calculate your net power, by default, but you can track them separately.  When planning to monitor production sources, make sure to identify the breakers that connect to those systems.
 
-{: .note-aqua }
-Only AC sources can be monitored with this project.
 
-
-### Planning
+## Planning
 As mentioned above, whole-home monitoring requires only to measure the mains.  So, note the rating of the big main breaker that feeds the panel. The labels are often stamped directly into the toggle switch of the breaker, or on the circuit breaker body itself.
 
 Next, make write down the rating of any additional circuits you want to measure.  Also make note of the "width" of the breaker (is it 1-pole, or 2-pole?) You should have something like this:
