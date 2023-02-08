@@ -1,6 +1,10 @@
 source "https://rubygems.org"
 
-gem "jekyll", "~> 4.3" # installed by `gem jekyll`
-# gem "webrick"        # required when using Ruby >= 3 and Jekyll <= 4.2.2
-
 gem "just-the-docs"
+gem "webrick"
+
+# For GitHub Pages
+# gem "jekyll", "~> 4.3" # installed by `gem jekyll`
+
+# For Local Development
+gem 'github-pages', group: :jekyll_plugins
