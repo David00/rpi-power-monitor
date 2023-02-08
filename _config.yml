@@ -5,7 +5,7 @@
 
 title: Power Monitor for Raspberry Pi
 description: All inclusive hardware and software project for complete home energy monitoring.
-theme: just-the-docs
+remote_theme: just-the-docs/just-the-docs
 
 url: https://david00.github.io/rpi-power-monitor/
 
