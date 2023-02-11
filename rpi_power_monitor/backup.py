@@ -150,6 +150,7 @@ def create_and_mount_path(device, mount_path):
     
     mounts = subprocess.run(f'mount | grep "{device}"', capture_output=True, shell=True)
     output = mounts.stdout.decode()
+    current_mount_path = None
     if device in output:
         if f'{device} on {mount_path}' in output:
             b_log.debug(f"Device {device} is already mounted.")
@@ -161,7 +162,7 @@ def create_and_mount_path(device, mount_path):
                 b_log.debug(f"{YELLOW}Your device is already mounted, but I was unable to determine current mount path. Please unmount your device with 'sudo umount /PATH/TO/MOUNTPOINT' and try again.{NC}")
                 exit()
             
-            b_log.debug(f"{YELLOW}Device {device} is mounted, but not to the intended target. Please unmount your backup drive with 'sudo umount {current_mount_point}' and run the script again.{NC}")
+            b_log.debug(f"{YELLOW}Device {device} is mounted, but not to the intended target. Please unmount your backup drive with 'sudo umount {current_mount_path}' and run the script again.{NC}")
             exit()
     # Mount the drive if it's not mounted (script returns above if it's already properly mounted)
     try:
