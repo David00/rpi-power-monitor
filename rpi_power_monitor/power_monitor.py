@@ -1132,6 +1132,3 @@ if __name__ == '__main__':
                 "Plot created! I could not determine the IP address of this machine."
                 "Visit your device's IP address in a web browser to view the list of charts "
                 "you've created using '--plot' mode.")
-
-
-import rpi_power_monitor.influx_interface as infl
