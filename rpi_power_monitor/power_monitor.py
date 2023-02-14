@@ -54,11 +54,26 @@ retention_policies = {
 class RPiPowerMonitor:
     """ Class to take readings from the MCP3008 and calculate power """
     def __init__(self, mode, config, spi=None):
+        self.pid = os.getpid()
         # Check to see if there is already a power monitor process running.
-        c = subprocess.run('sudo systemctl status power-monitor.service', shell=True, capture_output=True)
-        if 'active: running' in c.stdout.decode('utf-8').lower():
-            logger.warning("It appears the power monitor is already running in the background via systemd. Please stop the power monitor with the following command:\n'sudo systemctl stop power-monitor'")
-            self.cleanup(-1)
+        logger.debug("  ..Checking to see if the power monitor is already running or not...")
+        c = subprocess.run('sudo systemctl status power-monitor.service | grep "Main PID"', shell=True, capture_output=True)
+        output = c.stdout.decode('utf-8').lower()
+        if str(self.pid) not in output and len(output) > 10:
+                logger.warning("It appears the power monitor is already running in the background via systemd. Please stop the power monitor with the following command:\n'sudo systemctl stop power-monitor'")
+                self.cleanup(-1)
+        # Check process list in case user is running the power monitor manually in an SSH session.
+        c = subprocess.run('sudo ps -aux | grep "power_monitor.py" | grep -v "grep"', shell=True, capture_output=True)
+        output = c.stdout.decode('utf-8').lower()
+        if len(output.splitlines()) > 1:
+            if 'power_monitor.py' in c.stdout.decode('utf-8').lower():
+                for _ in range(6):
+                    output = output.replace('  ', ' ')
+                output = output.split(' ')
+                user, pid = output[0], output[1]
+                logger.warning(f"It appears that the user {user} is already running the power monitor in another session (process ID {pid}). You should not run two copies at the same time because they will compete with each other for access to the PCB.")
+                logger.warning(f"If you're not sure where or how the other power monitor session is running, you can kill it with the following command: kill -9 {pid}")
+                self.cleanup(-1)
 
         self.load_config(config)
         
