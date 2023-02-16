@@ -754,7 +754,7 @@ class RPiPowerMonitor:
                     if results[chan_num]['power'] < 0:
                         results[chan_num]['current'] = results[chan_num]['current'] * -1
                     
-                # Set the current for any production sources negative and find the total power and current from all production sources.
+                # Set the current for any production sources negative if the power is negative, and find the total power and current from all production sources.
                 for chan_num in self.production_channels:
                     if results[chan_num]['power'] < 0:
                         results[chan_num]['current'] = results[chan_num]['current'] * -1
@@ -776,7 +776,7 @@ class RPiPowerMonitor:
                         home_consumption_current += results[chan_num]['current']
                     for chan_num in self.production_channels:
                         home_consumption_power += results[chan_num]['power']
-                        home_consumption_current += results[chan_num]['current'] # Current from production sources is already "negative", so subtracting it here instead of adding it is correct.
+                        home_consumption_current += results[chan_num]['current']
 
 
                 net_power = home_consumption_power - production_power
