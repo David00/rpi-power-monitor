@@ -59,7 +59,7 @@ class RPiPowerMonitor:
         logger.debug("  ..Checking to see if the power monitor is already running or not...")
         c = subprocess.run('sudo systemctl status power-monitor.service | grep "Main PID"', shell=True, capture_output=True)
         output = c.stdout.decode('utf-8').lower()
-        if str(self.pid) not in output and len(output) > 10:
+        if str(self.pid) not in output and len(output) > 10 and 'code=' not in output:
                 logger.warning("It appears the power monitor is already running in the background via systemd. Please stop the power monitor with the following command:\n'sudo systemctl stop power-monitor'")
                 self.cleanup(-1)
         # Check process list in case user is running the power monitor manually in an SSH session.
@@ -762,7 +762,7 @@ class RPiPowerMonitor:
                     production_power += results[chan_num]['power']
                     production_current += results[chan_num]['current']
 
-                # Home consumption power is the total power that the home is using. This is typically the mains minus the production sources. 
+                # Home consumption power is the total power that the home is using. This is typically the mains plust the production sources. 
                 # However, if you haven't setup any mains channels in config.toml, this will be the sum of all 'consumption' channels + 'production' channels
                 home_consumption_power = 0
                 home_consumption_current = 0
@@ -776,7 +776,7 @@ class RPiPowerMonitor:
                         home_consumption_current += results[chan_num]['current']
                     for chan_num in self.production_channels:
                         home_consumption_power += results[chan_num]['power']
-                        home_consumption_current -= results[chan_num]['current'] # Current from production sources is already "negative", so subtracting it here instead of adding it is correct.
+                        home_consumption_current += results[chan_num]['current'] # Current from production sources is already "negative", so subtracting it here instead of adding it is correct.
 
 
                 net_power = home_consumption_power - production_power
