@@ -1,0 +1,85 @@
+# See the docs for details on how to use these settings:
+# https://david00.github.io/rpi-power-monitor/docs/v0.3.0-beta/configuration.html#configuration-reference-manual
+
+[general]
+name = "default"            # Enter a name for this power monitor. This name will be used to tag all entries in the DB, which is useful 
+                            # if you have multiple monitors saving data to a centralized InfluxDB server.
+
+[database]
+host = "localhost"
+port = 8086
+username = "root"
+password = "password"
+database_name = "power_monitor"
+
+[grid_voltage]
+grid_voltage = 123.6
+ac_transformer_output_voltage = 10.76
+frequency = 60
+voltage_calibration = 1
+
+[current_transformers.channel_1]
+name = 'Channel 1'
+rating = 100
+type = 'mains'
+two_pole = false
+enabled = true
+calibration = 1.0
+watts_cutoff_threshold = 1
+reversed = false
+
+[current_transformers.channel_2]
+name = 'Channel 2'
+rating = 100
+type = 'mains'
+two_pole = false
+enabled = true
+calibration = 1.0
+watts_cutoff_threshold = 0
+reversed = false
+
+[current_transformers.channel_3]
+name = 'Channel 3'
+rating = 100
+type = 'consumption'
+two_pole = false
+enabled = true
+calibration = 1.0
+watts_cutoff_threshold = 0
+reversed = false
+
+[current_transformers.channel_4]
+name = 'Channel 4'
+rating = 100
+type = 'consumption'
+two_pole = false
+enabled = false
+calibration = 1.0
+watts_cutoff_threshold = 0
+reversed = false
+
+[current_transformers.channel_5]
+name = 'Channel 5'
+rating = 100
+type = 'consumption'
+two_pole = false
+enabled = false
+calibration = 1.0
+watts_cutoff_threshold = 0
+reversed = false
+
+[current_transformers.channel_6]
+name = 'Channel 6'
+rating = 100
+type = 'consumption'
+two_pole = false
+enabled = false
+calibration = 1.0
+watts_cutoff_threshold = 0
+reversed = false
+
+[backups]
+backup_device = '/dev/sda1'             # This should be the device path as shown by the command sudo fdisk -l | grep "/dev/sd*"
+folder_name = 'power_monitor_backups'   # All backups will be placed into this folder at the root of your USB drive.
+mount_path = '/media/backups'           # The directory where the USB drive will be mounted to. No need to change this unless you're already using this path for something else.
+backup_count = 2                        # Number of backups to keep (the backup utility will automatically delete the oldest backups once the total count exceeds this number).
