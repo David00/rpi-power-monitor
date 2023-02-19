@@ -57,6 +57,7 @@ two_pole = false
 enabled = true
 calibration = 1.0
 watts_cutoff_threshold = 0
+reversed = false
 
 [current_transformers.channel_2]
 name = 'Main #2'
@@ -66,6 +67,7 @@ two_pole = false
 enabled = true
 calibration = 1.0
 watts_cutoff_threshold = 0
+reversed = false
 
 [current_transformers.channel_3]
 name = 'Solar'
@@ -75,6 +77,7 @@ two_pole = true
 enabled = true
 calibration = 1.0
 watts_cutoff_threshold = 0
+reversed = false
 
 [current_transformers.channel_4]
 name = 'AC Unit'
@@ -84,6 +87,7 @@ two_pole = true
 enabled = true
 calibration = 1.0
 watts_cutoff_threshold = 0
+reversed = false
 
 [current_transformers.channel_5]
 name = 'Master Bedroom'
@@ -93,6 +97,7 @@ two_pole = false
 enabled = true
 calibration = 1.0
 watts_cutoff_threshold = 0
+reversed = false
 
 [current_transformers.channel_6]
 name = 'EV Charger'
@@ -102,6 +107,7 @@ two_pole = true
 enabled = true
 calibration = 1.0
 watts_cutoff_threshold = 0
+reversed = false
 ```
 </details>
 
@@ -148,18 +154,18 @@ The backup will run every Sunday at midnight.  Feel free to adjust the cron sche
 
 See below for detailed information on each of the settings in the configuration file.
 
-### [general]
+## [general]
 
 <h3 id="name" class='config-value'><a class="anchor-heading" href="#name" aria-labelledby="name"></a>name</h3>
 
 Represents the name of your power monitor. This value will be used to tag all entries in InfluxDB.  This is useful if you have a centralized InfluDB server and multiple power monitors all logging to the same server, because it allows you to distinguish which data points are coming from which power monitor.
 
 
-### [data_retention]
+## [data_retention]
 
 TBD
 
-### [database]
+## [database]
 
 <h3 id="host" class='config-value'><a class="anchor-heading" href="#host" aria-labelledby="host"></a>host</h3>
 
@@ -188,7 +194,7 @@ The name of your InfluxDB database.
 
 > Default: `power_monitor`
 
-### [grid_voltage]
+## [grid_voltage]
 
 <h3 id="grid_voltage" class='config-value'><a class="anchor-heading" href="#grid_voltage" aria-labelledby="grid_voltage"></a>grid_voltage</h3>
 
@@ -202,7 +208,7 @@ The output voltage of your AC transformer, as measured by your multimeter.
 Do not use the label on your AC transformer - you must take a measurement with a multimeter. This is because transformers often put out higher voltages when there's no load on them.
 
 
-### [current_transformers.channel_#]
+## [current_transformers.channel_#]
 
 <h3 id="name" class='config-value'><a class="anchor-heading" href="#name" aria-labelledby="name"></a>name</h3>
 
@@ -251,7 +257,13 @@ Leave the value at 0 to disable this feature.
 
 > Default: 0
 
-### [backups]
+<h3 id="reversed" class='config-value'><a class="anchor-heading" href="#reversed" aria-labelledby="reversed"></a>reversed</h3>
+
+When set to `true`, this setting will negate the readings for this channel. If the channel is reading negative when it is supposed to be reading positive, or vice versa, set this to `true`.
+
+> Default: `false`
+
+## [backups]
 
 <h3 id="backup_device" class='config-value'><a class="anchor-heading" href="#backup_device" aria-labelledby="backup_device"></a>backup_device</h3>
 
