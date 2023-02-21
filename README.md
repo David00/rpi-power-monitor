@@ -16,6 +16,11 @@ Please see https://power-monitor.dalbrecht.tech/ for more information.
 
 ## How do I install?
 
+> The instructions below are just a quick start. For the full documentation, please see the full documentation site linked below. Please note that this site is still a work in progress as of February 2023.
+>
+>https://david00.github.io/rpi-power-monitor/
+
+
 There are two ways to install.
 
 ### Clone the repository
