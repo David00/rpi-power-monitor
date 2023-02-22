@@ -131,7 +131,11 @@ reversed = false
 
 ### Enabling Automatic Backups
 
-An automatic backup script is included with this project, as of v0.3.0. It will backup your configuration and all of the power monitor data to an external USB flash drive. To use it, follow the steps below to update the power monitor config with the USB device name, and enable the scheduled cron job.
+An automatic backup script is included with this project, as of v0.3.0. 
+
+> The script is located at `~/rpi_power_monitor/rpi_power_monitor/backup.py`
+
+It will backup your configuration and all of the power monitor data to an external USB flash drive. To use it, follow the steps below to update the power monitor config with the USB device name, and enable the scheduled cron job.
 
 {: .note-aqua }
 When the backup runs, it will stop the power monitor service. This is to reduce the demand on the database and help the backup complete as quickly as possible. Once the backup is done, the power monitor service will be restarted automatically.
