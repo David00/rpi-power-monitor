@@ -36,6 +36,7 @@ module_root = pathlib.Path(__file__).parent
 
 parser = argparse.ArgumentParser(description='Power Monitor CLI Interface', epilog='Please see the project documentation at https://github.com/david00/rpi-power-monitor#readme for further usage instructions.')
 parser.add_argument('--mode', type=str, help="Operating Mode. Defaults to 'main' if not specified.", default='main', required=False, choices=['main', 'terminal', 'plot'])
+parser.add_argument('--samples', type=int, help="Optionally specify the number of samples to capture in plot mode.", required=False)
 parser.add_argument('--title', type=str, help="Optionally specify the title of the generated plot.", required=False)
 parser.add_argument('--config', type=pathlib.Path, help='path to config.toml file.', default= os.path.join(module_root, 'config.toml'), required=False)
 parser.add_argument('-v', '--verbose', help='Increases verbosity of program output.', action='store_true')
@@ -1148,7 +1149,9 @@ if __name__ == '__main__':
 
     if args.title and not args.mode == 'plot':
         logger.info("The --title flag should only be used with '--mode plot'")
-        exit()
+    
+    if args.samples and not args.mode == 'plot':
+        logger.info("The --samples flag should only be used with '--mode plot'")
 
 
     rpm = RPiPowerMonitor(args.mode, args.config)
@@ -1162,7 +1165,11 @@ if __name__ == '__main__':
         rpm.run_main()
     
     if args.mode == 'plot':
-        samples = rpm.collect_data(1000)
+        if args.samples:
+            num_samples = args.samples
+        else:
+            num_samples = 1000
+        samples = rpm.collect_data(num_samples)
         duration = samples['duration']
         # Calculate Sample Rate in Kilo-Samples Per Second.
         sample_count = sum([len(samples[x]) for x in samples.keys() if type(samples[x]) == list])
