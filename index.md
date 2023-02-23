@@ -34,9 +34,9 @@ This project interfaces with high voltage electrical systems and discusses worki
 
 ## Quickstart / Setup Guide
 
-1. [Create Your Plan](./create-your-plan)
-2. [Acquire the Hardware](./acquire-the-hardware)
-3. [Install the Software](./install-the-software)
-4. [Install the Harware](./install-the-harware)
-5. [Calibration](./calibration)
-6. [Dashboards](./dashboards)
+1. [Create Your Plan](docs/general/create-your-plan)
+2. [Acquire the Hardware](docs/general/acquire-the-hardware)
+3. [Install the Software](docs/general/install-the-software)
+4. [Install the Harware](docs/general/install-the-harware)
+5. [Calibration](docs/general/calibration)
+6. [Dashboards](docs/general/dashboards)

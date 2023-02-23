@@ -70,13 +70,13 @@ This will display a table in your terminal with the latest measurements for each
 It is important to make sure the sign of the Watts field is correct for the application:
 
 * All `consumption` channels should read positive Watts.
-* All `production` channels should read negative Watts **when producing**.
+* All `production` channels should read positive Watts **when producing**.
 * The `mains` channels should be positive if you do not have any production sources, or if those production sources are not producing. If you have grid-tied solar panels, you'll probably need to wait until dark to confirm this (or shut down your solar inverter).
 
-If any values have the wrong sign, you can reverse the polarity of the CT sensor wires at the PCB.  If you can't reverse the polarity at the PCB (such as with the DIY kit's RJ-45 or 3.5mm interfaces), you can unclip the CT and reverse the direction that it is clipped around the conductor.
+If any values have the wrong sign, you can change [the `reversed` setting](/docs/{{site.latest-version}}/configuration#reversed) for the channel in config.toml. you can reverse the polarity of the CT sensor wires at the PCB.  If you can't reverse the polarity at the PCB (such as with the DIY kit's RJ-45 or 3.5mm interfaces), you can unclip the CT and reverse the direction that it is clipped around the conductor.
 
 {: .note-yellow }
-The net power and home power calculations both rely on proper signage according to the above parameters!  If your net power figures do not make sense, double check that your production sources are showing negative Watts.  Then, check that your mains are showing positive Watts when you're not producing any power (such as at night, for solar panels).
+The net power and home power calculations both rely on proper signage according to the above parameters!  If your net power figures do not make sense, double check that your production sources are showing positive Watts when producing.  Then, check that your mains are showing positive Watts when you're not producing any power (such as at night, for solar panels).
 
 After validation, move onto the [Calibration (v0.3.0)](/docs/{{site.latest-version}}/calibration) section.
 
