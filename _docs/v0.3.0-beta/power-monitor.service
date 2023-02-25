@@ -1,0 +1,14 @@
+[Unit]
+Description=Raspberry Pi Power Monitor
+After=network.target,influxdb
+
+[Service]
+Restart=always
+RestartSec=1
+StartLimitInterval=120
+StartLimitBurst=5
+User=pi
+ExecStart=/usr/bin/python3 /home/pi/rpi_power_monitor/rpi_power_monitor/power_monitor.py
+
+[Install]
+WantedBy=multi-user.target
