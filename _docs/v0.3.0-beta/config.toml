@@ -6,7 +6,7 @@ name = "default"            # Enter a name for this power monitor. This name wil
                             # if you have multiple monitors saving data to a centralized InfluxDB server.
 
 # Enable 3-phase mode by setting this to true.
-three_phase_mode = true
+three_phase_mode = false
 
 [database]
 host = "localhost"
