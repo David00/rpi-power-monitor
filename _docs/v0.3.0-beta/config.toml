@@ -5,6 +5,9 @@
 name = "default"            # Enter a name for this power monitor. This name will be used to tag all entries in the DB, which is useful 
                             # if you have multiple monitors saving data to a centralized InfluxDB server.
 
+# Enable 3-phase mode by setting this to true.
+three_phase_mode = true
+
 [database]
 host = "localhost"
 port = 8086
@@ -27,6 +30,7 @@ enabled = true
 calibration = 1.0
 watts_cutoff_threshold = 1
 reversed = false
+phase_angle = 0
 
 [current_transformers.channel_2]
 name = 'Channel 2'
@@ -37,6 +41,7 @@ enabled = true
 calibration = 1.0
 watts_cutoff_threshold = 0
 reversed = false
+phase_angle = 0
 
 [current_transformers.channel_3]
 name = 'Channel 3'
@@ -47,6 +52,7 @@ enabled = true
 calibration = 1.0
 watts_cutoff_threshold = 0
 reversed = false
+phase_angle = 0
 
 [current_transformers.channel_4]
 name = 'Channel 4'
@@ -57,6 +63,7 @@ enabled = false
 calibration = 1.0
 watts_cutoff_threshold = 0
 reversed = false
+phase_angle = 0
 
 [current_transformers.channel_5]
 name = 'Channel 5'
@@ -67,6 +74,7 @@ enabled = false
 calibration = 1.0
 watts_cutoff_threshold = 0
 reversed = false
+phase_angle = 0
 
 [current_transformers.channel_6]
 name = 'Channel 6'
@@ -77,6 +85,7 @@ enabled = false
 calibration = 1.0
 watts_cutoff_threshold = 0
 reversed = false
+phase_angle = 0
 
 [backups]
 backup_device = '/dev/sda1'             # This should be the device path as shown by the command sudo fdisk -l | grep "/dev/sd*"
