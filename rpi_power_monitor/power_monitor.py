@@ -6,7 +6,7 @@ import subprocess
 import sys
 import timeit
 from datetime import datetime
-from math import sqrt, cos
+from math import sqrt, cos, radians
 from socket import AF_INET, SOCK_DGRAM, socket, getaddrinfo
 import ipaddress
 from textwrap import dedent
@@ -20,8 +20,8 @@ from multiprocessing import Manager, Event
 import signal
 from copy import deepcopy
 import os
-
 from plotting import plot_data
+import rpi_power_monitor.three_phase as tp
 from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBServerError
 
@@ -44,6 +44,8 @@ parser.add_argument('--title', type=str, help="Optionally specify the title of t
 parser.add_argument('--config', type=pathlib.Path, help='path to config.toml file.', default= os.path.join(module_root, 'config.toml'), required=False)
 parser.add_argument('-v', '--verbose', help='Increases verbosity of program output.', action='store_true')
 parser.add_argument('-V', '--version', help='Displays the power monitor software version and exits.', action='store_true')
+parser.add_argument('--three-phase-calibrate', help='Start the calibration routine for 3-phase deployments.', action='store_true')
+parser.add_argument('--csv', default=False, help='Dump raw data to a CSV file', action='store_true')
 
 # Retention Policy Settings
 retention_policies = {
@@ -97,7 +99,16 @@ class RPiPowerMonitor:
         if self.config.get('plugins') is not None:
             self.load_plugins(self.config.get('plugins'))   # Note: Plugins are initialized here, but they are only started when the power monitor routine starts.
 
-    
+        if args.samples:
+            self.num_samples = args.samples
+        else:
+            self.num_samples = 500
+
+        if args.csv:
+            self.csv_output = args.csv
+        else:
+            self.csv_output = False
+
     def validate_cqs(self):
         '''Ensures that the continuous queries exist in the configured Influx database, and creates them if not.'''
 
@@ -209,6 +220,24 @@ class RPiPowerMonitor:
         self.ac_transformer_output_voltage = config.get('grid_voltage').get('ac_transformer_output_voltage')
         self.voltage_calibration = config.get('grid_voltage').get('voltage_calibration')
         self.name = config['general'].get('name')
+        self.three_phase_mode = config['general'].get('three_phase_mode')
+
+        # Phase Mode check
+        # Validate that each CT has the phase_angle option.
+        if self.three_phase_mode:
+            self.phase_angles = dict()
+            for channel, settings in config['current_transformers'].items():
+                if settings.get('phase_angle') is None:
+                    logger.warning(f"Channel {channel} seems to be missing the 'phase_angle' configuration option. Please make sure you have the latest config file (see the configuration section in the docs for the download link)")
+                    self.cleanup(-1)
+                else:
+                    # Convert from degrees to radians
+                    self.phase_angles.update({
+                        int(channel.split('_')[-1]) : {
+                            'deg' : settings['phase_angle'], 
+                            'rad' : round(radians(settings['phase_angle']), 3) 
+                            }
+                        })
 
         # Enabled Channels
         self.enabled_channels = [int(channel.split('_')[-1]) for channel, settings in config['current_transformers'].items() if settings['enabled'] ]
@@ -317,25 +346,34 @@ class RPiPowerMonitor:
         return
         
 
-    def dump_data(self, dump_type, samples):
+    def dump_data(self, samples):
         """ Writes raw data to a CSV file titled 'data-dump-<current_time>.csv' """
         speed_kHz = self.spi.max_speed_hz / 1000
         now = datetime.now().strftime('%m-%d-%Y-%H-%M')
         filename = f'data-dump-{now}.csv'
+        headers = ['Sample#']
+        sample_count = len(samples[f'ct{self.enabled_channels[0]}'])
+
+        for channel in self.enabled_channels:
+            headers.append(f'ct{channel}')
+            headers.append(f'v{channel}')
+
         with open(filename, 'w') as f:
-            headers = ["Sample#", "ct1", "ct2", "ct3", "ct4", "ct5", "ct6", "voltage"]
             writer = csv.writer(f)
             writer.writerow(headers)
-            # samples contains lists for each data sample.
-            for i in range(0, len(samples[0])):
-                ct1_data = samples[0]
-                ct2_data = samples[1]
-                ct3_data = samples[2]
-                ct4_data = samples[3]
-                ct5_data = samples[4]
-                ct6_data = samples[5]
-                v_data = samples[-1]
-                writer.writerow([i, ct1_data[i], ct2_data[i], ct3_data[i], ct4_data[i], ct5_data[i], ct6_data[i], v_data[i]])
+            
+            for i in range(0, sample_count):
+                row = []
+                row.append(i + 1)
+                for channel in self.enabled_channels:                    
+                    row.append(samples[f'ct{channel}'][i])
+                    row.append(samples[f'v{channel}'][i])
+                
+                writer.writerow(row)
+            overall, per_channel = self.calculate_sample_rate(samples, self.enabled_channels)
+            writer.writerow(['Sample Rate', overall])
+            writer.writerow(['Sample Duration', samples['duration']])
+
         logger.info(f"CSV written to {filename}.")
 
     def get_board_voltage(self):
@@ -380,6 +418,12 @@ class RPiPowerMonitor:
        
         samples['time'] = now
         samples['duration'] = duration
+
+        # Write to CSV if the --csv CLI option was provided
+        if self.csv_output:
+            self.dump_data(samples)
+            self.cleanup(0)
+            
         return samples
 
     def calculate_power(self, samples, board_voltage):
@@ -546,11 +590,17 @@ class RPiPowerMonitor:
         if ct1_samples:
             avg_raw_current_ct1 = sum_raw_current_ct1 / num_samples
             avg_raw_voltage_1 = sum_raw_voltage_1 / num_samples
-            real_power_1 = ((sum_inst_power_ct1 / num_samples) - (avg_raw_current_ct1 * avg_raw_voltage_1))  * ct1_scaling_factor * voltage_scaling_factor
             mean_square_current_ct1 = sum_squared_current_ct1 / num_samples
             mean_square_voltage_1 = sum_squared_voltage_1 / num_samples
             rms_current_ct1 = sqrt(mean_square_current_ct1 - (avg_raw_current_ct1 * avg_raw_current_ct1)) * ct1_scaling_factor
             rms_voltage_1 = sqrt(mean_square_voltage_1 - (avg_raw_voltage_1 * avg_raw_voltage_1)) * voltage_scaling_factor
+
+            if self.three_phase_mode:
+                real_power_1 = rms_current_ct1 * rms_voltage_1 * abs(cos(self.phase_angles[1]['rad']))
+            else:
+                real_power_1 = ((sum_inst_power_ct1 / num_samples) - (avg_raw_current_ct1 * avg_raw_voltage_1))  * ct1_scaling_factor * voltage_scaling_factor
+            
+
             apparent_power_1 = rms_voltage_1 * rms_current_ct1
             try:
                 power_factor_1 = real_power_1 / apparent_power_1
@@ -562,8 +612,8 @@ class RPiPowerMonitor:
             if self.config['current_transformers']['channel_1'].get('reversed'):
                 # Change the sign of the power calculation, and then make the current calculation match.
                 real_power_1 = real_power_1 * -1
-                if real_power_1 < 0:
-                    rms_current_ct1 = rms_current_ct1 * -1
+            if real_power_1 < 0:
+                rms_current_ct1 = rms_current_ct1 * -1
 
             # Filter out PF if the amperage data is not sufficient.
             delta = max(ct1_samples) - min(ct1_samples)
@@ -581,11 +631,16 @@ class RPiPowerMonitor:
         if ct2_samples:
             avg_raw_current_ct2 = sum_raw_current_ct2 / num_samples
             avg_raw_voltage_2 = sum_raw_voltage_2 / num_samples
-            real_power_2 = ((sum_inst_power_ct2 / num_samples) - (avg_raw_current_ct2 * avg_raw_voltage_2))  * ct2_scaling_factor * voltage_scaling_factor
             mean_square_current_ct2 = sum_squared_current_ct2 / num_samples
             mean_square_voltage_2 = sum_squared_voltage_2 / num_samples
             rms_current_ct2 = sqrt(mean_square_current_ct2 - (avg_raw_current_ct2 * avg_raw_current_ct2)) * ct2_scaling_factor
             rms_voltage_2 = sqrt(mean_square_voltage_2 - (avg_raw_voltage_2 * avg_raw_voltage_2)) * voltage_scaling_factor
+
+            if self.three_phase_mode:
+                real_power_2 = rms_current_ct2 * rms_voltage_2 * abs(cos(self.phase_angles[2]['rad']))
+            else:
+                real_power_2 = ((sum_inst_power_ct2 / num_samples) - (avg_raw_current_ct2 * avg_raw_voltage_2))  * ct2_scaling_factor * voltage_scaling_factor
+
             apparent_power_2 = rms_voltage_2 * rms_current_ct2
             try:
                 power_factor_2 = real_power_2 / apparent_power_2
@@ -597,8 +652,8 @@ class RPiPowerMonitor:
             if self.config['current_transformers']['channel_2'].get('reversed'):
                 # Change the sign of the power calculation, and then make the current calculation match.
                 real_power_2 = real_power_2 * -1
-                if real_power_2 < 0:
-                    rms_current_ct2 = rms_current_ct2 * -1
+            if real_power_2 < 0:
+                rms_current_ct2 = rms_current_ct2 * -1
 
             # Filter out PF if the amperage data is not sufficient.
             delta = max(ct2_samples) - min(ct2_samples)
@@ -616,11 +671,16 @@ class RPiPowerMonitor:
         if ct3_samples:
             avg_raw_current_ct3 = sum_raw_current_ct3 / num_samples
             avg_raw_voltage_3 = sum_raw_voltage_3 / num_samples
-            real_power_3 = ((sum_inst_power_ct3 / num_samples) - (avg_raw_current_ct3 * avg_raw_voltage_3))  * ct3_scaling_factor * voltage_scaling_factor
             mean_square_current_ct3 = sum_squared_current_ct3 / num_samples
             mean_square_voltage_3 = sum_squared_voltage_3 / num_samples
             rms_current_ct3 = sqrt(mean_square_current_ct3 - (avg_raw_current_ct3 * avg_raw_current_ct3)) * ct3_scaling_factor
             rms_voltage_3 = sqrt(mean_square_voltage_3 - (avg_raw_voltage_3 * avg_raw_voltage_3)) * voltage_scaling_factor
+
+            if self.three_phase_mode:
+                real_power_3 = rms_current_ct3 * rms_voltage_3 * abs(cos(self.phase_angles[3]['rad']))
+            else:
+                real_power_3 = ((sum_inst_power_ct3 / num_samples) - (avg_raw_current_ct3 * avg_raw_voltage_3))  * ct3_scaling_factor * voltage_scaling_factor                
+
             apparent_power_3 = rms_voltage_3 * rms_current_ct3
             try:
                 power_factor_3 = real_power_3 / apparent_power_3
@@ -632,8 +692,8 @@ class RPiPowerMonitor:
             if self.config['current_transformers']['channel_3'].get('reversed'):
                 # Change the sign of the power calculation, and then make the current calculation match.
                 real_power_3 = real_power_3 * -1
-                if real_power_3 < 0:
-                    rms_current_ct3 = rms_current_ct3 * -1
+            if real_power_3 < 0:
+                rms_current_ct3 = rms_current_ct3 * -1
 
             # Filter out PF if the amperage data is not sufficient.
             delta = max(ct3_samples) - min(ct3_samples)
@@ -651,11 +711,16 @@ class RPiPowerMonitor:
         if ct4_samples:
             avg_raw_current_ct4 = sum_raw_current_ct4 / num_samples
             avg_raw_voltage_4 = sum_raw_voltage_4 / num_samples
-            real_power_4 = ((sum_inst_power_ct4 / num_samples) - (avg_raw_current_ct4 * avg_raw_voltage_4))  * ct4_scaling_factor * voltage_scaling_factor
             mean_square_current_ct4 = sum_squared_current_ct4 / num_samples
             mean_square_voltage_4 = sum_squared_voltage_4 / num_samples
             rms_current_ct4 = sqrt(mean_square_current_ct4 - (avg_raw_current_ct4 * avg_raw_current_ct4)) * ct4_scaling_factor
             rms_voltage_4 = sqrt(mean_square_voltage_4 - (avg_raw_voltage_4 * avg_raw_voltage_4)) * voltage_scaling_factor
+
+            if self.three_phase_mode:
+                real_power_4 = rms_current_ct4 * rms_voltage_4 * abs(cos(self.phase_angles[4]['rad']))
+            else:
+                real_power_4 = ((sum_inst_power_ct4 / num_samples) - (avg_raw_current_ct4 * avg_raw_voltage_4))  * ct4_scaling_factor * voltage_scaling_factor
+
             apparent_power_4 = rms_voltage_4 * rms_current_ct4
             try:
                 power_factor_4 = real_power_4 / apparent_power_4
@@ -667,8 +732,8 @@ class RPiPowerMonitor:
             if self.config['current_transformers']['channel_4'].get('reversed'):
                 # Change the sign of the power calculation, and then make the current calculation match.
                 real_power_4 = real_power_4 * -1
-                if real_power_4 < 0:
-                    rms_current_ct4 = rms_current_ct4 * -1
+            if real_power_4 < 0:
+                rms_current_ct4 = rms_current_ct4 * -1
 
             # Filter out PF if the amperage data is not sufficient.
             delta = max(ct4_samples) - min(ct4_samples)
@@ -686,11 +751,16 @@ class RPiPowerMonitor:
         if ct5_samples:
             avg_raw_current_ct5 = sum_raw_current_ct5 / num_samples
             avg_raw_voltage_5 = sum_raw_voltage_5 / num_samples
-            real_power_5 = ((sum_inst_power_ct5 / num_samples) - (avg_raw_current_ct5 * avg_raw_voltage_5))  * ct5_scaling_factor * voltage_scaling_factor
             mean_square_current_ct5 = sum_squared_current_ct5 / num_samples
             mean_square_voltage_5 = sum_squared_voltage_5 / num_samples
             rms_current_ct5 = sqrt(mean_square_current_ct5 - (avg_raw_current_ct5 * avg_raw_current_ct5)) * ct5_scaling_factor
             rms_voltage_5 = sqrt(mean_square_voltage_5 - (avg_raw_voltage_5 * avg_raw_voltage_5)) * voltage_scaling_factor
+
+            if self.three_phase_mode:
+                real_power_5 = rms_current_ct5 * rms_voltage_5 * abs(cos(self.phase_angles[5]['rad']))
+            else:
+                real_power_5 = ((sum_inst_power_ct5 / num_samples) - (avg_raw_current_ct5 * avg_raw_voltage_5))  * ct5_scaling_factor * voltage_scaling_factor
+
             apparent_power_5 = rms_voltage_5 * rms_current_ct5
             try:
                 power_factor_5 = real_power_5 / apparent_power_5
@@ -702,8 +772,8 @@ class RPiPowerMonitor:
             if self.config['current_transformers']['channel_5'].get('reversed'):
                 # Change the sign of the power calculation, and then make the current calculation match.
                 real_power_5 = real_power_5 * -1
-                if real_power_5 < 0:
-                    rms_current_ct5 = rms_current_ct5 * -1
+            if real_power_5 < 0:
+                rms_current_ct5 = rms_current_ct5 * -1
 
             # Filter out PF if the amperage data is not sufficient.
             delta = max(ct5_samples) - min(ct5_samples)
@@ -721,11 +791,16 @@ class RPiPowerMonitor:
         if ct6_samples:
             avg_raw_current_ct6 = sum_raw_current_ct6 / num_samples
             avg_raw_voltage_6 = sum_raw_voltage_6 / num_samples
-            real_power_6 = ((sum_inst_power_ct6 / num_samples) - (avg_raw_current_ct6 * avg_raw_voltage_6))  * ct6_scaling_factor * voltage_scaling_factor
             mean_square_current_ct6 = sum_squared_current_ct6 / num_samples
             mean_square_voltage_6 = sum_squared_voltage_6 / num_samples
             rms_current_ct6 = sqrt(mean_square_current_ct6 - (avg_raw_current_ct6 * avg_raw_current_ct6)) * ct6_scaling_factor
             rms_voltage_6 = sqrt(mean_square_voltage_6 - (avg_raw_voltage_6 * avg_raw_voltage_6)) * voltage_scaling_factor
+
+            if self.three_phase_mode:
+                real_power_6 = rms_current_ct6 * rms_voltage_6 * abs(cos(self.phase_angles[6]['rad']))
+            else:
+                real_power_6 = ((sum_inst_power_ct6 / num_samples) - (avg_raw_current_ct6 * avg_raw_voltage_6))  * ct6_scaling_factor * voltage_scaling_factor
+
             apparent_power_6 = rms_voltage_6 * rms_current_ct6
             try:
                 power_factor_6 = real_power_6 / apparent_power_6
@@ -737,8 +812,8 @@ class RPiPowerMonitor:
             if self.config['current_transformers']['channel_6'].get('reversed'):
                 # Change the sign of the power calculation, and then make the current calculation match.
                 real_power_6 = real_power_6 * -1
-                if real_power_6 < 0:
-                    rms_current_ct6 = rms_current_ct6 * -1
+            if real_power_6 < 0:
+                rms_current_ct6 = rms_current_ct6 * -1
 
             # Filter out PF if the amperage data is not sufficient.
             delta = max(ct6_samples) - min(ct6_samples)
@@ -763,9 +838,59 @@ class RPiPowerMonitor:
                     results[chan_num]['pf'] = 0
         return results
 
+       
+
+    def three_phase_calibrate(self):
+        '''Runs the calibration routine for setting the power monitor up with a 3-phase system.'''
+
+        sma_window = 10
+        sma_phase_shifts = {chan : [] for chan in self.enabled_channels} # This holds the individual phase shift value for each batch of samples, per channel.
+        overall_averages = {chan : [] for chan in self.enabled_channels} # This holds the average simple-moving-average phase shift for each channel so we can calcualte and average average phase shift at the end.
+        frequency = self.config['grid_voltage'].get('frequency')
+        if not frequency:
+            logger.warning("It appears that the 'frequency' is missing from your config.toml file. Please make sure that this setting exists under the [grid_voltage] section of config.toml.")
+            self.cleanup(-1)
+        
+        if int(frequency) not in [50, 60]:
+            logger.warning(f"The 'frequency' setting of {frequency} is not one of the supported options (50 or 60). Your experience may not be supported.")
+            
+        # Initial SMA construction
+        for _ in range(0, 10):
+            samples = self.collect_data(self.num_samples)
+            phase_shifts_dict = tp.measure_phase_angle(samples, self.enabled_channels, frequency)
+
+            for chan, shifts in phase_shifts_dict.items():
+                sma_phase_shifts[chan].append(shifts['deg'])
+
+        # Measure phase angle over 100 measurement and calculation cycles and report the average on each cycle.
+        
+        for i in range(0, 100):
+            samples = self.collect_data(self.num_samples)
+            phase_shifts_dict = tp.measure_phase_angle(samples, self.enabled_channels, frequency)
+
+            for chan in self.enabled_channels:
+                for j in range(0, sma_window - 1):
+                    sma_phase_shifts[chan][j] = sma_phase_shifts[chan][j+1]
+                
+                sma_phase_shifts[chan][sma_window-1] = phase_shifts_dict[chan]['deg']
+
+                avg = sum(sma_phase_shifts[chan]) / len(sma_phase_shifts[chan])
+                overall_averages[chan].append(avg)
+            print(' '.join([f'ct{chan} : {value[-1]:.2f}' for chan, value in overall_averages.items()]))
+            #print(f"ct0: {overall_averages['ct0'][-1]:.2f} ct1: {overall_averages['ct1'][-1]:.2f} ct2: {overall_averages['ct2'][-1]:.2f} ct3: {overall_averages['ct3'][-1]:.2f} ct4: {overall_averages['ct4'][-1]:.2f} ct5: {overall_averages['ct5'][-1]:.2f}")
+
+        print("\n\nOverall Averages:")
+        for chan, avg in overall_averages.items():
+            print(f"  {chan} : {sum(avg) / len(avg):.2f} deg")
+
     def run_main(self):
         """ Starts the main power monitor loop and launches plugins. """
-        logger.info("... Starting Raspberry Pi Power Monitor")
+
+        if self.three_phase_mode:
+            logger.info(f"... Starting Raspberry Pi Power Monitor in 3-phase mode.")
+        else:
+            logger.info(f"... Starting Raspberry Pi Power Monitor")
+
         logger.info("Press Ctrl-c to quit...")
         # The following empty dictionaries will hold the respective calculated values at the end
         # of each polling cycle, which are then averaged prior to storing the value to the DB.
@@ -793,7 +918,7 @@ class RPiPowerMonitor:
         SMA_Window = 2      # This is the total number of calculations that are included in the simple-moving-average.
         write_threshold = 2 # This controls how many SMA_Data updates are processed before the resulting simple-moving-average values are sent to be stored in the database.
         write_threshold_counter = 0 # Counter that keeps track of the number of SMA updates processed. When write_threshold_counter == write_threshold, the current SMA values will be sent to influx DB cache for eventual storage.
-        num_samples = 500
+        
 
         # Start plugins that have been imported.
         if len(self.imported_plugins.keys()) > 0:
@@ -808,15 +933,15 @@ class RPiPowerMonitor:
 
 
         # Get the expected sample count for the current configuration.
-        samples = self.collect_data(num_samples)
+        samples = self.collect_data(self.num_samples)
         sample_count = sum([len(samples[x]) for x in samples.keys() if type(samples[x]) == list])
         
         while not halt_flag.is_set():
             board_voltage = self.get_board_voltage()
-            samples = self.collect_data(num_samples)
+            samples = self.collect_data(self.num_samples)
             poll_time = samples['time']
             duration = samples['duration']
-            sample_rate = round((sample_count / duration) / num_samples, 2)
+            sample_rate = round((sample_count / duration) / self.num_samples, 2)
             per_channel_sample_rate = round(sample_rate / (2 * len(rpm.enabled_channels)), 2)
 
             results = self.calculate_power(samples, board_voltage)
@@ -864,6 +989,10 @@ class RPiPowerMonitor:
             else:
                 current_status = "Consuming"
 
+                # # The old methods calculated the overall and per_channel rates in KSPS
+                # sample_rate = round((sample_count / duration) / self.num_samples, 2)
+                # per_channel_sample_rate = round(sample_rate / (2 * len(rpm.enabled_channels)), 2)
+                # logger.debug(f"Sample rates. Overall: {sample_rate} | Per-channel: {per_channel_sample_rate}")
 
             # Initial SMA Construction
             if len(SMA_Data['cts'][self.enabled_channels[0]]['power']) < SMA_Window:
@@ -1118,6 +1247,16 @@ class RPiPowerMonitor:
         finally:
             s.close()
         return ip
+    
+    @staticmethod
+    def calculate_sample_rate(samples, enabled_channels):
+        '''Determins the overall and per-channel sample rate from the given dictionary of samples.'''
+        # Get the number of samples per channel
+        num_samples_per_channel = len(samples[f'ct{enabled_channels[0]}'])
+        total_samples = num_samples_per_channel * len(enabled_channels) * 2
+        overall_sample_rate = total_samples / samples['duration']
+        per_channel_sample_rate = overall_sample_rate / (len(enabled_channels) * 2)
+        return overall_sample_rate, per_channel_sample_rate
 
 class Point:
     def __init__(self, p_type, *args, **kwargs):
@@ -1281,11 +1420,17 @@ if __name__ == '__main__':
     if args.title and not args.mode == 'plot':
         logger.info("The --title flag should only be used with '--mode plot'")
     
-    if args.samples and not args.mode == 'plot':
-        logger.info("The --samples flag should only be used with '--mode plot'")
+    if args.samples and not (args.mode == 'plot' or args.csv):        
+        logger.warning("Heads up! The --samples flag should only be used with '--mode plot' or '--mode csv'.  While setting the number of samples for other modes WILL work, please only do so if you know what you're doing, or if you've been advised by the project author (David).")
 
+    if args.csv == True:
+        logger.debug("CSV output enabled.")
 
     rpm = RPiPowerMonitor(mode=args.mode, config=args.config)
+    
+    if args.three_phase_calibrate:
+        rpm.three_phase_calibrate()
+        rpm.cleanup(0)
 
     if args.mode == 'terminal':
         rpm.terminal_mode = True
@@ -1296,16 +1441,12 @@ if __name__ == '__main__':
         rpm.run_main()
     
     if args.mode == 'plot':
-        if args.samples:
-            num_samples = args.samples
-        else:
-            num_samples = 1000
-        samples = rpm.collect_data(num_samples)
+        samples = rpm.collect_data(rpm.num_samples)
         duration = samples['duration']
         # Calculate Sample Rate in Kilo-Samples Per Second.
         sample_count = sum([len(samples[x]) for x in samples.keys() if type(samples[x]) == list])
-        sample_rate = round((sample_count / duration) / 1000, 2)
-        per_channel_sample_rate = round(sample_rate / (2 * len(rpm.enabled_channels)), 2)
+        overall, per_channel = rpm.calculate_sample_rate(samples, rpm.enabled_channels)
+        sample_rate_ksps = round((overall / 1000), 3)
 
         if not args.title:
             now = datetime.now().strftime("%m-%d-%y_%H%M%S")
@@ -1313,7 +1454,7 @@ if __name__ == '__main__':
         else:
             title = args.title.replace(' ', '_')
         logger.debug("Building plot...")
-        plot_data(samples, title, sample_rate, rpm.enabled_channels)
+        plot_data(samples, title, sample_rate_ksps, rpm.enabled_channels)
 
         ip = rpm.get_ip()
         if ip:
@@ -1325,3 +1466,4 @@ if __name__ == '__main__':
                 "Plot created! I could not determine the IP address of this machine."
                 "Visit your device's IP address in a web browser to view the list of charts "
                 "you've created using '--plot' mode.")
+        rpm.cleanup(0)
