@@ -93,8 +93,12 @@ class Backup():
             r = subprocess.run(f'docker exec {container_name} rm -r /backups/backup_{now}.tar.gz', shell=True)
 
         else:
-            # Natively installed InfluxDB mode
-            r = subprocess.run(f'influxd backup -portable -database {settings["db_name"]} -host {settings["host"]}:{settings["port"]} {this_backup_dir}/ > /dev/null', shell=True)
+            # Natively installed InfluxDB mode - check to see if the configured database is localhost in order to continue.
+            if settings['host'] not in ['localhost', '127.0.0.1', '127.0.1.1']:
+                b_log.error(f"This script can only be used when InfluxDB is running locally on this Pi. Your configured database host is {settings['host']} which does not appear to be local to this Pi.")
+                exit()
+
+            r = subprocess.run(f'influxd backup -portable -database {settings["db_name"]} {this_backup_dir}/ > /dev/null', shell=True)
             b_log.info("Done backing up InfluxDB. Creating an archive...")
             # Create compressed archive
             r = subprocess.run(f'tar -czf {os.path.join(backup_root, f"backup_{now}.tar.gz")} {os.path.join(backup_root, f"backup_{now}")} > /dev/null 2>&1', shell=True)
@@ -125,7 +129,7 @@ class Backup():
 
 
         stop = timeit.default_timer()
-        duration = stop - start
+        duration = round(stop - start, 2)
 
         # Start the power monitor
         r = subprocess.run('systemctl start power-monitor.service', shell=True, capture_output=True)
