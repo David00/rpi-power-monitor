@@ -64,6 +64,7 @@ In the [Planning section](/docs/general/create-your-plan#planning), I created a 
 <details markdown="block">
 <summary>Configuration Example (click to expand):</summary>
 ```
+
 [current_transformers.channel_1]
 name = 'Main #1'
 rating = 200
@@ -73,6 +74,7 @@ enabled = true
 calibration = 1.0
 watts_cutoff_threshold = 0
 reversed = false
+phase_angle = 0
 
 [current_transformers.channel_2]
 name = 'Main #2'
@@ -83,6 +85,7 @@ enabled = true
 calibration = 1.0
 watts_cutoff_threshold = 0
 reversed = false
+phase_angle = 0
 
 [current_transformers.channel_3]
 name = 'Solar'
@@ -93,6 +96,7 @@ enabled = true
 calibration = 1.0
 watts_cutoff_threshold = 0
 reversed = false
+phase_angle = 0
 
 [current_transformers.channel_4]
 name = 'AC Unit'
@@ -103,6 +107,7 @@ enabled = true
 calibration = 1.0
 watts_cutoff_threshold = 0
 reversed = false
+phase_angle = 0
 
 [current_transformers.channel_5]
 name = 'Master Bedroom'
@@ -113,6 +118,7 @@ enabled = true
 calibration = 1.0
 watts_cutoff_threshold = 0
 reversed = false
+phase_angle = 0
 
 [current_transformers.channel_6]
 name = 'EV Charger'
@@ -123,6 +129,7 @@ enabled = true
 calibration = 1.0
 watts_cutoff_threshold = 0
 reversed = false
+phase_angle = 0
 ```
 </details>
 
@@ -166,6 +173,10 @@ Save and close the file with `Ctrl-x`, then `y`.
 
 The backup will run every Sunday at midnight.  Feel free to adjust the cron scheduling parameters if you want the backup to run more or less often.
 
+{: .note-aqua }
+To start the backup script manually, use the following command:
+<br>
+`python3 ~/rpi_power_monitor/rpi_power_monitor/backup.py`
 
 ---
 
@@ -179,6 +190,11 @@ See below for detailed information on each of the settings in the configuration 
 
 Represents the name of your power monitor. This value will be used to tag all entries in InfluxDB.  This is useful if you have a centralized InfluDB server and multiple power monitors all logging to the same server, because it allows you to distinguish which data points are coming from which power monitor.
 
+<h3 id="three_phase_mode" class='config-value'><a class="anchor-heading" href="#three_phase_mode" aria-labelledby="three_phase_mode"></a>three_phase_mode</h3>
+
+When set to `true`, this setting will use the three-phase variant of the power calculation routine. Leave this setting to it's default value of `false` unless you have a three-phase system and have completed the 3-phase setup.
+
+> Default: `false`
 
 ## [data_retention]
 
@@ -281,6 +297,14 @@ Leave the value at 0 to disable this feature.
 When set to `true`, this setting will negate the readings for this channel. If the channel is reading negative when it is supposed to be reading positive, or vice versa, set this to `true`.
 
 > Default: `false`
+
+<h3 id="phase_angle" class='config-value'><a class="anchor-heading" href="#phase_angle" aria-labelledby="phase_angle"></a>phase_angle</h3>
+
+*For 3-phase-mode only.*
+
+This setting holds the measured default phase angle from the perspective of the power monitor, and is used in calculations when <a href="#three_phase_mode">`three_phase_mode`</a> is enabled.
+
+> Default: `0`
 
 ## [backups]
 
