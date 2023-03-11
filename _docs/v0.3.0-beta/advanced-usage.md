@@ -24,8 +24,79 @@ You can check the service status with the following command:
 
     sudo systemctl status power-monitor.service
 
-The service file is located at `/etc/systemd/system/power-monitor.service`.  
+In the custom OS release, the service file is located at `/etc/systemd/system/power-monitor.service`.
 
+<details open markdown="block">
+<summary id="service-file-contents">Here are the contents of the default service file:</summary>
+```
+[Unit]
+Description=Raspberry Pi Power Monitor
+After=network.target,influxdb
+
+[Service]
+Restart=always
+RestartSec=1
+StartLimitInterval=120
+StartLimitBurst=5
+User=pi
+ExecStart=/usr/bin/python3 /home/pi/rpi_power_monitor/rpi_power_monitor/power_monitor.py
+
+[Install]
+WantedBy=multi-user.target
+```
+</details>
+
+
+### Creating the Service File
+
+1. Remove the file if it exists:
+
+    ```
+    sudo rm /etc/systemd/system/power-monitor.service
+    ```
+
+2. Create the file, paste <a href="#service-file-contents">the contents</a> from above into this file:
+
+    ```
+    sudo nano /etc/systemd/system/power-monitor.service
+    ```
+
+3. Save and close the file with `Ctrl-x`, then `y`, then `Enter`
+
+4. Tell systemctl to refresh the service files and enable the power monitor service file:
+
+    ```
+    sudo systemctl daemon-reload && sudo systemctl enable power-monitor.service
+    ```
+
+
+### Controlling the Power Monitor Background Service
+
+All commands are with the systemd control command: `systemctl`. This command takes various arguments like `status`, `start`, `stop`, and more.
+
+1. View the current status:
+    
+    ```
+    sudo systemctl status power-monitor.service
+    ```
+
+2. Start the power monitor in the background:
+
+    ```
+    sudo systemctl start power-monitor.service
+    ```
+
+3. Stop the power monitor:
+
+    ```
+    sudo systemctl stop power-monitor.service
+    ```
+
+4. Restart the power monitor:
+
+    ```
+    sudo systemctl restart power-monitor.service
+    ```
 
 ## Command Line Interface
 
