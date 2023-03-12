@@ -249,7 +249,7 @@ if __name__ == '__main__':
 
     # TODO: Update documentation with usage instructions.
     parser = argparse.ArgumentParser(description='Power Monitor CLI Backup Interface', epilog='Documentation for the backup interface coming soon.')
-    parser.add_argument('--config', type=pathlib.Path, help='path to config.toml file.', default='/home/pi/rpi-power-monitor/rpi_power_monitor/config.toml', required=False)
+    parser.add_argument('--config', type=pathlib.Path, help='path to config.toml file.', default=os.path.join(module_root, 'config.toml'), required=False)
     args = parser.parse_args()    
 
     config_path = os.path.join(module_root, 'config.toml')
