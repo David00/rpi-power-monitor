@@ -191,7 +191,7 @@ class RPiPowerMonitor:
     def load_config(self, config_file=os.path.join(module_root, 'config.toml')):
         '''Loads the user's config.toml file and validates entries.'''
 
-        logger.debug(f"Attempting to loading config from {config_file}")
+        logger.debug(f"Attempting to load config from {config_file}")
         invalid_settings = False
         if not os.path.exists(config_file): 
             logger.error(f"Could not find your config.toml file at rpi_power_monitor/config.toml. Please ensure it exists, or, provide the config file location with the -c flag when launching the program.")
