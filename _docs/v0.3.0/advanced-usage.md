@@ -1,9 +1,11 @@
 ---
 title: Advanced Usage
-parent: v0.3.0-beta
+parent: v0.3.0
 grand_parent: Documentation
 layout: default
 nav_order: 5
+redirect_from: 
+  - docs/v0.3.0-beta/advanced-usage
 ---
 
 # Advanced Usage
@@ -18,7 +20,11 @@ nav_order: 5
 
 ## Running as a Service
 
-If you're using the custom OS image, the power monitor is already setup to run as a service.  This is what enables the power monitor to start automatically on boot, and restart automatically if there are any problems that cause it to crash.
+If you're using the custom OS image, a service file already exists, but you'll need to enable it. The service file is what enables the power monitor to start automatically on boot and restart automatically if there are any problems that cause it to crash.  Enable the service with the following command:
+
+```
+sudo systemctl enable power-monitor.service
+```
 
 You can check the service status with the following command:
 
@@ -31,12 +37,13 @@ In the custom OS release, the service file is located at `/etc/systemd/system/po
 ```
 [Unit]
 Description=Raspberry Pi Power Monitor
-After=network.target,influxdb
+After=network.target
+Wants=influxdb.service
 
 [Service]
 Restart=always
-RestartSec=1
-StartLimitInterval=120
+RestartSec=2
+StartLimitInterval=0
 StartLimitBurst=5
 User=pi
 ExecStart=/usr/bin/python3 /home/pi/rpi_power_monitor/rpi_power_monitor/power_monitor.py
@@ -147,14 +154,17 @@ Specify the number of samples (per channel) with the optional argument `--sample
     How to use:
     {: .text-delta}
     ```
-python3 power_monitor.py --mode plot [--samples 10000]
+python3 power_monitor.py --mode plot --samples 1000
     ```
     Output:
     {: .text-delta}
     ```
-    
+    INFO : Plot created! Visit http://192.168.10.219/Generated-Plot_04-02-23_001055.html to view the chart. Or, simply visit http://192.168.10.219 to view all the charts created using '--plot' mode.
     ```
+    You can view the plot by accessing the link that your terminal shows from a web browser on another device on the same network as the Raspberry Pi.
     </details>
+
+
 
 ### `--config`
 {: .fs-6 .no_toc }

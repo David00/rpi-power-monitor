@@ -1,12 +1,13 @@
 plugins:
 - jekyll-remote-theme
+- jekyll-redirect-from
 
 
 title: Power Monitor for Raspberry Pi
 description: All inclusive hardware and software project for complete home energy monitoring.
 remote_theme: just-the-docs/just-the-docs
 
-url: https://david00.github.io/rpi-power-monitor/
+url: https://david00.github.io/rpi-power-monitor
 
 # Search Settings
 search_enabled: true
@@ -16,13 +17,13 @@ search.heading_level: 1
 enable_copy_code_button: true
 
 # Latest version for the documentation
-latest-version: v0.3.0-beta
+latest-version: v0.3.0
 
 # Latest version for the custom OS image (needs to be updated to support the 'v' in the version name of the image). The v0.2.0 image path is:
 # https://github.com/David00/rpi-power-monitor/releases/download/v0.2.0/Raspberry-Pi-OS-Lite_rpi_power_monitor-0.2.0+release.zip
 # So the path contains the 'v', but the filename does not.
 
-latest-os-image: 0.2.0
+latest-os-image: v0.3.0
 
 collections:
   docs:

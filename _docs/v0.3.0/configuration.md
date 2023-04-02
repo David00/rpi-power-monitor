@@ -1,9 +1,11 @@
 ---
 title: Configuration
-parent: v0.3.0-beta
+parent: v0.3.0
 grand_parent: Documentation
 layout: default
 nav_order: 1
+redirect_from: 
+  - docs/v0.3.0-beta/configuration
 ---
 
 # Configuration
@@ -28,12 +30,12 @@ The configuration file is located at `~/rpi_power_monitor/rpi_power_monitor/conf
 
 1. Download directly to your Pi via the command line:
 ```
-wget https://david00.github.io/rpi-power-monitor/docs/v0.3.0-beta/config.toml -O ~/rpi_power_monitor/rpi_power_monitor/config.toml
+wget https://david00.github.io/rpi-power-monitor/docs/v0.3.0/config.toml -O ~/rpi_power_monitor/rpi_power_monitor/config.toml
 ```
 
 2. Download to your computer:
 
-[Download](https://david00.github.io/rpi-power-monitor/docs/v0.3.0-beta/config.toml)
+[Download](https://david00.github.io/rpi-power-monitor/docs/v0.3.0/config.toml)
 
 </details>
 
@@ -59,7 +61,7 @@ Skip down to the `[current_transformers.channel_#]` sections.  Each CT channel h
 * `type`: either `production`, `consumption`, or `mains`. See [this part](configuration#type) of the configuration reference manual for details about these options.
 
 {: .example-cream }
-In the [Planning section](/docs/general/create-your-plan#planning), I created a sample list of requirements. Remember, those requirements were based on the rating of the **breaker**, and the config file needs the rating of the **sensor**.
+In the [Planning section]({{site.url}}/docs/general/create-your-plan#planning), I created a sample list of requirements. Remember, those requirements were based on the rating of the **breaker**, and the config file needs the rating of the **sensor**.
 
 <details markdown="block">
 <summary>Configuration Example (click to expand):</summary>
@@ -136,6 +138,7 @@ phase_angle = 0
 
 > When finished making changes, press `Ctrl-x`, then `y` to save and close the config file.
 
+
 ### Enabling Automatic Backups
 
 An automatic backup script is included with this project, as of v0.3.0. 
@@ -176,7 +179,11 @@ The backup will run every Sunday at midnight.  Feel free to adjust the cron sche
 {: .note-aqua }
 To start the backup script manually, use the following command:
 <br>
-`python3 ~/rpi_power_monitor/rpi_power_monitor/backup.py`
+`sudo python3 /home/pi/rpi_power_monitor/rpi_power_monitor/backup.py`
+
+
+{: .note-aqua }
+Done with the initial configuration? Proceed to [Calibration](./calibration).
 
 ---
 

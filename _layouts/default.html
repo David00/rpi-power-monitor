@@ -11,6 +11,11 @@ layout: table_wrappers
   {% include icons/icons.html %}
   {% include components/sidebar.html %}
   <div class="main" id="top">
+    <div id="github-actions" style="text-align:right;margin-top:10px;margin-right:-78px;margin-bottom:-33px;">
+      <a class="github-button" href="https://github.com/David00/rpi-power-monitor" data-icon="octicon-star" data-size="large" data-show-count="True" aria-label="Star rpi-power-monitor on GitHub">Star</a>
+      <a class="github-button" href="https://github.com/David00/rpi-power-monitor/discussions" data-icon="octicon-comment-discussion" data-size="large" aria-label="Discuss David00/rpi-power-monitor on GitHub">Discuss</a>
+      <a class="github-button" href="https://github.com/David00/rpi-power-monitor/subscription" data-icon="octicon-eye" data-size="large" data-show-count="true" aria-label="Watch David00/rpi-power-monitor on GitHub">Watch</a>
+    </div>
     {% include components/header.html %}
     <div id="main-content-wrap" class="main-content-wrap">
       {% include components/breadcrumbs.html %}
@@ -37,5 +42,6 @@ layout: table_wrappers
   {% if site.mermaid %}
     {% include components/mermaid.html %}
   {% endif %}
+  <script async defer src="https://buttons.github.io/buttons.js"></script>
 </body>
 </html>

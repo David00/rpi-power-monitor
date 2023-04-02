@@ -1,9 +1,11 @@
 ---
 title: Database Info
-parent: v0.3.0-beta
+parent: v0.3.0
 grand_parent: Documentation
 layout: default
 nav_order: 4
+redirect_from: 
+  - docs/v0.3.0-beta/database-info
 ---
 
 # Database Info

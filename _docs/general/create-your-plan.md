@@ -65,4 +65,4 @@ The final part of the plan is the location to install the power monitor.  The se
 
 Now that you have your plan, you're ready to [purchase the hardware](./acquire-the-hardware).
 
-If this page did not answer your questions for planning, please see [the FAQ](/FAQ).
+If this page did not answer your questions for planning, please see [the FAQ]({{site.url}}/FAQ).

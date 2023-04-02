@@ -3,12 +3,14 @@ title: 3 Phase Variant Setup
 layout: default
 nav_exclude: true
 search_exclude: true
+redirect_from: 
+  - docs/v0.3.0-beta/3-phase
 ---
 
 # 3-Phase Setup Guide
 {: .no_toc }
 
-#### March 2023 | v0.3.0
+#### April 2023 | v0.3.0
 {: .no_toc }
 
 <details open markdown="block">
@@ -76,7 +78,7 @@ ls ~/rpi_power_monitor
 
     ```
     cd ~/rpi_power_monitor/rpi_power_monitor
-    wget https://david00.github.io/rpi-power-monitor/docs/v0.3.0-beta/config.toml
+    wget https://david00.github.io/rpi-power-monitor/docs/v0.3.0/config.toml
     ```
 
 1. Go through the section in the docs titled [Configuring your Power Monitor](configuration.html#configuring-your-power-monitor).

@@ -44,7 +44,7 @@ It is possible that a conductor is too large for the sensor according to the bre
 
 
 {: .example-cream }
-> Continuing the [example](/docs/general/create-your-plan#planning) from the planning section... I would purchase the following to meet the requirements, **after** ensuring the conductors will fit the diameter of the CT sensors:
+> Continuing the [example]({{site.url}}/docs/general/create-your-plan#planning) from the planning section... I would purchase the following to meet the requirements, **after** ensuring the conductors will fit the diameter of the CT sensors:
 > >
 > Mains: 2x [200A sensors](https://power-monitor.dalbrecht.tech/product/sct-t24-200a-current-transformer-24mm/)
 > >

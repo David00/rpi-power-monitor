@@ -1,9 +1,11 @@
 ---
 title: Calibration
-parent: v0.3.0-beta
+parent: v0.3.0
 grand_parent: Documentation
 layout: default
 nav_order: 2
+redirect_from: 
+  - docs/v0.3.0-beta/calibration
 ---
 
 # Calibration
@@ -132,4 +134,4 @@ After making a change to `config.toml`, save the file, and restart the power mon
 
 Repeat these steps for each sensor in use.
 
-After calibration, the software is ready for use! See [Running As A Service]() in the Advanced Usage section.
+After calibration, the software is ready for use! See [Running As A Service](advanced-usage.html#running-as-a-service) in the Advanced Usage section.

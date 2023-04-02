@@ -1,5 +1,5 @@
 # See the docs for details on how to use these settings:
-# https://david00.github.io/rpi-power-monitor/docs/v0.3.0-beta/configuration.html#configuration-reference-manual
+# https://david00.github.io/rpi-power-monitor/docs/v0.3.0/configuration.html#configuration-reference-manual
 
 [general]
 name = "default"            # Enter a name for this power monitor. This name will be used to tag all entries in the DB, which is useful 
@@ -59,7 +59,7 @@ name = 'Channel 4'
 rating = 100
 type = 'consumption'
 two_pole = false
-enabled = false
+enabled = true
 calibration = 1.0
 watts_cutoff_threshold = 0
 reversed = false
@@ -70,7 +70,7 @@ name = 'Channel 5'
 rating = 100
 type = 'consumption'
 two_pole = false
-enabled = false
+enabled = true
 calibration = 1.0
 watts_cutoff_threshold = 0
 reversed = false
@@ -81,7 +81,7 @@ name = 'Channel 6'
 rating = 100
 type = 'consumption'
 two_pole = false
-enabled = false
+enabled = true
 calibration = 1.0
 watts_cutoff_threshold = 0
 reversed = false

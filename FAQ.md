@@ -53,4 +53,48 @@ Unless you have updated your power monitor software, the OS build version should
 </details>
 
 
+<details markdown="block">
+<summary id="how-do-i-determine-which-software-version-i-have" class="fs-5">How do start the power monitor automatically on boot?</summary>
+{: .text-delta }
+You need to create and/or enable the `power-monitor.service` file. See [Running As a Service]({{site.url}}/docs/v0.3.0/advanced-usage.html#running-as-a-service) for specific instructions.
+</details>
+
+
 ## Troubleshooting
+
+<details markdown="block">
+<summary id="how-do-i-determine-which-software-version-i-have" class="fs-5">I can't access Grafana</summary>
+{: .text-delta }
+First, make sure Grafana is running with the command:
+
+```
+sudo systemctl status grafana-server
+```
+
+You should see `Active: active (running)` near the top of the output, like this:
+
+<details open markdown="block">
+<summary>Click to expand</summary>
+```
+$ sudo systemctl status grafana-server
+● grafana-server.service - Grafana instance
+    Loaded: loaded (/lib/systemd/system/grafana-server.service; enabled; vendor preset: enabled)
+    Active: active (running) since Tue 2023-02-21 01:23:44 GMT; 1 months 9 days ago
+```
+</details>
+
+If you don't see `active (running)`, then you can try to restart the service with the following command:
+
+```
+sudo systemctl restart grafana-server
+```
+
+If Grafana refuses to start, you can check the logs for an indication with the following command:
+
+```
+sudo journalctl -u grafana-service -n 25
+```
+
+This should give some indication of the problem which you can use to research online.
+
+</details>
