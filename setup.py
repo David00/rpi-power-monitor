@@ -20,7 +20,7 @@ with open(path.join(here, "README.md"), encoding="utf-8") as f:
 
 setup(
     name="rpi_power_monitor",
-    version='0.2.0',
+    version='0.3.0',
     description="Raspberry Pi Power Monitor",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -33,6 +33,7 @@ setup(
         "plotly==4.5.4",
         "spidev==3.6",
         "requests==2.21.0",
+        "tomli==2.0.1"
     ],
     license="GNU General Public License (GPLv3)",
     packages=["rpi_power_monitor"],
