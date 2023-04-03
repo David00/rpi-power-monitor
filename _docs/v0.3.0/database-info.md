@@ -3,9 +3,10 @@ title: Database Info
 parent: v0.3.0
 grand_parent: Documentation
 layout: default
-nav_order: 4
+nav_order: 5
 redirect_from: 
   - docs/v0.3.0-beta/database-info
+  - rpi-power-monitor/docs/v0.3.0-beta/database-info
 ---
 
 # Database Info
