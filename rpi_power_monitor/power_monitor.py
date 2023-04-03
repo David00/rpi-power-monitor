@@ -459,7 +459,11 @@ class RPiPowerMonitor:
         ac_voltage_ratio = (self.grid_voltage / self.ac_transformer_output_voltage) * 11  # Rough approximation
         voltage_scaling_factor = vref * ac_voltage_ratio * self.voltage_calibration
 
-        num_samples = len(v_samples_1)
+        # Get the number of samples by checking the length of one of the sample buffers.
+        for chan_num in range(1, 7):
+            if f'ct{chan_num}' in samples.keys():
+                num_samples = len(samples[f'ct{chan_num}'])
+                break
 
         for i in range(0, num_samples):
             if ct1_samples:
