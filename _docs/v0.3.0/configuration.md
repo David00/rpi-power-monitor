@@ -6,6 +6,7 @@ layout: default
 nav_order: 1
 redirect_from: 
   - docs/v0.3.0-beta/configuration
+  - docs/latest/configuration
 ---
 
 # Configuration

@@ -6,7 +6,8 @@ layout: default
 nav_order: 11
 nav_exclude: true
 search_exclude: true
-# redirect_from: 
+redirect_from: 
+  - docs/latest/upgrade-existing-software
 ---
 
 ## Upgrading from v0.2.0 -> v0.3.0 

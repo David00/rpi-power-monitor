@@ -6,6 +6,7 @@ layout: default
 nav_order: 5
 redirect_from: 
   - docs/v0.3.0-beta/advanced-usage
+  - docs/latest/advanced-usage
 ---
 
 # Advanced Usage

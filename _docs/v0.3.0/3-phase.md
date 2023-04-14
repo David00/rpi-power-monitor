@@ -5,6 +5,7 @@ nav_exclude: true
 search_exclude: true
 redirect_from: 
   - docs/v0.3.0-beta/3-phase
+  - docs/latest/3-phase
 ---
 
 # 3-Phase Setup Guide
