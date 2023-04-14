@@ -5,7 +5,8 @@ grand_parent: Documentation
 layout: default
 nav_order: 2
 redirect_from: 
-  - docs/v0.3.0-beta/calibration
+  - docs/v0.3.0-beta/calibration  
+  - docs/latest/calibration
 ---
 
 # Calibration
