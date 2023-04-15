@@ -206,11 +206,14 @@ TBD
 
 You can use a remote InfluxDB server simply by supplying the server IP or URL, database name, and username/password.  The power monitor will automatically attempt to create the database and setup the retention policies/continuous queries upon the first connection. 
 
+You'll need to [install InfluxDB version 1.8.X ](https://docs.influxdata.com/influxdb/v1.8/introduction/install/#installing-influxdb-oss) on your remote machine, which could be another Raspberry Pi, a cloud VPS, or your desktop computer. In any case, it should be a machine that has reliable power and network connectivity.
+
 {: .pro-aqua }
 Try launching the monitor software with the `--verbose` command-line option to see more detailed output when attempting to setup a remote Influx database.
 
+Simply edit your power monitor's `config.toml` file with the host, port, and optional username/password (if configured).
 
-<details markdown="block">    
+<details markdown="block">
 <summary>Sample Configuration (click to expand)</summary>
 
 ```
