@@ -14,7 +14,7 @@ When it comes to the software, this section only covers the high level informati
 
 
 {: .note-aqua }
-[FAQ: How do I determine my software version?](/FAQ/#how-do-i-determine-which-software-version-i-have)
+[FAQ: How do I determine my software version?]({{site.baseurl}}/FAQ/#how-do-i-determine-which-software-version-i-have)
 
 ---
 

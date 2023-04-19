@@ -29,6 +29,19 @@ Adaptations to monitor other systems like DC power, gas, and water, are not supp
 
 </details>
 
+<details markdown="block">
+<summary class="fs-5">Can I use my own current transformers?</summary>
+{: .text-delta }
+If your existing current transformers are of the "current-output" type, please make sure they do not provide more than 53mA at their maximum rating.
+
+If they are of the "voltage output" type, please make sure they do not provide more than 1.65V at their maximum rating.
+
+Sensors that exceed these values may damage the ADC on the PCB.
+
+The sensors available in my online shop are custom made specifically for my project and provide the best possible sensitivity and resolution. Using other sensors that provide significantly less than 53mA or 1.65V will decrease the sensitivity and resolution of the power monitor readings.
+
+</details>
+
 
 ## Software
 
