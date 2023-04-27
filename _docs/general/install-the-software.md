@@ -29,7 +29,7 @@ The recommended way to setup and use this project is with the provided prebuilt 
 The provided Pi OS image is simply the stock Raspberry Pi OS Lite image with all the dependencies pre-installed, and it is suitable for offline installations. Simply download the file and use Raspberry Pi Imager to write the image to your microSD card.
 
 {: .note-aqua }
-If you don't want to use the prebuilt image, see [Manual Installation]({{site.url}}/docs/{{site.latest-version}}/manual-installation).
+If you don't want to use the prebuilt image, see [Manual Installation]({{site.baseurl}}/docs/{{site.latest-version}}/manual-installation).
 
 ## Pre-configure Wi-Fi 
 
@@ -67,4 +67,4 @@ The SSH credentials for the custom OS image have been left as default (username:
 
 To continue the setup, see the Configuration page for the specific release that you are using. The latest release is {{ site.latest-version }} and its configuration page is here:
 
-## [{{ site.latest-version }} - Configuration]({{site.url}}/docs/{{ site.latest-version }}/configuration)
+## [{{ site.latest-version }} - Configuration]({{site.baseurl}}/docs/{{ site.latest-version }}/configuration)

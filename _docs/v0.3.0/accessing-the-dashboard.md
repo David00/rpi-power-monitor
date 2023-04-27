@@ -23,7 +23,7 @@ redirect_from:
 
 Grafana is an open source dashboard application used to present data from a variety of sources. For this project, it is used to display data from the power monitor database and show it to you in a meaningful way.
 
-The application is installed by default in the [prebuilt OS image]({{site.url}}/docs/general/install-the-software/prebuilt-os-image), and you can check its operational status with systemctl:
+The application is installed by default in the [prebuilt OS image]({{site.baseurl}}/docs/general/install-the-software#prebuilt-os-image), and you can check its operational status with systemctl:
 
 #### Check Grafana's Operational Status
 ```
@@ -75,9 +75,9 @@ Grafana's default login credentials are `admin` and `admin`. When logging in for
 
 ### Viewing Dashboards
 
-In the [prebuilt OS image]({{site.url}}/docs/general/install-the-software/prebuilt-os-image), Grafana is already configured for you. To access the dashboards, navigate to the Dashboards option, and then select browse, as shown below:
+In the [prebuilt OS image]({{site.baseurl}}/docs/general/install-the-software#prebuilt-os-image), Grafana is already configured for you. To access the dashboards, navigate to the Dashboards option, and then select browse, as shown below:
 
-![Grafana Navigation]({{site.url}}/images/grafana-browse-dashboards.png)
+![Grafana Navigation]({{site.baseurl}}/images/grafana-browse-dashboards.png)
 
 
 Then, open up the General folder, and you'll see the following dashboards:
@@ -85,12 +85,12 @@ Then, open up the General folder, and you'll see the following dashboards:
 
 * #### Home Power Dashboard
     This dashboard primarily shows detailed daily data but also includes a daily summary for the previous 60 days. <br>
-    <a href="{{site.url}}/images/home-power-dashboard-v0.3.0.png" target="_blank">Preview</a> | <a href="{{site.url}}/assets/downloads/home_power_dashboard_v0.3.0.json.txt">Download JSON</a>
+    <a href="{{site.baseurl}}/images/home-power-dashboard-v0.3.0.png" target="_blank">Preview</a> | <a href="{{site.baseurl}}/assets/downloads/home_power_dashboard_v0.3.0.json.txt">Download JSON</a>
 
 
 * #### Individual CT Data
     This dashboard shows detailed power (Watts), measured energy (kilowatt-hours), amperage (amperes), and power factor data from each individual CT. <br>
-    <a href="{{site.url}}/images/individual-ct-data-v0.3.0.png" target="_blank">Preview</a> | <a href="{{site.url}}/assets/downloads/individual_ct_data_v0.3.0.json.txt">Download JSON</a>
+    <a href="{{site.baseurl}}/images/individual-ct-data-v0.3.0.png" target="_blank">Preview</a> | <a href="{{site.baseurl}}/assets/downloads/individual_ct_data_v0.3.0.json.txt">Download JSON</a>
 
   
 ### Building Dashboards

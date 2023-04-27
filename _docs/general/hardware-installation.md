@@ -24,12 +24,12 @@ layout: default
 <details markdown="block">
 <summary>Show picture:</summary>
 
-![Pi4 with standoffs installed]({{site.url}}/images/pi4_with_standoffs.jpg)
+![Pi4 with standoffs installed]({{site.baseurl}}/images/pi4_with_standoffs.jpg)
 
 </details>
 
 {:style="counter-reset:step-counter 1"}
-2. Make sure you've already done the [channel configuration]({{site.url}}/docs/{{site.latest-version}}/configuration#setting-current-transformer-ct-sensor-details}}) part of the software installation so that you can get straight to post install verification.
+2. Make sure you've already done the [channel configuration]({{site.baseurl}}/docs/{{site.latest-version}}/configuration#setting-current-transformer-ct-sensor-details}}) part of the software installation so that you can get straight to post install verification.
 
 ---
 
@@ -45,9 +45,9 @@ This project should be installed by a licensed electrician. Your electrical pane
 > * Mini flat-head screw driver (for the factory assembled PCB terminal screws)
 > * Mini Phillips-head screw driver (for the standoff screws)
 
-Panel installation is intended for whole home monitoring implementations. From the [planning]({{site.url}}/docs/general/create-your-plan#planning) step, you should have identified a place to install the power monitor and identified the breakers that you intend to monitor.
+Panel installation is intended for whole home monitoring implementations. From the [planning]({{site.baseurl}}/docs/general/create-your-plan#planning) step, you should have identified a place to install the power monitor and identified the breakers that you intend to monitor.
 
-Simply clamp each sensor around the hot wire for the target circuit, and run the sensor wire back to the location of the Raspberry Pi.  The sensor wire should be kept as far away from the high voltage conductors as reasonably possible to minimize interference and noise.  Take note of which sensor wire is which so that you can validate the [channel configuration]({{site.url}}/docs/{{site.latest-version}}/configuration#setting-current-transformer-ct-sensor-details) after install.
+Simply clamp each sensor around the hot wire for the target circuit, and run the sensor wire back to the location of the Raspberry Pi.  The sensor wire should be kept as far away from the high voltage conductors as reasonably possible to minimize interference and noise.  Take note of which sensor wire is which so that you can validate the [channel configuration]({{site.baseurl}}/docs/{{site.latest-version}}/configuration#setting-current-transformer-ct-sensor-details) after install.
 
 On the factory assembled PCB, do not over tighten the screws in the terminal block.  Once they start to get tight, they should be tight enough.
 
@@ -73,12 +73,12 @@ It is important to make sure the sign of the Watts field is correct for the appl
 * All `production` channels should read positive Watts **when producing**.
 * The `mains` channels should be positive if you do not have any production sources, or if those production sources are not producing. If you have grid-tied solar panels, you'll probably need to wait until dark to confirm this (or shut down your solar inverter).
 
-If any values have the wrong sign, you can change [the `reversed` setting]({{site.url}}/docs/{{site.latest-version}}/configuration#reversed) for the channel in config.toml. you can reverse the polarity of the CT sensor wires at the PCB.  If you can't reverse the polarity at the PCB (such as with the DIY kit's RJ-45 or 3.5mm interfaces), you can unclip the CT and reverse the direction that it is clipped around the conductor.
+If any values have the wrong sign, you can change [the `reversed` setting]({{site.baseurl}}/docs/{{site.latest-version}}/configuration#reversed) for the channel in config.toml. you can reverse the polarity of the CT sensor wires at the PCB.  If you can't reverse the polarity at the PCB (such as with the DIY kit's RJ-45 or 3.5mm interfaces), you can unclip the CT and reverse the direction that it is clipped around the conductor.
 
 {: .note-yellow }
 The net power and home power calculations both rely on proper signage according to the above parameters!  If your net power figures do not make sense, double check that your production sources are showing positive Watts when producing.  Then, check that your mains are showing positive Watts when you're not producing any power (such as at night, for solar panels).
 
-After validation, move onto the [Calibration (v0.3.0)]({{site.url}}/docs/{{site.latest-version}}/calibration) section.
+After validation, move onto the [Calibration (v0.3.0)]({{site.baseurl}}/docs/{{site.latest-version}}/calibration) section.
 
 ---
 

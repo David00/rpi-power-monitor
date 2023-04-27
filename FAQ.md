@@ -69,7 +69,7 @@ Unless you have updated your power monitor software, the OS build version should
 <details markdown="block">
 <summary id="how-do-i-determine-which-software-version-i-have" class="fs-5">How do start the power monitor automatically on boot?</summary>
 {: .text-delta }
-You need to create and/or enable the `power-monitor.service` file. See [Running As a Service]({{site.url}}/docs/v0.3.0/advanced-usage.html#running-as-a-service) for specific instructions.
+You need to create and/or enable the `power-monitor.service` file. See [Running As a Service]({{site.baseurl}}/docs/v0.3.0/advanced-usage#running-as-a-service) for specific instructions.
 </details>
 
 

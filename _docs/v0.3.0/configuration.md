@@ -62,7 +62,7 @@ Skip down to the `[current_transformers.channel_#]` sections.  Each CT channel h
 * `type`: either `production`, `consumption`, or `mains`. See [this part](configuration#type) of the configuration reference manual for details about these options.
 
 {: .example-cream }
-In the [Planning section]({{site.url}}/docs/general/create-your-plan#planning), I created a sample list of requirements. Remember, those requirements were based on the rating of the **breaker**, and the config file needs the rating of the **sensor**.
+In the [Planning section]({{site.baseurl}}/docs/general/create-your-plan#planning), I created a sample list of requirements. Remember, those requirements were based on the rating of the **breaker**, and the config file needs the rating of the **sensor**.
 
 <details markdown="block">
 <summary>Configuration Example (click to expand):</summary>
