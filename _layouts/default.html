@@ -11,11 +11,24 @@ layout: table_wrappers
   {% include icons/icons.html %}
   {% include components/sidebar.html %}
   <div class="main" id="top">
-    <div id="github-actions" style="position:absolute;top:15px;right:-1rem;z-index:3;">
+    <div id="github-actions">
       <a class="github-button" href="https://github.com/David00/rpi-power-monitor" data-icon="octicon-star" data-size="large" data-show-count="True" aria-label="Star rpi-power-monitor on GitHub">Star</a>
       <a class="github-button" href="https://github.com/David00/rpi-power-monitor/discussions" data-icon="octicon-comment-discussion" data-size="large" aria-label="Discuss David00/rpi-power-monitor on GitHub">Discuss</a>
       <a class="github-button" href="https://github.com/David00/rpi-power-monitor/subscription" data-icon="octicon-eye" data-size="large" data-show-count="true" aria-label="Watch David00/rpi-power-monitor on GitHub">Watch</a>
+      <div id="dark-toggle-container">
+        <div id="dark-toggle" title="Toggle dark mode" aria-label="Toggle dark mode">
+          <label class="switch">
+            <input type="checkbox" id="dark-toggle-switch">
+            <span class="slider round"></span>
+          </label>
+        </div>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-moon">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+      </div>
     </div>
+    
     {% include components/header.html %}
     <div id="main-content-wrap" class="main-content-wrap">
       {% include components/breadcrumbs.html %}

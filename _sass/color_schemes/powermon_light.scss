@@ -1,0 +1,13 @@
+@import "./color_schemes/light";
+
+:target {
+    background-color: rgb(255, 254, 185);
+    border-radius: 5px;
+    animation: bounce_element 2s ease 0s 1 normal forwards;    
+    
+}
+
+.config-value {
+    background-color: #F1FAEE;
+    border-radius: 5px;
+}

@@ -1,0 +1,12 @@
+@import "./color_schemes/dark";
+
+:target {
+    background-color: rgb(113, 111, 0);
+    border-radius: 5px;
+    animation: bounce_element 2s ease 0s 1 normal forwards;    
+}
+
+.config-value {
+    background-color: #3D4B38;
+    border-radius: 5px;
+}

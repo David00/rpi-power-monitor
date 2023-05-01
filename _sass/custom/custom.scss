@@ -1,11 +1,10 @@
-// TODO: Figure out how to use SCSS
 // @import "./support/_variables";
 
-
-.config-value {
-    // color: $palette-cream
-    background-color: #F1FAEE;
+// Hide page content - JS will remove it once DOM is loaded.
+body {
+    display: none;
 }
+
 
 .text-muted {
     color: #6c757d !important;
@@ -14,4 +13,133 @@
 .text-muted-link {
     color: #6c757d !important;
     text-decoration: underline;
+}
+
+// Fix .site-header alignment 
+.site-header {
+    height: 101px;
+    max-height: 101px;
+}
+
+.feather-moon {
+    top:3px;
+    position:relative;
+}
+
+#github-actions {
+    display:flex;
+    width:50%;
+    padding-top:0.5em;
+    justify-content: space-around;
+    min-width:360px;
+    
+    .github-button {
+        padding-right:0.1em;
+    }
+}
+
+// Dark mode slide toggle
+#dark-toggle-container {
+    width:66px;
+    display:flex;
+    justify-content: space-between;
+}
+#dark-toggle {
+  display:flex;
+  align-items:center;
+}
+.switch {
+    position: absolute;
+    width: 30px;
+    height: 17px;
+    margin-left:0.4em;
+
+    // Hide HTML checkbox
+    input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+}
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
+
+    &:before {
+        position: absolute;
+        content: "";
+        height: 13px;
+        width: 13px;
+        left: 2px;
+        bottom: 2px;
+        background-color: white;
+        -webkit-transition: .4s;
+        transition: .4s;
+    }
+    &.round {
+        border-radius: 17px;
+    }
+    &.round:before {
+        border-radius: 50%;
+    }
+}
+
+input:checked + .slider {
+    background-color: #2196f3;
+}
+input:focus + .slider {
+    box-shadow: 0 0 1px #2196f3;
+}
+input:checked + .slider:before {
+    -webkit-transform: translateX(13px);
+    -ms-transform: translateX(13px);
+    transform: translateX(13px);
+  }
+
+
+// Page Anchor Animation
+@keyframes bounce_element {
+	0% {
+		animation-timing-function: ease-in;
+		opacity: 1;
+		transform: translateY(-45px);
+	}
+	24% {
+		opacity: 1;
+	}
+	40% {
+		animation-timing-function: ease-in;
+		transform: translateY(-24px);
+	}
+	65% {
+		animation-timing-function: ease-in;
+		transform: translateY(-12px);
+	}
+	82% {
+		animation-timing-function: ease-in;
+		transform: translateY(-6px);
+	}
+	93% {
+		animation-timing-function: ease-in;
+		transform: translateY(-4px);
+	}
+	25%,
+	55%,
+	75%,
+	87% {
+		animation-timing-function: ease-out;
+		transform: translateY(0px);
+	}
+	100% {
+		animation-timing-function: ease-out;
+		opacity: 1;
+		transform: translateY(0px);
+	}
 }
