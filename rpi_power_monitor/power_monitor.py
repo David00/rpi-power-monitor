@@ -16,6 +16,10 @@ import spidev
 from prettytable import PrettyTable
 import argparse
 import pathlib
+from multiprocessing import Manager, Event
+import signal
+from copy import deepcopy
+import os
 
 from rpi_power_monitor.plotting import plot_data
 from influxdb import InfluxDBClient
@@ -30,7 +34,6 @@ formatter = logging.Formatter('%(asctime)s : %(message)s', datefmt='%Y-%m-%d %H:
 ch_formatter = logging.Formatter('%(levelname)s : %(message)s')
 ch.setFormatter(ch_formatter)
 logger.addHandler(ch)
-
 
 module_root = pathlib.Path(__file__).parent
 
@@ -52,29 +55,18 @@ retention_policies = {
     }
 }
 
+
+
+
 class RPiPowerMonitor:
     """ Class to take readings from the MCP3008 and calculate power """
     def __init__(self, mode, config, spi=None):
         self.pid = os.getpid()
-        # Check to see if there is already a power monitor process running.
-        logger.debug("  ..Checking to see if the power monitor is already running or not...")
-        c = subprocess.run('sudo systemctl status power-monitor.service | grep "Main PID"', shell=True, capture_output=True)
-        output = c.stdout.decode('utf-8').lower()
-        if str(self.pid) not in output and len(output) > 10 and 'code=' not in output:
-                logger.warning("It appears the power monitor is already running in the background via systemd. Please stop the power monitor with the following command:\n'sudo systemctl stop power-monitor'")
-                self.cleanup(-1)
-        # Check process list in case user is running the power monitor manually in an SSH session.
-        c = subprocess.run('sudo ps -aux | grep "power_monitor.py" | grep -v "grep"', shell=True, capture_output=True)
-        output = c.stdout.decode('utf-8').lower()
-        if len(output.splitlines()) > 1:
-            if 'power_monitor.py' in c.stdout.decode('utf-8').lower():
-                for _ in range(6):
-                    output = output.replace('  ', ' ')
-                output = output.split(' ')
-                user, pid = output[0], output[1]
-                logger.warning(f"It appears that the user {user} is already running the power monitor in another session (process ID {pid}). You should not run two copies at the same time because they will compete with each other for access to the PCB.")
-                logger.warning(f"If you're not sure where or how the other power monitor session is running, you can kill it with the following command: kill -9 {pid}")
-                self.cleanup(-1)
+        self.imported_plugins = dict()
+        
+        duplicate = self.check_dup_process()
+        if duplicate:
+            self.cleanup()
 
         self.load_config(config)
         
@@ -98,6 +90,9 @@ class RPiPowerMonitor:
         self.points_buffer = [] # A buffer to hold sublists of points so that they can be written altogether (reduces DB overhead)
         self.def_cal = 0.88     # This is the default calibration factor for all CTs from my shop.
         self.terminal_mode = False
+
+        # Plugin Loading
+        self.load_plugins(self.config['plugins'])   # Note: Plugins are initialized here, but they are only started when the power monitor routine starts.
 
     
     def validate_cqs(self):
@@ -738,7 +733,7 @@ class RPiPowerMonitor:
             }
         
         # Grab the voltage from one of the enabled channels:
-        results['voltage'] = results[self.enabled_channels[0]]['voltage']
+        # results['voltage'] = results[self.enabled_channels[0]]['voltage']
 
         # Cutoff Threshold check
         for chan_num  in self.enabled_channels:
@@ -751,7 +746,7 @@ class RPiPowerMonitor:
         return results
 
     def run_main(self):
-        """ Starts the main power monitor loop. """
+        """ Starts the main power monitor loop and launches plugins. """
         logger.info("... Starting Raspberry Pi Power Monitor")
         logger.info("Press Ctrl-c to quit...")
         # The following empty dictionaries will hold the respective calculated values at the end
@@ -759,28 +754,163 @@ class RPiPowerMonitor:
         production_values = dict(power=[], pf=[], current=[])
         home_consumption_values = dict(power=[], pf=[], current=[])
         net_values = dict(power=[], current=[])
-        ct_dict = {channel : {'power' : [], 'pf' : [], 'current' : []} for channel in self.enabled_channels}
+        ct_dict = {channel : {'power' : [], 'pf' : [], 'current' : [], 'voltage' : []} for channel in self.enabled_channels}
         rms_voltages = []
-        SMA_Values = {channel : {'power' : [], 'pf' : [], 'current' : []} for channel in self.enabled_channels}
-        num_samples = 1000
+        SMA_Data = {channel : {'power' : [], 'pf' : [], 'current' : []} for channel in self.enabled_channels}
+        # Add 'production', 'home-consumption', and 'net' figures to the SMA_Data dictionary:
+        SMA_Data.update({
+            'cts' : ct_dict,
+            'production' : {'power' : [], 'pf': [], 'current': []},
+            'home-consumption' : {'power': [], 'current': []},
+            'net' : {'power': [], 'current': []},
+            'voltage' : [],
+            })
+        SMA_Values = {
+            'cts' : deepcopy(ct_dict),
+            'production' : {'power' : None, 'pf' : None, 'current' : None},
+            'home-consumption' : {'power' : None, 'current' : None},
+            'net' : {'power' : None, 'current' : None},
+            'voltage' : None
+        }
+        SMA_Window = 2      # This is the total number of calculations that are included in the simple-moving-average.
+        write_threshold = 2 # This controls how many SMA_Data updates are processed before the resulting simple-moving-average values are sent to be stored in the database.
+        write_threshold_counter = 0 # Counter that keeps track of the number of SMA updates processed. When write_threshold_counter == write_threshold, the current SMA values will be sent to influx DB cache for eventual storage.
+        num_samples = 500
 
-        i = 0   # Counter for averaging function
+        # Start plugins that have been imported.
+        if len(self.imported_plugins.keys()) > 0:
+            self.result_manager = Manager()
+            self.latest_results = self.result_manager.dict()
+
+            for plugin_name, plugin in self.imported_plugins.items():
+                plugin['plugin'].start(self.latest_results)
+        
+        else:
+            self.latest_results = dict()
+
+
         # Get the expected sample count for the current configuration.
         samples = self.collect_data(num_samples)
         sample_count = sum([len(samples[x]) for x in samples.keys() if type(samples[x]) == list])
         
-        while True:
-            try:
-                board_voltage = self.get_board_voltage()
-                samples = self.collect_data(num_samples)
-                poll_time = samples['time']
-                duration = samples['duration']
-                sample_rate = round((sample_count / duration) / num_samples, 2)
-                per_channel_sample_rate = round(sample_rate / (2 * len(rpm.enabled_channels)), 2)                
-                # logger.debug(f"Sample rates. Overall: {sample_rate} | Per-channel: {per_channel_sample_rate}")
+        while not halt_flag.is_set():
+            board_voltage = self.get_board_voltage()
+            samples = self.collect_data(num_samples)
+            poll_time = samples['time']
+            duration = samples['duration']
+            sample_rate = round((sample_count / duration) / num_samples, 2)
+            per_channel_sample_rate = round(sample_rate / (2 * len(rpm.enabled_channels)), 2)
+
+            results = self.calculate_power(samples, board_voltage)
+            voltage = results[self.enabled_channels[0]]['voltage']
+
+            # Determine Production, Home Consumption, and Net Values
+            
+            # Home Consumption
+            # Home consumption power is the total power that the home is using. This is typically the mains plus the production sources. 
+            # However, if you haven't setup any mains channels in config.toml, this will be the sum of all 'consumption' channels + 'production' channels
+            home_consumption_power = 0
+            home_consumption_current = 0
+            if len(self.mains_channels) == 0:   # No mains have been configured, so sum all channels with type == consumption
+                for chan_num in self.consumption_channels:
+                    home_consumption_power += results[chan_num]['power']
+                    home_consumption_current += results[chan_num]['current']
+            else:   # Mains have been configured, so sum them and subtract (rather, add the negative) production sources.
+                for chan_num in self.mains_channels:
+                    home_consumption_power += results[chan_num]['power']
+                    home_consumption_current += results[chan_num]['current']
+                for chan_num in self.production_channels:
+                    home_consumption_power += results[chan_num]['power']
+                    home_consumption_current += results[chan_num]['current']
+
+            # Production
+            # Set the current for any production sources negative if the power is negative, and find the total power and current from all production sources.
+            production_power = 0
+            production_current = 0
+            production_pf = 0   # Average power factor from all production sources
+
+            for chan_num in self.production_channels:                    
+                production_power += results[chan_num]['power']
+                production_current += results[chan_num]['current']
+                production_pf += results[chan_num]['pf']
+            
+            # Average the production power factor
+            if len(self.production_channels) > 0:
+                production_pf = production_pf / len(self.production_channels)
+
+            # Net
+            net_power = home_consumption_power - production_power
+            net_current = home_consumption_current - production_current
+            if net_power < 0:
+                current_status = "Producing"
+            else:
+                current_status = "Consuming"
 
 
-                results = self.calculate_power(samples, board_voltage)
+            # Initial SMA Construction
+            if len(SMA_Data['cts'][self.enabled_channels[0]]['power']) < SMA_Window:
+                for chan in results.keys():
+                    for figure, value in results[chan].items():
+                        if figure != 'type':
+                            SMA_Data['cts'][chan][figure].append(value)
+                
+                # Voltage, Net, Home Power, and Production SMAs
+                SMA_Data['voltage'].append(voltage)
+                SMA_Data['home-consumption']['power'].append(home_consumption_power)
+                SMA_Data['home-consumption']['current'].append(home_consumption_current)
+                SMA_Data['net']['power'].append(net_power)
+                SMA_Data['net']['current'].append(net_current)
+                SMA_Data['production']['power'].append(production_power)
+                SMA_Data['production']['current'].append(production_current)
+                SMA_Data['production']['pf'].append(production_pf)
+            
+            else:
+                for chan in results.keys():
+                    for figure, value in results[chan].items():
+                        if figure != 'type': 
+                            SMA_Data['cts'][chan][figure].pop(0)
+                            SMA_Data['cts'][chan][figure].append(value)
+                
+                SMA_Data['voltage'].pop(0)
+                SMA_Data['home-consumption']['power'].pop(0)
+                SMA_Data['home-consumption']['current'].pop(0)
+                SMA_Data['net']['power'].pop(0)
+                SMA_Data['net']['current'].pop(0)
+                SMA_Data['production']['power'].pop(0)
+                SMA_Data['production']['current'].pop(0)
+                SMA_Data['production']['pf'].pop(0)
+
+                SMA_Data['voltage'].append(voltage)
+                SMA_Data['home-consumption']['power'].append(home_consumption_power)
+                SMA_Data['home-consumption']['current'].append(home_consumption_current)
+                SMA_Data['net']['power'].append(net_power)
+                SMA_Data['net']['current'].append(net_current)
+                SMA_Data['production']['power'].append(production_power)
+                SMA_Data['production']['current'].append(production_current)
+                SMA_Data['production']['pf'].append(production_pf)
+
+                # Calculate SMA
+                for chan in SMA_Data['cts'].keys():
+                    for figure, values in SMA_Data['cts'][chan].items():
+                        SMA_Values['cts'][chan][figure] = sum(values) / len(values)
+                
+                for summary_figure in ('home-consumption', 'net', 'production'):
+                    try:
+                        for measurement, values in SMA_Data[summary_figure].items():
+                            SMA_Values[summary_figure][measurement] = sum(values) / len(values)
+                    except ZeroDivisionError:
+                        SMA_Values[summary_figure][measurement] = 0
+                    
+                # Update Voltage SMA separately since it is not a dictionary.
+                SMA_Values['voltage'] = sum(SMA_Data['voltage']) / len(SMA_Data['voltage'])
+            
+                # Determine if the system is net producing or net consuming right now by looking at the panel mains.
+                # Since the current measured is always positive,
+                # we need to add a negative sign to the amperage value if we're exporting power.
+                for chan_num in self.mains_channels:
+                    # print(f"Channel {chan_num}: Power: {SMA_Values['cts'][chan_num]['power']} | Current: {SMA_Values['cts'][chan_num]['current']}")
+                    if SMA_Values['cts'][chan_num]['power'] < 0:
+                        SMA_Values['cts'][chan_num]['current'] = SMA_Values['cts'][chan_num]['current'] * -1            
 
                 # RMS calculation for phase correction only - this is not needed after everything is tuned.
                 # The following code is used to compare the RMS power to the calculated real power.
@@ -793,128 +923,35 @@ class RPiPowerMonitor:
                 # rms_power_6 = round(results['ct6']['current'] * results['ct6']['voltage'], 2)  # AKA apparent power
 
                 # Prepare values for database storage
-                production_power = 0
-                production_current = 0
-                production_pf = 0   # Average power factor from all production sources
 
-                # Set the RMS voltage using one of the calculated voltages.
-                voltage = results[self.enabled_channels[0]]['voltage']
-
-                # Determine if the system is net producing or net consuming right now by looking at the panel mains.
-                # Since the current measured is always positive,
-                # we need to add a negative sign to the amperage value if we're exporting power.
-                for chan_num in self.mains_channels:
-                    if results[chan_num]['power'] < 0:
-                        results[chan_num]['current'] = results[chan_num]['current'] * -1
-                    
-                # Set the current for any production sources negative if the power is negative, and find the total power and current from all production sources.
-                for chan_num in self.production_channels:                    
-                    production_power += results[chan_num]['power']
-                    production_current += results[chan_num]['current']
-
-                # Home consumption power is the total power that the home is using. This is typically the mains plust the production sources. 
-                # However, if you haven't setup any mains channels in config.toml, this will be the sum of all 'consumption' channels + 'production' channels
-                home_consumption_power = 0
-                home_consumption_current = 0
-                if len(self.mains_channels) == 0:   # No mains have been configured, so sum all channels with type == consumption
-                    for chan_num in self.consumption_channels:
-                        home_consumption_power += results[chan_num]['power']
-                        home_consumption_current += results[chan_num]['current']
-                else:   # Mains have been configured, so sum them and subtract (rather, add the negative) production sources.
-                    for chan_num in self.mains_channels:
-                        home_consumption_power += results[chan_num]['power']
-                        home_consumption_current += results[chan_num]['current']
-                    for chan_num in self.production_channels:
-                        home_consumption_power += results[chan_num]['power']
-                        home_consumption_current += results[chan_num]['current']
-
-
-                net_power = home_consumption_power - production_power
-                net_current = home_consumption_current - production_current
-
-                if net_power < 0:
-                    current_status = "Producing"
+                if write_threshold_counter == write_threshold:
+                    self.queue_for_influx(SMA_Values, poll_time)
+                    write_threshold_counter = 0
                 else:
-                    current_status = "Consuming"
+                    write_threshold_counter += 1
 
-                # Average 10 readings before sending to db
-                if i < 10:
-                    production_values['power'].append(production_power)
-                    production_values['current'].append(production_current)
-                    production_values['pf'].append(production_pf)
+                # Expose data to plugins
+                self.latest_results.update(SMA_Values)
 
-                    home_consumption_values['power'].append(home_consumption_power)
-                    home_consumption_values['current'].append(home_consumption_current)
+                if self.terminal_mode:
+                    self.print_results(SMA_Values, sample_rate)
 
-                    net_values['power'].append(net_power)
-                    net_values['current'].append(net_current)
+        # Halt flag set
+        self.cleanup()
 
-                    for chan_num in self.enabled_channels:
-                        ct_dict[chan_num]['power'].append(results[chan_num]['power'])
-                        ct_dict[chan_num]['current'].append(results[chan_num]['current'])
-                        ct_dict[chan_num]['pf'].append(results[chan_num]['pf'])
+    def queue_for_influx(self, SMA_Values, poll_time):
+        '''Creates Point() objects from the measured values, and caches them into a small batch before writing to Influx.'''
 
-                    rms_voltages.append(voltage)
-                    i += 1
-                else:
-                    # Calculate the average, buffer the result, and write to Influx 
-                    # if the batch size has met the threshold.
-                    self.queue_for_influx(
-                        production_values,
-                        home_consumption_values,
-                        net_values,
-                        ct_dict,
-                        poll_time,
-                        i,
-                        rms_voltages)
-                    production_values = dict(power=[], pf=[], current=[])
-                    home_consumption_values = dict(power=[], pf=[], current=[])
-                    net_values = dict(power=[], current=[])
-                    ct_dict = {channel : {'power' : [], 'pf' : [], 'current' : []} for channel in self.enabled_channels}
-                    rms_voltages = []
-                    i = 0
-
-                    if self.terminal_mode:                        
-                        self.print_results(results, sample_rate)
-
-            except KeyboardInterrupt:
-                self.cleanup(0)
-
-
-    def queue_for_influx(self,
-                        production_values,
-                        home_consumption_values,
-                        net_values,
-                        ct_dict,
-                        poll_time,
-                        length,
-                        voltages):
-        # Calculate Averages
-        avg_production_power = sum(production_values['power']) / length
-        avg_production_current = sum(production_values['current']) / length
-        avg_production_pf = sum(production_values['pf']) / length
-        avg_home_power = sum(home_consumption_values['power']) / length
-        avg_home_current = sum(home_consumption_values['current']) / length
-        avg_net_power = sum(net_values['power']) / length
-        avg_net_current = sum(net_values['current']) / length
-
-        # Create per-channel Point()
+        # Create Points() for every measurement.
         ct_points = []
         for chan_num in self.enabled_channels:
-            power = sum(ct_dict[chan_num]['power']) / length
-            current = sum(ct_dict[chan_num]['current']) / length
-            pf = sum(ct_dict[chan_num]['pf']) / length
-            avg_voltage = sum(voltages) / length
+            values = SMA_Values['cts'][chan_num]
+            ct_points.append(Point('ct', num=chan_num, power=values['power'], current=values['current'], pf=values['pf'], time=poll_time, name=self.name).to_dict())
 
-            ct_points.append(
-                Point('ct', power=power, current=current, pf=pf, time=poll_time, num=chan_num, name=self.name).to_dict()
-            )
-
-        # Create Points
-        home_load = Point('home_load', power=avg_home_power, current=avg_home_current, time=poll_time, name=self.name)
-        production = Point('solar', power=avg_production_power, current=avg_production_current, pf=avg_production_pf, time=poll_time, name=self.name)
-        net = Point('net', power=avg_net_power, current=avg_net_current, time=poll_time, name=self.name)
-        v = Point('voltage', voltage=avg_voltage, v_input=0, time=poll_time, name=self.name)
+        home_load = Point('home_load', power=SMA_Values['home-consumption']['power'], current=SMA_Values['home-consumption']['current'], time=poll_time, name=self.name)
+        production = Point('solar', power=SMA_Values['production']['power'], current=SMA_Values['production']['current'], pf=SMA_Values['production']['pf'], time=poll_time, name=self.name)
+        net = Point('net', power=SMA_Values['net']['power'], current=SMA_Values['net']['current'], time=poll_time, name=self.name)
+        v = Point('voltage', voltage=SMA_Values['voltage'], v_input=0, time=poll_time, name=self.name)
 
         points = [
             home_load.to_dict(),
@@ -934,13 +971,46 @@ class RPiPowerMonitor:
                 logger.critical(f"Failed to write data to Influx. Reason: {e}")
             except ConnectionError:
                 logger.info("Connection to InfluxDB lost. Please investigate!")
-                quit()
+                self.cleanup()
             
-            # logger.info(f"Wrote {len(self.points_buffer)} points to the DB ({batch_size} batches)")
             self.points_buffer = []
 
 
-    def cleanup(self, returncode):
+    def check_dup_process(self, *args, **kwargs):
+        '''Checks the host to see if the power monitor is already running in a separate process.
+        
+        Returns True if a duplicate process is found.
+        Returns False if no duplicate process is found, or if the environment POWERMON_DEBUG is set to True.
+        '''
+
+        if os.getenv("POWERMON_DEBUG"):
+            logger.debug("Environment variable POWERMON_DEBUG is True - skipping duplicate copy check.")
+            return False
+
+        # Check to see if there is already a power monitor process running.
+        c = subprocess.run('sudo systemctl status power-monitor.service | grep "Main PID"', shell=True, capture_output=True)
+        output = c.stdout.decode('utf-8').lower()
+        if str(self.pid) not in output and len(output) > 10 and 'code=' not in output:
+                logger.warning("It appears the power monitor is already running in the background via systemd. Please stop the power monitor with the following command:\n'sudo systemctl stop power-monitor'")
+                return True
+
+        # Check process list in case user is running the power monitor manually in an SSH session.
+        c = subprocess.run('sudo ps -aux | grep "power_monitor.py" | grep -v "grep"', shell=True, capture_output=True)
+        output = c.stdout.decode('utf-8').lower()
+        if len(output.splitlines()) > 1:
+            if 'power_monitor.py' in c.stdout.decode('utf-8').lower():
+                for _ in range(6):
+                    output = output.replace('  ', ' ')
+                output = output.split(' ')
+                user, pid = output[0], output[1]
+                logger.warning(f"It appears that the user {user} is already running the power monitor in another session (process ID {pid}). You should not run two copies at the same time because they will compete with each other for access to the PCB.")
+                logger.warning(f"If you're not sure where or how the other power monitor session is running, you can kill it with the following command: sudo kill -9 {pid}")
+                return True
+
+        return False
+
+
+    def cleanup(self, *args, **kwargs):
         '''Performs necessary termination/shutdown procedures and exits the program.'''
         try:
             if self.spi:
@@ -953,37 +1023,66 @@ class RPiPowerMonitor:
         except AttributeError:
             pass
     
-        exit(returncode)
+        # Stop plugins
+        for plugin_name, plugin in self.imported_plugins.items():
+            logger.debug(f"Stopping plugin {plugin['plugin'].name}")
+            stopped = plugin['plugin'].stop()
+            if not stopped:
+                logger.debug(f"... there was a problem stopping the {plugin} plugin.")
+    
+        exit(0)
         
+    def load_plugins(self, plugins):
+        '''Handles the import of custom plugins.'''
+
+        for plugin_name, config in plugins.items():
+            if config['enabled']:
+                p = Plugin(plugin_name, config)
+                if not p:
+                    logger.warning(f"There was a problem importing plugin {plugin_name}. Please review the plugin logs.")
+                    continue
+
+                if p._module:   # Plugin was found and successfully imported
+                    self.imported_plugins[plugin_name] = {
+                        'status' : 'imported',
+                        'plugin' : p
+                    }
+
 
     @staticmethod
-    def print_results(results, sample_rate):
+    def print_results(SMA_Values, sample_rate):
         t = PrettyTable(['', 'ct1', 'ct2', 'ct3', 'ct4', 'ct5', 'ct6'])
         t.add_row(['Watts',
-                   round(results[1]['power'] if results.get(1) else 0, 3),
-                   round(results[2]['power'] if results.get(2) else 0, 3),
-                   round(results[3]['power'] if results.get(3) else 0, 3),
-                   round(results[4]['power'] if results.get(4) else 0, 3),
-                   round(results[5]['power'] if results.get(5) else 0, 3),
-                   round(results[6]['power'] if results.get(6) else 0, 3)])
+                   round(SMA_Values['cts'][1]['power'] if SMA_Values['cts'].get(1) else 0, 3),
+                   round(SMA_Values['cts'][2]['power'] if SMA_Values['cts'].get(2) else 0, 3),
+                   round(SMA_Values['cts'][3]['power'] if SMA_Values['cts'].get(3) else 0, 3),
+                   round(SMA_Values['cts'][4]['power'] if SMA_Values['cts'].get(4) else 0, 3),
+                   round(SMA_Values['cts'][5]['power'] if SMA_Values['cts'].get(5) else 0, 3),
+                   round(SMA_Values['cts'][6]['power'] if SMA_Values['cts'].get(6) else 0, 3)])
         t.add_row(['Current',
-                   round(results[1]['current'] if results.get(1) else 0, 3),
-                   round(results[2]['current'] if results.get(2) else 0, 3),
-                   round(results[3]['current'] if results.get(3) else 0, 3),
-                   round(results[4]['current'] if results.get(4) else 0, 3),
-                   round(results[5]['current'] if results.get(5) else 0, 3),
-                   round(results[6]['current'] if results.get(6) else 0, 3)])
+                   round(SMA_Values['cts'][1]['current'] if SMA_Values['cts'].get(1) else 0, 3),
+                   round(SMA_Values['cts'][2]['current'] if SMA_Values['cts'].get(2) else 0, 3),
+                   round(SMA_Values['cts'][3]['current'] if SMA_Values['cts'].get(3) else 0, 3),
+                   round(SMA_Values['cts'][4]['current'] if SMA_Values['cts'].get(4) else 0, 3),
+                   round(SMA_Values['cts'][5]['current'] if SMA_Values['cts'].get(5) else 0, 3),
+                   round(SMA_Values['cts'][6]['current'] if SMA_Values['cts'].get(6) else 0, 3)])
         t.add_row(['P.F.',
-                   round(results[1]['pf'] if results.get(1) else 0, 3),
-                   round(results[2]['pf'] if results.get(2) else 0, 3),
-                   round(results[3]['pf'] if results.get(3) else 0, 3),
-                   round(results[4]['pf'] if results.get(4) else 0, 3),
-                   round(results[5]['pf'] if results.get(5) else 0, 3),
-                   round(results[6]['pf'] if results.get(6) else 0, 3)])
-        t.add_row(['Voltage', round(results['voltage'], 3), '', '', '', '', ''])
+                   round(SMA_Values['cts'][1]['pf'] if SMA_Values['cts'].get(1) else 0, 3),
+                   round(SMA_Values['cts'][2]['pf'] if SMA_Values['cts'].get(2) else 0, 3),
+                   round(SMA_Values['cts'][3]['pf'] if SMA_Values['cts'].get(3) else 0, 3),
+                   round(SMA_Values['cts'][4]['pf'] if SMA_Values['cts'].get(4) else 0, 3),
+                   round(SMA_Values['cts'][5]['pf'] if SMA_Values['cts'].get(5) else 0, 3),
+                   round(SMA_Values['cts'][6]['pf'] if SMA_Values['cts'].get(6) else 0, 3)])
+        t.add_row(['Voltage', round(SMA_Values['voltage'], 3), '', '', '', '', ''])
         t.add_row(['Sample Rate', sample_rate, 'kSPS', '', '', '', ''])
+
+        summary_table = PrettyTable(['Summary Name', 'Watts', 'Amps', 'Power Factor'])
+        summary_table.add_row(['Home Consumption', f"{round(SMA_Values['home-consumption']['power'], 3)} W", f"{round(SMA_Values['home-consumption']['power'], 3)} A", '--'])
+        summary_table.add_row(['Production', f"{round(SMA_Values['production']['power'], 3)} W", f"{round(SMA_Values['production']['power'], 3)} A", f"{round(SMA_Values['production']['pf'], 2)}"])
+        summary_table.add_row(['Net', f"{round(SMA_Values['net']['power'], 3)} W", f"{round(SMA_Values['net']['power'], 3)} A", '--'])
+        summary_string = summary_table.get_string()
         s = t.get_string()
-        logger.info(f"\n{s}")
+        logger.info(f"\n{s}\n{summary_string}")
 
     @staticmethod
     def get_ip():
@@ -1001,7 +1100,6 @@ class RPiPowerMonitor:
         finally:
             s.close()
         return ip
-
 
 class Point:
     def __init__(self, p_type, *args, **kwargs):
@@ -1137,13 +1235,24 @@ class Point:
 
         return data
 
+# Main Stop Event
+def halt(*args, **kwargs):
+    if not halt_flag.is_set():
+        logger.info("\nStopping the power monitor gracefully - please wait.")
+        halt_flag.set()
+
+from plugin_handler import Plugin
+
 if __name__ == '__main__':
+    halt_flag = Event()
+    signal.signal(signal.SIGINT, halt)
+    signal.signal(signal.SIGTERM, halt)
 
     args = parser.parse_args()
     if args.verbose == True:
         ch.setLevel(logging.DEBUG)
         logger.setLevel(logging.DEBUG)
-        logger.debug("Verbose logs output enabled.")
+        logger.debug("Verbose logging output enabled.")
 
     if args.version:
         import rpi_power_monitor as rpim
