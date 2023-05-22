@@ -1,0 +1,115 @@
+# Plugin for the Power Monitor for Raspberry Pi
+# Plugin Name: MQTT
+# Author: Jacob Madden
+# Description: This plugin will publish live power data to MQTT for use in external software like homeassistant.
+#
+""" 
+Please update your config.toml file as below:
+
+[plugins.mqtt]
+enabled = true
+host = "192.168.x.x"
+username = "user"
+password = "Password"
+prefix = "powermon"
+
+
+###  MQTT topic structure:  ###
+
+powermon:
+    ct1
+        power = 436.9398467009072
+        pf = 0.6188594676154295
+        current = 3.0030905091888105
+        voltage = 235.0883109766441
+    production
+        power = 1666.4916708477683
+        pf = 0.9972528630009776
+        current = 7.106431483921596
+    home-consumption
+        power = 423.7662194448079
+        current = 12.904760645319703
+    net
+        power = -1242.7254514029605
+        current = 5.798329161398107
+    voltage = 235.0883109766441
+
+"""
+
+import paho.mqtt.client as mqtt
+from time import sleep
+
+def on_connect(client, userdata, flags, rc):
+    """Callback function for when the client connects to the MQTT broker."""
+    if rc == 0:
+        print("Connected to MQTT broker")
+        logger.info("Connected to MQTT broker")
+    else:
+        print(f"Failed to connect to MQTT broker, return code: {rc}")
+        logger.info("Failed to connect to MQTT broker, return code: {rc}")
+
+def start_plugin(data, stop_flag, config, logger, *args, **kwargs):
+  
+    logger.info("Starting MQTT Plugin")
+
+    # MQTT Setup
+    broker = config.get('host')
+    username = config.get('username') 
+    password = config.get('password') 
+    prefix = config.get('prefix')
+
+    # Create an MQTT client instance
+    client = mqtt.Client()
+
+    # Set the on_connect callback function
+    client.on_connect = on_connect
+
+    # Connect to the MQTT broker
+    client.username_pw_set(username, password)
+    client.connect(broker, 1883, 60) 
+
+    # Publish online status when the plugin starts
+    client.publish(prefix + "/status", "online")
+
+    while not stop_flag.is_set():
+        try:
+            for channel, channel_data in data.get('cts', {}).items():
+                for key, value in channel_data.items():
+                    topic = f"{prefix}/ct{channel}/{key}"
+                    payload = str(value)
+                    client.publish(topic, payload)
+
+            for key, value in data.get('production', {}).items():
+                topic = f"{prefix}/production/{key}"
+                payload = str(value)
+                client.publish(topic, payload)
+
+            for key, value in data.get('home-consumption', {}).items():
+                topic = f"{prefix}/home-consumption/{key}"
+                payload = str(value)
+                client.publish(topic, payload)
+
+            for key, value in data.get('net', {}).items():
+                topic = f"{prefix}/net/{key}"
+                payload = str(value)
+                client.publish(topic, payload)
+
+            topic = f"{prefix}/voltage"
+            payload = str(data.get('voltage'))
+            client.publish(topic, payload)
+
+
+        except Exception as e:
+            logger.error(f"Error occurred while publishing MQTT message: {e}")
+
+        sleep(5)
+
+    # Publish offline status when the plugin stops
+    client.publish(prefix + "/status", "offline")
+
+    stop_plugin(client)
+    return
+
+def stop_plugin(client):
+    client.disconnect()
+    return
