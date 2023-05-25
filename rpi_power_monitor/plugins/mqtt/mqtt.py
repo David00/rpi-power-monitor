@@ -14,7 +14,7 @@ def start_plugin(data, stop_flag, config, logger, *args, **kwargs):
     def on_disconnect(client, userdata, rc):
         if rc != 0:
             logger.warning("MQTT broker disconnected")
-            while True:  # Try to reconnect indefinitely
+            while True:  # Try to reconnect
                 try:
                     client.reconnect()
                     logger.debug("Successfully reconnected.")
@@ -36,8 +36,7 @@ def start_plugin(data, stop_flag, config, logger, *args, **kwargs):
     #client.clean_session = False
     client.username_pw_set(username, password)
 
-    # Set Last Will and Testament (LWT). The broker will send this message if
-    # this client disconnects unexpectedly.
+    # Set Last Will and Testament (LWT)
     will_topic = f"{prefix}/status"
     will_payload = "offline"
     will_qos = 0  # Quality of Service Level (0, 1, or 2)
