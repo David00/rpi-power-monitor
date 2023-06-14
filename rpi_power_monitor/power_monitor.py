@@ -392,7 +392,7 @@ class RPiPowerMonitor:
 
         Returns a dictionary containing a dictionary for each channel, with the following structure:
         {
-            'ct1': {
+            1 : {
                 'type': 'consumption',
                 'power': <Real Power (float) for this channel>,
                 'current': <RMS Current (float) for this channel>,
@@ -400,7 +400,7 @@ class RPiPowerMonitor:
                 'pf': <Power Factor (float) for this channel>
             },
             ... ,
-            'ct6' : { ... }
+            6 : { ... }
         }
         """
         ct1_samples = samples.get('ct1')        # current samples for ct1
@@ -739,6 +739,7 @@ class RPiPowerMonitor:
         
         # Grab the voltage from one of the enabled channels:
         results['voltage'] = results[self.enabled_channels[0]]['voltage']
+        voltage = results['voltage']
 
         # Cutoff Threshold check
         for chan_num  in self.enabled_channels:
@@ -746,8 +747,10 @@ class RPiPowerMonitor:
             if cutoff != 0:
                 if abs(results[chan_num]['power']) < cutoff:
                     results[chan_num]['power'] = 0
-                    results[chan_num]['current'] = 0
                     results[chan_num]['pf'] = 0
+                    # Set the current to 0 if the voltage supply is detected, but the watts is still less than the cutoff.
+                    if voltage >= 60:
+                        results[chan_num]['current'] = 0
         return results
 
     def run_main(self):
