@@ -1420,7 +1420,8 @@ if __name__ == '__main__':
     if args.title and not args.mode == 'plot':
         logger.info("The --title flag should only be used with '--mode plot'")
     
-    if args.samples and not (args.mode == 'plot' or args.csv):        
+    if args.samples and not (args.mode == 'plot' or args.csv):
+        logger.debug(f"args.mode is {args.mode}. args.mode == plot or args.mode == csv is: {args.mode == 'plot' or args.csv}")
         logger.warning("Heads up! The --samples flag should only be used with '--mode plot' or '--mode csv'.  While setting the number of samples for other modes WILL work, please only do so if you know what you're doing, or if you've been advised by the project author (David).")
 
     if args.csv == True:
