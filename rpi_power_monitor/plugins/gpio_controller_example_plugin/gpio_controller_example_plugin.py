@@ -12,6 +12,8 @@
 
 import RPi.GPIO as GPIO
 from time import sleep
+from datetime import timedelta
+from .. import sleep_for
 
 def start_plugin(data, stop_flag, config, logger, *args, **kwargs):
     '''This function should start your plugin and contain a While True loop if your plugin is designed to be constantly running.
@@ -27,6 +29,16 @@ def start_plugin(data, stop_flag, config, logger, *args, **kwargs):
     A plugin's while loop should run until either:
         - the stop_flag is set, or
         - your plugin has finished its task and is not intended to run indefinitely.
+
+    The main config.toml file should have the following config section defined for this plugin:
+
+    [plugins.gpio_controller_example_plugin]
+    enabled = true
+    pin_numbering_scheme = 'BCM'
+    output_pin = 17
+    input_pin = 27
+    # Optional Config settings
+    # log_level = 'INFO'  # This will override the logging level for the plugin, which normally gets the logging level from the main program.  
 
     Here is the full structure of the data dictionary, with real sample values. 
 
@@ -126,8 +138,8 @@ def start_plugin(data, stop_flag, config, logger, *args, **kwargs):
         except KeyError:
             logger.debug(f"Failed to get the net power from the data dictionary. If the power monitor just started, this is normal.")
 
-        sleep(5)
-        
+        # Sleep for 60 seconds, using the provided sleep_for() function.
+        sleep_for(60, stop_flag)
 
     stop_plugin()
     return

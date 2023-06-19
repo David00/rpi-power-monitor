@@ -26,8 +26,9 @@ class Plugin():
             if not ( hasattr(self._module, 'start_plugin') and hasattr(self._module, 'stop_plugin') ):
                 self.logger.warning(f"Plugin {name} does not have the start_plugin function defined.")
                 return None
-        except:
+        except Exception as e:
             self.logger.warning(f"Failed to import enabled plugin {name}. Ensure that your plugin is inside of a folder named {name}, which should be inside the plugins/ directory.")
+            self.logger.debug(f"Exception: {e}")
             self._module = None
 
 
@@ -37,7 +38,8 @@ class Plugin():
 
         start_plugin = getattr(self._module, 'start_plugin')
         if not start_plugin:
-            self.logger.warning(f"Plugin {self.name} is missing the start_plugin function.")
+            self.logger.warning(f"Plugin {self.name} is missing the start_plugin function. Unable to start plugin.")
+            return False
         
         p = Process(target=start_plugin, args=(results, self.stop_flag, self.config, self.logger))
         p.start()
