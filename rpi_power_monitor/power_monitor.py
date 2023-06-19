@@ -610,12 +610,14 @@ class RPiPowerMonitor:
                 rms_current_ct1 = rms_current_ct1 * 2
             if self.config['current_transformers']['channel_1'].get('reversed'):
                 # RMS current is always positive, so the reverse check is done off the calculated real power.
-                if real_power_1 < 0:    # Make power positive (current is already positive)
-                    real_power_1 = abs(real_power_1)
-                    power_factor_1 = abs(power_factor_1)
-                else: # Make real power and current negative
-                    rms_current_ct1 = rms_current_ct1 * -1
-                    real_power_1 = real_power_1 * -1
+                # Check to see if the voltage is present, and if it is, set the sign of the current.
+                if rms_voltage_1 >= 60:
+                    if real_power_1 < 0:    # Make power positive (current is already positive)
+                        real_power_1 = abs(real_power_1)
+                        power_factor_1 = abs(power_factor_1)
+                    else: # Make real power and current negative
+                        rms_current_ct1 = rms_current_ct1 * -1
+                        real_power_1 = real_power_1 * -1
             
             results[1] = {
                 'type': self.config['current_transformers']['channel_1']['type'],
@@ -648,12 +650,14 @@ class RPiPowerMonitor:
                 rms_current_ct2 = rms_current_ct2 * 2
             if self.config['current_transformers']['channel_2'].get('reversed'):
                 # RMS current is always positive, so the reverse check is done off the calculated real power.
-                if real_power_2 < 0:    # Make power positive (current is already positive)
-                    real_power_2 = abs(real_power_2)
-                    power_factor_2 = abs(power_factor_2)
-                else: # Make current negative (real power is already negative)
-                    rms_current_ct2 = rms_current_ct2 * -1
-                    real_power_2 = real_power_2 * -1
+                # Check to see if the voltage is present, and if it is, set the sign of the current.
+                if rms_voltage_2 >= 60:
+                    if real_power_2 < 0:    # Make power positive (current is already positive)
+                        real_power_2 = abs(real_power_2)
+                        power_factor_2 = abs(power_factor_2)
+                    else: # Make current negative (real power is already negative)
+                        rms_current_ct2 = rms_current_ct2 * -1
+                        real_power_2 = real_power_2 * -1
             
             results[2] = {
                 'type': self.config['current_transformers']['channel_2']['type'],
@@ -686,12 +690,14 @@ class RPiPowerMonitor:
                 rms_current_ct3 = rms_current_ct3 * 2
             if self.config['current_transformers']['channel_3'].get('reversed'):
                 # RMS current is always positive, so the reverse check is done off the calculated real power.
-                if real_power_3 < 0:    # Make power positive (current is already positive)
-                    real_power_3 = abs(real_power_3)
-                    power_factor_3 = abs(power_factor_3)
-                else: # Make current negative (real power is already negative)
-                    rms_current_ct3 = rms_current_ct3 * -1
-                    real_power_3 = real_power_3 * -1
+                # Check to see if the voltage is present, and if it is, set the sign of the current.
+                if rms_voltage_3 >= 60:
+                    if real_power_3 < 0:    # Make power positive (current is already positive)
+                        real_power_3 = abs(real_power_3)
+                        power_factor_3 = abs(power_factor_3)
+                    else: # Make current negative (real power is already negative)
+                        rms_current_ct3 = rms_current_ct3 * -1
+                        real_power_3 = real_power_3 * -1
             
             results[3] = {
                 'type': self.config['current_transformers']['channel_3']['type'],
@@ -724,12 +730,14 @@ class RPiPowerMonitor:
                 rms_current_ct4 = rms_current_ct4 * 2
             if self.config['current_transformers']['channel_4'].get('reversed'):
                 # RMS current is always positive, so the reverse check is done off the calculated real power.
-                if real_power_4 < 0:    # Make power positive (current is already positive)
-                    real_power_4 = abs(real_power_4)
-                    power_factor_4 = abs(power_factor_4)
-                else: # Make current negative (real power is already negative)
-                    rms_current_ct4 = rms_current_ct4 * -1
-                    real_power_4 = real_power_4 * -1
+                # Check to see if the voltage is present, and if it is, set the sign of the current.
+                if rms_voltage_4 >= 60:
+                    if real_power_4 < 0:    # Make power positive (current is already positive)
+                        real_power_4 = abs(real_power_4)
+                        power_factor_4 = abs(power_factor_4)
+                    else: # Make current negative (real power is already negative)
+                        rms_current_ct4 = rms_current_ct4 * -1
+                        real_power_4 = real_power_4 * -1
             
             results[4] = {
                 'type': self.config['current_transformers']['channel_4']['type'],
@@ -762,12 +770,14 @@ class RPiPowerMonitor:
                 rms_current_ct5 = rms_current_ct5 * 2
             if self.config['current_transformers']['channel_5'].get('reversed'):
                 # RMS current is always positive, so the reverse check is done off the calculated real power.
-                if real_power_5 < 0:    # Make power positive (current is already positive)
-                    real_power_5 = abs(real_power_5)
-                    power_factor_5 = abs(power_factor_5)
-                else: # Make current negative (real power is already negative)
-                    rms_current_ct5 = rms_current_ct5 * -1
-                    real_power_5 = real_power_5 * -1
+                # Check to see if the voltage is present, and if it is, set the sign of the current.
+                if rms_voltage_5 >= 60:
+                    if real_power_5 < 0:    # Make power positive (current is already positive)
+                        real_power_5 = abs(real_power_5)
+                        power_factor_5 = abs(power_factor_5)
+                    else: # Make current negative (real power is already negative)
+                        rms_current_ct5 = rms_current_ct5 * -1
+                        real_power_5 = real_power_5 * -1
             
             results[5] = {
                 'type': self.config['current_transformers']['channel_5']['type'],
@@ -800,12 +810,14 @@ class RPiPowerMonitor:
                 rms_current_ct6 = rms_current_ct6 * 2
             if self.config['current_transformers']['channel_6'].get('reversed'):
                 # RMS current is always positive, so the reverse check is done off the calculated real power.
-                if real_power_6 < 0:    # Make power positive (current is already positive)
-                    real_power_6 = abs(real_power_6)
-                    power_factor_6 = abs(power_factor_6)
-                else: # Make current negative (real power is already negative)
-                    rms_current_ct6 = rms_current_ct6 * -1
-                    real_power_6 = real_power_6 * -1
+                # Check to see if the voltage is present, and if it is, set the sign of the current.
+                if rms_voltage_6 >= 60:
+                    if real_power_6 < 0:    # Make power positive (current is already positive)
+                        real_power_6 = abs(real_power_6)
+                        power_factor_6 = abs(power_factor_6)
+                    else: # Make current negative (real power is already negative)
+                        rms_current_ct6 = rms_current_ct6 * -1
+                        real_power_6 = real_power_6 * -1
             
             results[6] = {
                 'type': self.config['current_transformers']['channel_6']['type'],
