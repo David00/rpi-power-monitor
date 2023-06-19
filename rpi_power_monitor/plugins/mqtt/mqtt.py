@@ -1,5 +1,5 @@
 import paho.mqtt.client as mqtt
-from time import sleep
+from .. import sleep_for
 
 
 def start_plugin(data, stop_flag, config, logger, *args, **kwargs):
@@ -21,7 +21,7 @@ def start_plugin(data, stop_flag, config, logger, *args, **kwargs):
                     break  # If the connection was successful, exit the loop
                 except Exception as e:
                     logger.error(f"Failed to reconnect: {e}")
-                    sleep(5)  # Wait before trying again
+                    sleep_for(5)  # Wait before trying again
 
 
 
@@ -50,7 +50,7 @@ def start_plugin(data, stop_flag, config, logger, *args, **kwargs):
 
     client.connect(broker, 1883, 60)
     client.loop_start()
-    sleep(2)
+    sleep_for(2)
     client.publish(prefix + "/status", "online")
 
     while not stop_flag.is_set():
@@ -89,7 +89,7 @@ def start_plugin(data, stop_flag, config, logger, *args, **kwargs):
 
 
 
-        sleep(5)
+        sleep_for(5)
         
 
     stop_plugin(client)
