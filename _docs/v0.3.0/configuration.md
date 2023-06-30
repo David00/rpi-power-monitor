@@ -30,13 +30,14 @@ The configuration file is located at `~/rpi_power_monitor/rpi_power_monitor/conf
 <summary>Don't see it there?  Click for download options:</summary>
 
 1. Download directly to your Pi via the command line:
-```
-wget https://david00.github.io/rpi-power-monitor/docs/v0.3.0/config.toml -O ~/rpi_power_monitor/rpi_power_monitor/config.toml
-```
+
+    ```
+    wget https://david00.github.io/rpi-power-monitor/docs/v0.3.0/config.toml -O ~/rpi_power_monitor/rpi_power_monitor/config.toml
+    ```
 
 2. Download to your computer:
 
-[Download](https://david00.github.io/rpi-power-monitor/docs/v0.3.0/config.toml)
+    [Download](https://david00.github.io/rpi-power-monitor/docs/v0.3.0/config.toml){: .btn .btn-blue }
 
 </details>
 
