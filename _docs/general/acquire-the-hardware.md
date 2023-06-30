@@ -18,9 +18,11 @@ layout: default
 
 Here's a quick summary of everything you'll need:
 
+<small>Some of the links below are Amazon Affiliate links, and purchasing the items through these links help support this project.</small>
+
 * Raspberry Pi 4B with 2GB+ of RAM. A 3B+ will also work, but perform slower.
-* High Endurance microSD card at least 32GB.
-* USB flash drive, at least 4GB, for automatic backups.
+* [High Endurance microSD card at least 32GB](https://www.amazon.com/dp/B07P14QHB7?&_encoding=UTF8&tag=rpipowermonit-20&linkCode=ur2&linkId=aa270754de6773d1a275beac9fa81413&camp=1789&creative=9325).
+* [USB flash drive, at least 4GB, for automatic backups](https://www.amazon.com/SanDisk-Ultra-Flair-128GB-Flash/dp/B015CH1JIW?&_encoding=UTF8&tag=rpipowermonit-20&linkCode=ur2&linkId=e4f1673e6763da76b58cc37cb127195f&camp=1789&creative=9325).
 * [Factory assembled power monitor PCB](https://power-monitor.dalbrecht.tech/product/pre-soldered-pcb-v2/), or the [DIY self-assembly kit](https://power-monitor.dalbrecht.tech/product/diy-power-monitor-kit/)
 * [Current Transformers](https://power-monitor.dalbrecht.tech/product-category/current-transformers/) (see ["Selecting CTs"](#selecting-cts) below)
 * [9V AC to AC Supply](https://power-monitor.dalbrecht.tech/product/9v-ac-transformer-north-america-only/)

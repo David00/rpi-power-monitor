@@ -23,9 +23,10 @@ redirect_from:
 ## Items Required
 
 * Multimeter
-* AC current clamp meter
+* [AC current clamp meter (also functions as a voltage multimeter)](https://www.amazon.com/KAIWEETS-Multimeter-Auto-ranging-Temperature-Capacitance/dp/B07Z398YWF?&_encoding=UTF8&tag=rpipowermonit-20&linkCode=ur2&linkId=8d3b4e440b75b31574ccbd7d66b66133&camp=1789&creative=9325")
 * SSH access to your Raspberry Pi to update the config file
 
+<small>Some of the links are Amazon Affiliate links, and purchasing the items through these links help support this project.</small>
 
 ## Voltage Calibration
 
