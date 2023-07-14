@@ -36,7 +36,7 @@ The input and output pins can use the "BCM" or the "BOARD" scheme. Here's the di
 _See the "What do these numbers mean?" section on https://pinout.xyz/ for more info, and for a detailed header pinout map._
 
 ## Modifications
-This plugin is a barebones example of how to write a plugin. Therefore, the actual logic of the plugin is fairly simple and may not require modification to meet the needs of various users.  The entire logic of the plugin is contained inside [a `while` loop](https://github.com/David00/rpi-power-monitor/blob/develop/v0.3.0-plugins/rpi_power_monitor/plugins/gpio_controller_example_plugin/gpio_controller_example_plugin.py#L124) - this is where the decision is made to change the state of the output pin and is the likely place for you to expand the functionality of the plugin.
+This plugin is a barebones example of how to write a plugin. Therefore, the actual logic of the plugin is fairly simple and may require modification to meet the needs of various users.  The entire logic of the plugin is contained inside [a `while` loop](https://github.com/David00/rpi-power-monitor/blob/develop/v0.3.0-plugins/rpi_power_monitor/plugins/gpio_controller_example_plugin/gpio_controller_example_plugin.py#L124) - this is where the decision is made to change the state of the output pin and is the likely place for you to expand the functionality of the plugin.
 
 ## Support
 Please use [GitHub Discussions](https://github.com/David00/rpi-power-monitor/discussions) if you have questions about using or modifying this plugin.
