@@ -68,3 +68,4 @@ The SSH credentials for the custom OS image have been left as default (username:
 To continue the setup, see the Configuration page for the specific release that you are using. The latest release is {{ site.latest-version }} and its configuration page is here:
 
 ## [ Go to {{ site.latest-version }} Configuration]( {{site.baseurl}}/docs/{{ site.latest-version }}/configuration ){: .btn .btn-blue }
+{: .no_toc }
