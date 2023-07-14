@@ -1,4 +1,4 @@
-# GPIO Controller Documentation
+# plugin_name Documentation
 
 #### Author: Your GitHub Username (and optional contact email)
 
@@ -15,7 +15,9 @@ Provide pip commands to install any additional libraries for your plugin
 The following configuration block needs to be added to the power monitor's `config.toml` file:
 
 ```toml
+
 Paste configuration block here, leaving the toml syntax identifer above.
+
 ```
 
 Add any additional notes that the user should be aware of when using this plugin.

@@ -24,7 +24,7 @@ class Plugin():
             self._module = importlib.import_module(f'plugins.{name}.{name}')
 
             if not ( hasattr(self._module, 'start_plugin') and hasattr(self._module, 'stop_plugin') ):
-                self.logger.warning(f"Plugin {name} does not have the start_plugin function defined.")
+                self.logger.warning(f"Plugin {name} does not have the start_plugin or stop_plugin functions defined.")
                 return None
         except Exception as e:
             self.logger.warning(f"Failed to import enabled plugin {name}. Ensure that your plugin is inside of a folder named {name}, which should be inside the plugins/ directory.")
