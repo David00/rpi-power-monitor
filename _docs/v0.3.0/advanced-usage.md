@@ -204,7 +204,7 @@ TBD
 
 ## Using A Remote InfluxDB Server
 
-You can use a remote InfluxDB server simply by supplying the server IP or URL, database name, and username/password.  The power monitor will automatically attempt to create the database and setup the retention policies/continuous queries upon the first connection. 
+You can use a remote InfluxDB server simply by supplying the server IP or URL, database name, and username/password.  The power monitor will automatically attempt to create the database and setup the retention policies/continuous queries upon the first connection. You'll also need to [configure Grafana](#add-remote-datasource-to-grafana) to point to the new remote InfluxDB server. 
 
 You'll need to [install InfluxDB version 1.8.X ](https://docs.influxdata.com/influxdb/v1.8/introduction/install/#installing-influxdb-oss) on your remote machine, which could be another Raspberry Pi, a cloud VPS, or your desktop computer. In any case, it should be a machine that has reliable power and network connectivity.
 
@@ -226,8 +226,27 @@ database_name = "power_monitor"
 ```
 </details>
 
+### Add Remote Datasource to Grafana
+When using a remote datasource, you also need to tell Grafana about the remote source. Login to your Grafana instance as an admin user and follow the steps below to make the change.
+
+1. Go to Configuration -> Data Sources
+2. Select "Add Data Source"
+3. Search for, and select, InfluxDB
+4. Fill out the fields for the new datasource.
+    * Name
+    * URL (in the format http://192.168.1.123:8086)
+    * Database (the same as `database_name` entered above)
+    * User and password if you've setup the InfluxDB server with a username and password
+
+5. Click Save & Test. You should see a green checkmark with a message "Datasource is working".  Make sure you have started the power monitor at least one time against the remote InfluxDB server before this step (the power monitor will create the database on the remote server upon startup).
+6. Lastly, you'll need to update each panel in the dashboard to retrieve its data from the new datasource.  Click on each panel's title, select edit, and change the "Data Source" dropdown (directly above the query builder section) to the name of the new datasource you entered in step 4.
+7. Don't forget to save the dashboard!
+
+
 {: .note-cream }
 The included [database backup script](./configuration#enabling-automatic-backups) will not work directly on a remote Influx instance, but it can serve as a template to modify and support your remote Influx instance.
+
+
 
 ## Remote Access
 
