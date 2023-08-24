@@ -65,7 +65,7 @@ If you followed the pre-configure wifi section above, your Pi should connect to 
 The SSH credentials for the custom OS image have been left as default (username: **pi** password: **raspberry**). 
 
 
-To continue the setup, see the Configuration page for the specific release that you are using. The latest release is {{ site.latest-version }} and its configuration page is here:
+To continue the setup, see the Configuration page for the major release that you are using. The latest release is {{ site.latest-os-image }} and its configuration page is here: 
 
-## [ Go to {{ site.latest-version }} Configuration]( {{site.baseurl}}/docs/{{ site.latest-version }}/configuration ){: .btn .btn-blue }
+## [ Go to {{ site.latest-os-image }} Configuration]( {{site.baseurl}}/docs/{{ site.latest-version }}/configuration ){: .btn .btn-blue }
 {: .no_toc }
