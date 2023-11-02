@@ -1,8 +1,10 @@
 ---
 title: 3 Phase Variant Setup
 layout: default
-nav_exclude: true
-search_exclude: true
+nav_exclude: false
+search_exclude: false
+parent: v0.3.0
+grand_parent: Documentation
 redirect_from: 
   - docs/v0.3.0-beta/3-phase
   - docs/latest/3-phase
