@@ -235,7 +235,7 @@ If you used the [plugin init script](#create-your-plugin-files-and-folder), a RE
 
 ## Sharing your Plugin
 
-If you'd like to share your work and make your plugin available for other users, you can submit a pull request (PR) to have your plugin integrated into the Power Monitor for Raspberry Pi project.  Plugins that whose PRs are approved will be added to the [Supported Plugin List](plugin-list).  You are also welcome to host your plugin in your own repo if you don't want to submit a PR; however, your plugin will not be added to the Supported Plugin List.
+If you'd like to share your work and make your plugin available for other users, you can submit a pull request (PR) to have your plugin integrated into the Power Monitor for Raspberry Pi project.  Plugins whose PRs are approved will be added to the [Supported Plugin List](plugin-list).  You are also welcome to host your plugin in your own repo if you don't want to submit a PR; however, your plugin will not be added to the Supported Plugin List.
 
 Before submitting a PR, please read and understand the following:
 
