@@ -34,3 +34,16 @@ This plugin is a small, but functional, example of a working plugin.  It is inte
 Documentation: [link](https://github.com/David00/rpi-power-monitor/tree/develop/v0.3.0-plugins/rpi_power_monitor/plugins/gpio_controller_example_plugin)
 {: .no_toc }
 {: .text-delta }
+
+
+## 2. MQTT
+
+Author: jmadden91
+{: .no_toc }
+{: .text-delta }
+
+The MQTT plugin allows you to export power monitor data to a MQTT-capable system, like Home Assistant.
+
+Documentation: [link](https://github.com/David00/rpi-power-monitor/tree/develop/v0.3.0-plugins/rpi_power_monitor/plugins/mqtt)
+{: .no_toc }
+{: .text-delta }
