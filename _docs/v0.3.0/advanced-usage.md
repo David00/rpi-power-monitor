@@ -54,6 +54,8 @@ WantedBy=multi-user.target
 ```
 </details>
 
+{: .note-aqua }
+If you are not using the default `pi` user, you'll need to edit the service file and change the `User=` and `ExecStart=` lines with the correct username and path to the power monitor project.
 
 ### Creating the Service File
 
