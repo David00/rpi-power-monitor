@@ -42,7 +42,7 @@ The power monitor supports monitoring production sources, like any grid-tied sol
 ## Planning
 As mentioned above, whole-home monitoring requires only to measure the mains.  So, note the rating of the big main breaker that feeds the panel. The labels are often stamped directly into the toggle switch of the breaker, or on the circuit breaker body itself.
 
-Next, make write down the rating of any additional circuits you want to measure.  Also make note of the "width" of the breaker (is it 1-pole, or 2-pole?) You should have something like this:
+Next, write down the rating of any additional circuits you want to measure.  Also make note of the "width" of the breaker (is it 1-pole, or 2-pole?) You should have something like this:
 
 * Mains: 200A (typically always 2-pole in North America)
 * Solar Inverter: 80A (2-pole)

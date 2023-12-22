@@ -118,7 +118,7 @@ Here are some example queries that demonstrate usage of the retention policies, 
 ### InfluxDB Query Examples
 
 {: .note-cream }
-By default, all data is stored into the Influx database in UTC time. This means that to get accurate results from your CLI queries, you'll need to specify the timezone with the `TZ()` function.  See the [official list of timezones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List) and find the `TZ database name` from the list that corresponds to your timezone.
+By default, all data is stored into the Influx database in UTC time. This means that to get accurate results from your CLI queries, you'll need to specify the timezone with the `TZ()` function.  See the [official list of timezones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List) and find the `TZ identifier` from the list that corresponds to your timezone.
 
 1. Get the maximum amperage from CT1 over the last 3 days.
 
