@@ -74,4 +74,4 @@ Plug type: 2.1 x 5.5mm, center positive
 
 ## Summary
 
-Once you have your Pi and microSD card, you can move onto [the software](./install-the-software).
+Once you have your Pi and microSD card, you can move onto [the software](./install-the-software.html).

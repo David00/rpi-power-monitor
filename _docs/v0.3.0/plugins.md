@@ -36,6 +36,8 @@ There are countless possibilities for plugin functionality. Here are some exampl
 
 ## Writing a Plugin
 
+{: .note-cream }
+See the <a href="https://github.com/David00/rpi-power-monitor/blob/develop/v0.3.0-plugins/rpi_power_monitor/plugins/gpio_controller_example_plugin/gpio_controller_example_plugin.py">GPIO Controller plugin</a> for a real example of all of the concepts and guidelines in this section.
 
 ### Git checkout the plugin development branch
 At the time of writing, plugins are currently not supported on `master`. Checkout the `develop/v0.3.0-plugins` branch to test and develop plugins.
@@ -83,8 +85,8 @@ Done! Created sample_plugin_2.py and README.md inside plugins/sample_plugin_2/
 All plugins must adhere to the following structure and naming conventions:
 
 * The plugin must reside in a folder inside of `rpi_power_monitor/plugins`, and the folder name must match the name of the file containing the code for your plugin.
-* Created a barebones Python file with the <a href="#required-functions">required functions</a>
-* A README.md in your plugin's folder (see #readme)
+* The plugin must include the <a href="#required-functions">required functions</a>
+* The plugin folder must contain A README.md (see <a href="#readme">README</a>) that follows the laid out structure.
 
 The [convenience script](#create-your-plugin-files-and-folder) mentioned above will initialize a new plugin that follows the guidelines above.
 
