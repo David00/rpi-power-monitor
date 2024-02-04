@@ -60,7 +60,7 @@ retention_policies = {
 
 class RPiPowerMonitor:
     """ Class to take readings from the MCP3008 and calculate power """
-    def __init__(self, mode, config, spi=None):
+    def __init__(self, mode='main', config='rpi_power_monitor/config.toml', spi=None):
         self.pid = os.getpid()
         self.imported_plugins = dict()
         
@@ -555,7 +555,7 @@ class RPiPowerMonitor:
                 power_factor_1 = 0
             if self.config['current_transformers']['channel_1']['two_pole']:
                 real_power_1 = real_power_1 * 2
-                rms_current_ct1 = rms_current_ct1 * 2
+                rms_current_ct1 = rms_current_ct1
             if self.config['current_transformers']['channel_1'].get('reversed'):
                 # RMS current is always positive, so the reverse check is done off the calculated real power.
                 if real_power_1 < 0:    # Make power positive (current is already positive)
@@ -587,7 +587,7 @@ class RPiPowerMonitor:
                 power_factor_2 = 0
             if self.config['current_transformers']['channel_2']['two_pole']:
                 real_power_2 = real_power_2 * 2
-                rms_current_ct2 = rms_current_ct2 * 2
+                rms_current_ct2 = rms_current_ct2
             if self.config['current_transformers']['channel_2'].get('reversed'):
                 # RMS current is always positive, so the reverse check is done off the calculated real power.
                 if real_power_2 < 0:    # Make power positive (current is already positive)
@@ -619,7 +619,7 @@ class RPiPowerMonitor:
                 power_factor_3 = 0
             if self.config['current_transformers']['channel_3']['two_pole']:
                 real_power_3 = real_power_3 * 2
-                rms_current_ct3 = rms_current_ct3 * 2
+                rms_current_ct3 = rms_current_ct3
             if self.config['current_transformers']['channel_3'].get('reversed'):
                 # RMS current is always positive, so the reverse check is done off the calculated real power.
                 if real_power_3 < 0:    # Make power positive (current is already positive)
@@ -651,7 +651,7 @@ class RPiPowerMonitor:
                 power_factor_4 = 0
             if self.config['current_transformers']['channel_4']['two_pole']:
                 real_power_4 = real_power_4 * 2
-                rms_current_ct4 = rms_current_ct4 * 2
+                rms_current_ct4 = rms_current_ct4
             if self.config['current_transformers']['channel_4'].get('reversed'):
                 # RMS current is always positive, so the reverse check is done off the calculated real power.
                 if real_power_4 < 0:    # Make power positive (current is already positive)
@@ -683,7 +683,7 @@ class RPiPowerMonitor:
                 power_factor_5 = 0
             if self.config['current_transformers']['channel_5']['two_pole']:
                 real_power_5 = real_power_5 * 2
-                rms_current_ct5 = rms_current_ct5 * 2
+                rms_current_ct5 = rms_current_ct5
             if self.config['current_transformers']['channel_5'].get('reversed'):
                 # RMS current is always positive, so the reverse check is done off the calculated real power.
                 if real_power_5 < 0:    # Make power positive (current is already positive)
@@ -715,7 +715,7 @@ class RPiPowerMonitor:
                 power_factor_6 = 0        
             if self.config['current_transformers']['channel_6']['two_pole']:
                 real_power_6 = real_power_6 * 2
-                rms_current_ct6 = rms_current_ct6 * 2
+                rms_current_ct6 = rms_current_ct6
             if self.config['current_transformers']['channel_6'].get('reversed'):
                 # RMS current is always positive, so the reverse check is done off the calculated real power.
                 if real_power_6 < 0:    # Make power positive (current is already positive)
@@ -1267,7 +1267,7 @@ if __name__ == '__main__':
         logger.info("The --samples flag should only be used with '--mode plot'")
 
 
-    rpm = RPiPowerMonitor(args.mode, args.config)
+    rpm = RPiPowerMonitor(mode=args.mode, config=args.config)
 
     if args.mode == 'terminal':
         rpm.terminal_mode = True
