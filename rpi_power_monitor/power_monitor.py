@@ -1241,7 +1241,7 @@ def halt(*args, **kwargs):
         logger.info("\nStopping the power monitor gracefully - please wait.")
         halt_flag.set()
 
-from plugin_handler import Plugin
+from .plugin_handler import Plugin
 
 if __name__ == '__main__':
     halt_flag = Event()
