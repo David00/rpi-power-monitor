@@ -10,7 +10,7 @@ The case includes holes for the standard Pi 4 Model B ports and in addition side
 
 Standoffs can be printed to raise the case off the surface it is installed on.
 
-Tight clip fitment for the Raspberry Pi. It will be hard to remove the project from the case once clipped in place. Make sure the hat and any required heat sinks on the Pi are installed prior to fitting it into the case.
+Tight clip fitment for the Raspberry Pi. It will be hard to remove the project from the case once clipped in place. Make sure the hat and any required heat sinks on the Pi are installed prior to fitting it into the case. It is also recommended to install the metal standoffs for the hat and insert the Pi without the hat installed.
 ---
 
 ## How to print ?
