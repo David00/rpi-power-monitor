@@ -17,8 +17,10 @@ Tight clip fitment for the Raspberry Pi. It will be hard to remove the project f
 
 I have tested the build on Flash Forge Adventurer 4.
 
-Supports are required for the case. Don't forget under the protruding clips near the USB C and audio port of the Pi.
+Supports are required for the case. Don't forget under the protruding clips near the USB C and audio port of the Pi. I used 4 sheels and 100% infill.
 
 The standsoffs can be glued using a drop of crazy glue.
 
-###### Last Updated:  January 27 2024
+Case design based on https://www.printables.com/model/116513-another-raspberry-pi-4-case/files by guytas
+
+###### Last Updated:  February 12 2024
