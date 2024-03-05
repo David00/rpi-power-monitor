@@ -21,7 +21,7 @@ class Plugin():
         
 
         try:        
-            self._module = importlib.import_module(f'plugins.{name}.{name}')
+            self._module = importlib.import_module(f'rpi_power_monitor.plugins.{name}.{name}')
 
             if not ( hasattr(self._module, 'start_plugin') and hasattr(self._module, 'stop_plugin') ):
                 self.logger.warning(f"Plugin {name} does not have the start_plugin or stop_plugin functions defined.")

@@ -92,7 +92,8 @@ class RPiPowerMonitor:
         self.terminal_mode = False
 
         # Plugin Loading
-        self.load_plugins(self.config['plugins'])   # Note: Plugins are initialized here, but they are only started when the power monitor routine starts.
+        if self.config.get('plugins') is not None:
+            self.load_plugins(self.config.get('plugins'))   # Note: Plugins are initialized here, but they are only started when the power monitor routine starts.
 
     
     def validate_cqs(self):
@@ -1241,7 +1242,7 @@ def halt(*args, **kwargs):
         logger.info("\nStopping the power monitor gracefully - please wait.")
         halt_flag.set()
 
-from .plugin_handler import Plugin
+from rpi_power_monitor.plugin_handler import Plugin
 
 if __name__ == '__main__':
     halt_flag = Event()
