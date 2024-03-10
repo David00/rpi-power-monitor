@@ -21,7 +21,7 @@ import signal
 from copy import deepcopy
 import os
 
-from rpi_power_monitor.plotting import plot_data
+from plotting import plot_data
 from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBServerError
 
@@ -1242,7 +1242,7 @@ def halt(*args, **kwargs):
         logger.info("\nStopping the power monitor gracefully - please wait.")
         halt_flag.set()
 
-from rpi_power_monitor.plugin_handler import Plugin
+from plugin_handler import Plugin
 
 if __name__ == '__main__':
     halt_flag = Event()
