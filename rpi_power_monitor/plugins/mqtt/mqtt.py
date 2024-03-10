@@ -1,5 +1,6 @@
 import paho.mqtt.client as mqtt
 from .. import sleep_for
+import socket
 
 
 def start_plugin(data, stop_flag, config, logger, *args, **kwargs):
@@ -47,8 +48,11 @@ def start_plugin(data, stop_flag, config, logger, *args, **kwargs):
     # Set the on_connect and on_disconnect callbacks
     client.on_connect = lambda client, userdata, flags, rc: on_connect(client, flags, rc)
     client.on_disconnect = on_disconnect
-
-    client.connect(broker, 1883, 60)
+    try:
+        client.connect(broker, 1883, 60)
+    except socket.gaierror:
+        logger.warning(f"Failed to connect to MQTT broker at {broker}.")
+        exit()
     client.loop_start()
     sleep_for(2)
     client.publish(prefix + "/status", "online")

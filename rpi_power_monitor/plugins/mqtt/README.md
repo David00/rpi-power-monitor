@@ -7,9 +7,9 @@
 The MQTT plugin allows you to export power monitor data to a MQTT-capable system. 
 
 ## Setup & Usage
-You'll need to install the paho mqtt client to use this plugin:
+You'll need to install the v1 paho mqtt client to use this plugin:
     
-    pip install paho-mqtt
+    pip install paho-mqtt==1.6.1
 
 
 The following configuration block needs to be added to the power monitor's `config.toml` file
