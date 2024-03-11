@@ -40,3 +40,4 @@ Alter max_publish_seconds to define how often values are republished regardless 
 ## Support
 Please post any issues or questions in the pull request thread located here:
 
+https://github.com/David00/rpi-power-monitor/pull/124
