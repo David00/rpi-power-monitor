@@ -1078,9 +1078,9 @@ class RPiPowerMonitor:
         t.add_row(['Sample Rate', sample_rate, 'kSPS', '', '', '', ''])
 
         summary_table = PrettyTable(['Summary Name', 'Watts', 'Amps', 'Power Factor'])
-        summary_table.add_row(['Home Consumption', f"{round(SMA_Values['home-consumption']['power'], 3)} W", f"{round(SMA_Values['home-consumption']['power'], 3)} A", '--'])
+        summary_table.add_row(['Home Consumption', f"{round(SMA_Values['home-consumption']['power'], 3)} W", f"{round(SMA_Values['home-consumption']['current'], 3)} A", '--'])
         summary_table.add_row(['Production', f"{round(SMA_Values['production']['power'], 3)} W", f"{round(SMA_Values['production']['power'], 3)} A", f"{round(SMA_Values['production']['pf'], 2)}"])
-        summary_table.add_row(['Net', f"{round(SMA_Values['net']['power'], 3)} W", f"{round(SMA_Values['net']['power'], 3)} A", '--'])
+        summary_table.add_row(['Net', f"{round(SMA_Values['net']['power'], 3)} W", f"{round(SMA_Values['net']['current'], 3)} A", '--'])
         summary_string = summary_table.get_string()
         s = t.get_string()
         logger.info(f"\n{s}\n{summary_string}")
