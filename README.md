@@ -16,51 +16,11 @@ Please see https://power-monitor.dalbrecht.tech/ for more information.
 
 ## How do I install?
 
-> The instructions below are just a quick start. For the full documentation, please see the full documentation site linked below. Please note that this site is still a work in progress as of February 2023.
->
->https://david00.github.io/rpi-power-monitor/
-
-
-There are several ways to install.
-
-### Flash the custom OS image to your microSD card or USB flash drive/SSD enclosure
+There are two main ways to install - either flash the custom OS image to your microSD card, or perform the manual installation process on your existing image. Both processes are documented here:
 
 See [Software Installation](https://david00.github.io/rpi-power-monitor/docs/general/install-the-software.html#prebuilt-os-image) in the docs.
 
-### Clone the repository
-
-```bash
-git clone https://github.com/David00/rpi-power-monitor rpi_power_monitor
-```
-
-Then, download the default config file, and start the power monitor:
-
-```bash
-cd rpi_power_monitor
-python3 -m pip install .
-wget https://david00.github.io/rpi-power-monitor/docs/v0.3.0/config.toml -O rpi_power_monitor/config.toml
-python3 rpi_power_monitor/power_monitor.py
-```
-
-See the [Configuration section](https://david00.github.io/rpi-power-monitor/docs/v0.3.0/configuration.html) in the docs for further information on setting up the power monitor.
-
-### Install python package
-
-```bash
-
-python3 -m pip install git+https://github.com/David00/rpi-power-monitor.git
-```
-
-Then, to run, for example:
-
-```python
-from rpi_power_monitor import power_monitor
-
-rpm = power_monitor.RPiPowerMonitor()
-rpm.run_main()
-```
-
-
+After installation, see the [configuration section](https://david00.github.io/rpi-power-monitor/docs/v0.3.0/configuration.html) in the docs for further information on setting up the power monitor.
 
 ---
 
@@ -81,9 +41,9 @@ The code takes tens of thousands of samples per second, corrects for phase error
 ---
 
 
-## Installation & Documentation
+## Documentation
 
-### Please see [the documentation](https://david00.github.io/rpi-power-monitor/docs/general/index.html) for detailed setup instructions.
+https://david00.github.io/rpi-power-monitor/docs/general/index.html
 
 ---
 
