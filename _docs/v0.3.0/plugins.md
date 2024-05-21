@@ -39,8 +39,7 @@ There are countless possibilities for plugin functionality. Here are some exampl
 {: .note-cream }
 See the <a href="https://github.com/David00/rpi-power-monitor/blob/develop/v0.3.0-plugins/rpi_power_monitor/plugins/gpio_controller_example_plugin/gpio_controller_example_plugin.py">GPIO Controller plugin</a> for a real example of all of the concepts and guidelines in this section.
 
-### Git checkout the plugin development branch
-At the time of writing, plugins are currently not supported on `master`. Checkout the `develop/v0.3.0-plugins` branch to test and develop plugins.
+### Git checkout the `master` branch
 
 {: .note-cream }
 If you are developing directly on a Pi running the Custom OS Image, you'll have to update your git config file to allow it to fetch other branches with the following commands: 
@@ -53,9 +52,9 @@ git fetch
 ```
 </details>
 
-Checkout the `v0.3.0-plugins` branch:
+Checkout the `master` branch:
 ```
-git checkout develop/v0.3.0-plugins
+git checkout master
 ```
 
 ### Create your plugin files and folder
