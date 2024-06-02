@@ -61,7 +61,7 @@ For example, with a configuration of voltage_change = 3, if the voltage is stabl
 
     max_publish_seconds
 
-Define this value to force a publish of the refreshed and most up to date values of all measurements regardless of they changed of not.
+Define this value to force a publish of the refreshed and most up to date values of all measurements regardless of if they changed of not.
 
     refresh_rate
 
