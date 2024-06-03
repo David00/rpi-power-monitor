@@ -47,3 +47,16 @@ The MQTT plugin allows you to export power monitor data to a MQTT-capable system
 Documentation: [link](https://github.com/David00/rpi-power-monitor/tree/develop/v0.3.0-plugins/rpi_power_monitor/plugins/mqtt)
 {: .no_toc }
 {: .text-delta }
+
+
+## 3. MQTT-V2
+
+Author: onixx
+{: .no_toc }
+{: .text-delta }
+
+The MQTT-V2 plugin allows you to export power monitor data to a MQTT Version 2 system.
+
+Documentation: [link](https://github.com/David00/rpi-power-monitor/tree/master/rpi_power_monitor/plugins/mqtt_v2)
+{: .no_toc }
+{: .text-delta }
