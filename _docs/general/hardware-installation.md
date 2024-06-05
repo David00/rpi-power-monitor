@@ -86,8 +86,8 @@ After validation, move onto the [Calibration (v0.3.0)]({{site.baseurl}}/docs/{{s
 
 If you are using the power monitor to measure an individual appliance, there's one obstacle in doing so: you can't use the sensor over the entire power cable.  The sensor must only be installed over the "hot" wire of the cable, excluding the ground and neutral wires.  Because most power cables have multiple conductors inside them, this makes it tricky to install for a single appliance. You'll likely need to make your own extension cable to get access to the hot conductor inside the cable. Here are some components you can use to make a custom extension cable. If your load is over 10A continuous, you should go with a 14-gauge cable instead.
 
-* [16 AWG 3-wire pigtail](https://www.amazon.com/gp/product/B07BQCMPF2)
-* [15A 5-15R Connector](https://www.amazon.com/gp/product/B08MBQFVQB)
+* [16 AWG 3-wire pigtail](https://amzn.to/459XCNi)
+* [15A 5-15R Connector](https://amzn.to/45hLTfS)
 
 {: .warning }
 Making custom cables can be dangerous and increase the risk of shock. Do not attempt to modify cable that is energized!
