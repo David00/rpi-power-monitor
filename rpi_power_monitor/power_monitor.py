@@ -90,6 +90,8 @@ class RPiPowerMonitor:
         self.points_buffer = [] # A buffer to hold sublists of points so that they can be written altogether (reduces DB overhead)
         self.def_cal = 0.88     # This is the default calibration factor for all CTs from my shop.
         self.terminal_mode = False
+        self.PF_DELTA = 20      # This value enforces a minimum amperage waveform quality in order to calculate PF. 
+                                # If the measured waveform peak-trough delta is less than this value, PF will not be calculated and will be set to zero.
 
         # Plugin Loading
         if self.config.get('plugins') is not None:
@@ -563,6 +565,11 @@ class RPiPowerMonitor:
                 if real_power_1 < 0:
                     rms_current_ct1 = rms_current_ct1 * -1
 
+            # Filter out PF if the amperage data is not sufficient.
+            delta = max(ct1_samples) - min(ct1_samples)
+            if delta < self.PF_DELTA:
+                power_factor_1 = 0
+                
             results[1] = {
                 'type': self.config['current_transformers']['channel_1']['type'],
                 'power': real_power_1,
@@ -593,6 +600,11 @@ class RPiPowerMonitor:
                 if real_power_2 < 0:
                     rms_current_ct2 = rms_current_ct2 * -1
 
+            # Filter out PF if the amperage data is not sufficient.
+            delta = max(ct2_samples) - min(ct2_samples)
+            if delta < self.PF_DELTA:
+                power_factor_2 = 0
+                
             results[2] = {
                 'type': self.config['current_transformers']['channel_2']['type'],
                 'power': real_power_2,
@@ -623,6 +635,11 @@ class RPiPowerMonitor:
                 if real_power_3 < 0:
                     rms_current_ct3 = rms_current_ct3 * -1
 
+            # Filter out PF if the amperage data is not sufficient.
+            delta = max(ct3_samples) - min(ct3_samples)
+            if delta < self.PF_DELTA:
+                power_factor_3 = 0
+                
             results[3] = {
                 'type': self.config['current_transformers']['channel_3']['type'],
                 'power': real_power_3,
@@ -653,6 +670,11 @@ class RPiPowerMonitor:
                 if real_power_4 < 0:
                     rms_current_ct4 = rms_current_ct4 * -1
 
+            # Filter out PF if the amperage data is not sufficient.
+            delta = max(ct4_samples) - min(ct4_samples)
+            if delta < self.PF_DELTA:
+                power_factor_4 = 0
+                
             results[4] = {
                 'type': self.config['current_transformers']['channel_4']['type'],
                 'power': real_power_4,
@@ -683,6 +705,11 @@ class RPiPowerMonitor:
                 if real_power_5 < 0:
                     rms_current_ct5 = rms_current_ct5 * -1
 
+            # Filter out PF if the amperage data is not sufficient.
+            delta = max(ct5_samples) - min(ct5_samples)
+            if delta < self.PF_DELTA:
+                power_factor_5 = 0
+                
             results[5] = {
                 'type': self.config['current_transformers']['channel_5']['type'],
                 'power': real_power_5,
@@ -713,6 +740,11 @@ class RPiPowerMonitor:
                 if real_power_6 < 0:
                     rms_current_ct6 = rms_current_ct6 * -1
 
+            # Filter out PF if the amperage data is not sufficient.
+            delta = max(ct6_samples) - min(ct6_samples)
+            if delta < self.PF_DELTA:
+                power_factor_6 = 0
+                
             results[6] = {
                 'type': self.config['current_transformers']['channel_6']['type'],
                 'power': real_power_6,
