@@ -30,6 +30,9 @@ redirect_from:
 
 ## Voltage Calibration
 
+{: .note-aqua }
+Voltage calibration is required to get an accurate voltage reading from the 9V AC transformer.  It is normal if the voltage over or under reads out of the box.
+
 Using your multimeter, measure the AC voltage at the receptacle where your 9V AC transformer is connected.  Edit `config.toml` and find the `[grid_voltage]` section.
 
 Update the value for `grid_voltage` to match your multimeter's reading.
