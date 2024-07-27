@@ -552,19 +552,17 @@ class RPiPowerMonitor:
             apparent_power_1 = rms_voltage_1 * rms_current_ct1
             try:
                 power_factor_1 = real_power_1 / apparent_power_1
+                power_factor_1 = abs(power_factor_1)
             except ZeroDivisionError:
                 power_factor_1 = 0
             if self.config['current_transformers']['channel_1']['two_pole']:
                 real_power_1 = real_power_1 * 2
-                rms_current_ct1 = rms_current_ct1
             if self.config['current_transformers']['channel_1'].get('reversed'):
-                # RMS current is always positive, so the reverse check is done off the calculated real power.
-                if real_power_1 < 0:    # Make power positive (current is already positive)
-                    real_power_1 = real_power_1 * -1
-                    power_factor_1 = abs(power_factor_1)
-                else: # Make current negative (real power is already negative)
+                # Change the sign of the power calculation, and then make the current calculation match.
+                real_power_1 = real_power_1 * -1
+                if real_power_1 < 0:
                     rms_current_ct1 = rms_current_ct1 * -1
-            
+
             results[1] = {
                 'type': self.config['current_transformers']['channel_1']['type'],
                 'power': real_power_1,
@@ -584,19 +582,17 @@ class RPiPowerMonitor:
             apparent_power_2 = rms_voltage_2 * rms_current_ct2
             try:
                 power_factor_2 = real_power_2 / apparent_power_2
+                power_factor_2 = abs(power_factor_2)
             except ZeroDivisionError:
                 power_factor_2 = 0
             if self.config['current_transformers']['channel_2']['two_pole']:
                 real_power_2 = real_power_2 * 2
-                rms_current_ct2 = rms_current_ct2
             if self.config['current_transformers']['channel_2'].get('reversed'):
-                # RMS current is always positive, so the reverse check is done off the calculated real power.
-                if real_power_2 < 0:    # Make power positive (current is already positive)
-                    real_power_2 = real_power_2 * -1
-                    power_factor_2 = abs(power_factor_2)
-                else: # Make current negative (real power is already negative)
+                # Change the sign of the power calculation, and then make the current calculation match.
+                real_power_2 = real_power_2 * -1
+                if real_power_2 < 0:
                     rms_current_ct2 = rms_current_ct2 * -1
-            
+
             results[2] = {
                 'type': self.config['current_transformers']['channel_2']['type'],
                 'power': real_power_2,
@@ -616,19 +612,17 @@ class RPiPowerMonitor:
             apparent_power_3 = rms_voltage_3 * rms_current_ct3
             try:
                 power_factor_3 = real_power_3 / apparent_power_3
+                power_factor_3 = abs(power_factor_3)
             except ZeroDivisionError:
                 power_factor_3 = 0
             if self.config['current_transformers']['channel_3']['two_pole']:
                 real_power_3 = real_power_3 * 2
-                rms_current_ct3 = rms_current_ct3
             if self.config['current_transformers']['channel_3'].get('reversed'):
-                # RMS current is always positive, so the reverse check is done off the calculated real power.
-                if real_power_3 < 0:    # Make power positive (current is already positive)
-                    real_power_3 = real_power_3 * -1
-                    power_factor_3 = abs(power_factor_3)
-                else: # Make current negative (real power is already negative)
+                # Change the sign of the power calculation, and then make the current calculation match.
+                real_power_3 = real_power_3 * -1
+                if real_power_3 < 0:
                     rms_current_ct3 = rms_current_ct3 * -1
-            
+
             results[3] = {
                 'type': self.config['current_transformers']['channel_3']['type'],
                 'power': real_power_3,
@@ -648,19 +642,17 @@ class RPiPowerMonitor:
             apparent_power_4 = rms_voltage_4 * rms_current_ct4
             try:
                 power_factor_4 = real_power_4 / apparent_power_4
+                power_factor_4 = abs(power_factor_4)
             except ZeroDivisionError:
                 power_factor_4 = 0
             if self.config['current_transformers']['channel_4']['two_pole']:
                 real_power_4 = real_power_4 * 2
-                rms_current_ct4 = rms_current_ct4
             if self.config['current_transformers']['channel_4'].get('reversed'):
-                # RMS current is always positive, so the reverse check is done off the calculated real power.
-                if real_power_4 < 0:    # Make power positive (current is already positive)
-                    real_power_4 = real_power_4 * -1
-                    power_factor_4 = abs(power_factor_4)
-                else: # Make current negative (real power is already negative)
+                # Change the sign of the power calculation, and then make the current calculation match.
+                real_power_4 = real_power_4 * -1
+                if real_power_4 < 0:
                     rms_current_ct4 = rms_current_ct4 * -1
-            
+
             results[4] = {
                 'type': self.config['current_transformers']['channel_4']['type'],
                 'power': real_power_4,
@@ -680,19 +672,17 @@ class RPiPowerMonitor:
             apparent_power_5 = rms_voltage_5 * rms_current_ct5
             try:
                 power_factor_5 = real_power_5 / apparent_power_5
+                power_factor_5 = abs(power_factor_5)
             except ZeroDivisionError:
                 power_factor_5 = 0
             if self.config['current_transformers']['channel_5']['two_pole']:
                 real_power_5 = real_power_5 * 2
-                rms_current_ct5 = rms_current_ct5
             if self.config['current_transformers']['channel_5'].get('reversed'):
-                # RMS current is always positive, so the reverse check is done off the calculated real power.
-                if real_power_5 < 0:    # Make power positive (current is already positive)
-                    real_power_5 = real_power_5 * -1
-                    power_factor_5 = abs(power_factor_5)
-                else: # Make current negative (real power is already negative)
+                # Change the sign of the power calculation, and then make the current calculation match.
+                real_power_5 = real_power_5 * -1
+                if real_power_5 < 0:
                     rms_current_ct5 = rms_current_ct5 * -1
-            
+
             results[5] = {
                 'type': self.config['current_transformers']['channel_5']['type'],
                 'power': real_power_5,
@@ -712,19 +702,17 @@ class RPiPowerMonitor:
             apparent_power_6 = rms_voltage_6 * rms_current_ct6
             try:
                 power_factor_6 = real_power_6 / apparent_power_6
+                power_factor_6 = abs(power_factor_6)
             except ZeroDivisionError:
                 power_factor_6 = 0        
             if self.config['current_transformers']['channel_6']['two_pole']:
                 real_power_6 = real_power_6 * 2
-                rms_current_ct6 = rms_current_ct6
             if self.config['current_transformers']['channel_6'].get('reversed'):
-                # RMS current is always positive, so the reverse check is done off the calculated real power.
-                if real_power_6 < 0:    # Make power positive (current is already positive)
-                    real_power_6 = real_power_6 * -1
-                    power_factor_6 = abs(power_factor_6)
-                else: # Make current negative (real power is already negative)
+                # Change the sign of the power calculation, and then make the current calculation match.
+                real_power_6 = real_power_6 * -1
+                if real_power_6 < 0:
                     rms_current_ct6 = rms_current_ct6 * -1
-            
+
             results[6] = {
                 'type': self.config['current_transformers']['channel_6']['type'],
                 'power': real_power_6,
@@ -732,9 +720,6 @@ class RPiPowerMonitor:
                 'voltage': rms_voltage_6,
                 'pf': power_factor_6
             }
-        
-        # Grab the voltage from one of the enabled channels:
-        # results['voltage'] = results[self.enabled_channels[0]]['voltage']
 
         # Cutoff Threshold check
         for chan_num  in self.enabled_channels:
@@ -909,9 +894,9 @@ class RPiPowerMonitor:
                 # Since the current measured is always positive,
                 # we need to add a negative sign to the amperage value if we're exporting power.
                 for chan_num in self.mains_channels:
-                    # print(f"Channel {chan_num}: Power: {SMA_Values['cts'][chan_num]['power']} | Current: {SMA_Values['cts'][chan_num]['current']}")
-                    if SMA_Values['cts'][chan_num]['power'] < 0:
-                        SMA_Values['cts'][chan_num]['current'] = SMA_Values['cts'][chan_num]['current'] * -1            
+                    # Only change the sign on the current field if it doesn't match the sign of the real power measurement.
+                    if SMA_Values['cts'][chan_num]['power'] < 0 and SMA_Values['cts'][chan_num]['current'] > 0:
+                        SMA_Values['cts'][chan_num]['current'] = SMA_Values['cts'][chan_num]['current'] * -1
 
                 # RMS calculation for phase correction only - this is not needed after everything is tuned.
                 # The following code is used to compare the RMS power to the calculated real power.
@@ -1079,7 +1064,7 @@ class RPiPowerMonitor:
 
         summary_table = PrettyTable(['Summary Name', 'Watts', 'Amps', 'Power Factor'])
         summary_table.add_row(['Home Consumption', f"{round(SMA_Values['home-consumption']['power'], 3)} W", f"{round(SMA_Values['home-consumption']['current'], 3)} A", '--'])
-        summary_table.add_row(['Production', f"{round(SMA_Values['production']['power'], 3)} W", f"{round(SMA_Values['production']['power'], 3)} A", f"{round(SMA_Values['production']['pf'], 2)}"])
+        summary_table.add_row(['Production', f"{round(SMA_Values['production']['power'], 3)} W", f"{round(SMA_Values['production']['current'], 3)} A", f"{round(SMA_Values['production']['pf'], 2)}"])
         summary_table.add_row(['Net', f"{round(SMA_Values['net']['power'], 3)} W", f"{round(SMA_Values['net']['current'], 3)} A", '--'])
         summary_string = summary_table.get_string()
         s = t.get_string()
