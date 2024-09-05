@@ -64,6 +64,15 @@ If you followed the pre-configure wifi section above, your Pi should connect to 
 {: .note-aqua }
 The SSH credentials for the custom OS image have been left as default (username: **pi** password: **raspberry**). 
 
+## Update the Power Monitor software
+Run the following commands to make sure the power monitor software is up to date after your first boot.
+```
+cd ~/rpi_power_monitor
+sed -i 's|+refs/tags/v0.3.*:refs/tags/v0.3.*|+refs/heads/*:refs/remotes/origin/*|g' .git/config
+git fetch
+git checkout master
+```
+
 
 To continue the setup, see the Configuration page for the major release that you are using. The latest release is {{ site.latest-os-image }} and its configuration page is here: 
 
