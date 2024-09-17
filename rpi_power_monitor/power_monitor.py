@@ -562,8 +562,8 @@ class RPiPowerMonitor:
             if self.config['current_transformers']['channel_1'].get('reversed'):
                 # Change the sign of the power calculation, and then make the current calculation match.
                 real_power_1 = real_power_1 * -1
-                if real_power_1 < 0:
-                    rms_current_ct1 = rms_current_ct1 * -1
+            if real_power_1 < 0:
+                rms_current_ct1 = abs(rms_current_ct1) * -1
 
             # Filter out PF if the amperage data is not sufficient.
             delta = max(ct1_samples) - min(ct1_samples)
@@ -597,8 +597,8 @@ class RPiPowerMonitor:
             if self.config['current_transformers']['channel_2'].get('reversed'):
                 # Change the sign of the power calculation, and then make the current calculation match.
                 real_power_2 = real_power_2 * -1
-                if real_power_2 < 0:
-                    rms_current_ct2 = rms_current_ct2 * -1
+            if real_power_2 < 0:
+                rms_current_ct2 = abs(rms_current_ct2) * -1
 
             # Filter out PF if the amperage data is not sufficient.
             delta = max(ct2_samples) - min(ct2_samples)
@@ -632,8 +632,8 @@ class RPiPowerMonitor:
             if self.config['current_transformers']['channel_3'].get('reversed'):
                 # Change the sign of the power calculation, and then make the current calculation match.
                 real_power_3 = real_power_3 * -1
-                if real_power_3 < 0:
-                    rms_current_ct3 = rms_current_ct3 * -1
+            if real_power_3 < 0:
+                rms_current_ct3 = abs(rms_current_ct3) * -1
 
             # Filter out PF if the amperage data is not sufficient.
             delta = max(ct3_samples) - min(ct3_samples)
@@ -667,8 +667,8 @@ class RPiPowerMonitor:
             if self.config['current_transformers']['channel_4'].get('reversed'):
                 # Change the sign of the power calculation, and then make the current calculation match.
                 real_power_4 = real_power_4 * -1
-                if real_power_4 < 0:
-                    rms_current_ct4 = rms_current_ct4 * -1
+            if real_power_4 < 0:
+                rms_current_ct4 = abs(rms_current_ct4) * -1
 
             # Filter out PF if the amperage data is not sufficient.
             delta = max(ct4_samples) - min(ct4_samples)
@@ -702,8 +702,8 @@ class RPiPowerMonitor:
             if self.config['current_transformers']['channel_5'].get('reversed'):
                 # Change the sign of the power calculation, and then make the current calculation match.
                 real_power_5 = real_power_5 * -1
-                if real_power_5 < 0:
-                    rms_current_ct5 = rms_current_ct5 * -1
+            if real_power_5 < 0:
+                rms_current_ct5 = abs(rms_current_ct5) * -1
 
             # Filter out PF if the amperage data is not sufficient.
             delta = max(ct5_samples) - min(ct5_samples)
@@ -737,8 +737,8 @@ class RPiPowerMonitor:
             if self.config['current_transformers']['channel_6'].get('reversed'):
                 # Change the sign of the power calculation, and then make the current calculation match.
                 real_power_6 = real_power_6 * -1
-                if real_power_6 < 0:
-                    rms_current_ct6 = rms_current_ct6 * -1
+            if real_power_6 < 0:
+                rms_current_ct6 = abs(rms_current_ct6) * -1
 
             # Filter out PF if the amperage data is not sufficient.
             delta = max(ct6_samples) - min(ct6_samples)
