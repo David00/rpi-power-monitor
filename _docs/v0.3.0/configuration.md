@@ -76,6 +76,7 @@ type = 'mains'
 two_pole = false
 enabled = true
 calibration = 1.0
+amps_cutoff_threshold = 0
 watts_cutoff_threshold = 0
 reversed = false
 phase_angle = 0
@@ -87,6 +88,7 @@ type = 'mains'
 two_pole = false
 enabled = true
 calibration = 1.0
+amps_cutoff_threshold = 0
 watts_cutoff_threshold = 0
 reversed = false
 phase_angle = 0
@@ -98,6 +100,7 @@ type = 'production'
 two_pole = true
 enabled = true
 calibration = 1.0
+amps_cutoff_threshold = 0
 watts_cutoff_threshold = 0
 reversed = false
 phase_angle = 0
@@ -109,6 +112,7 @@ type = 'consumption'
 two_pole = true
 enabled = true
 calibration = 1.0
+amps_cutoff_threshold = 0
 watts_cutoff_threshold = 0
 reversed = false
 phase_angle = 0
@@ -120,6 +124,7 @@ type = 'consumption'
 two_pole = false
 enabled = true
 calibration = 1.0
+amps_cutoff_threshold = 0
 watts_cutoff_threshold = 0
 reversed = false
 phase_angle = 0
@@ -131,6 +136,7 @@ type = 'consumption'
 two_pole = true
 enabled = true
 calibration = 1.0
+amps_cutoff_threshold = 0
 watts_cutoff_threshold = 0
 reversed = false
 phase_angle = 0
@@ -291,7 +297,20 @@ A constant value used to align the amperage measurement from a sensor to your ca
 
 > Default: 1.0
 
+<h3 id="amps_cutoff_threshold" class='config-value'><a class="anchor-heading" href="#amps_cutoff_threshold" aria-labelledby="amps_cutoff_threshold"></a>amps_cutoff_threshold</h3>
+
+This is a software-based filter to help remove very low power noise.  The value you enter here will be the absolute minimum value the power monitor will require in order to save the calculation to the database.  For example, if you set this to `0.2`, the power monitor will ignore all readings for this channel until they are above 0.2 Amps.  When data falls below this threshold, the power monitor will hardcode the reading to 0 for power, current, and power factor (PF).
+
+The power monitor will ignore the sign of the power measurement (aka, the absolute value) when comparing the measurement to the cutoff threshold. For example, with a `amps_cutoff_threshold` of 0.2, a measurement of -0.3 Amps will not be ignored, but a measurement of -0.15 will be ignored.
+
+Leave the value at 0 to disable this feature.
+
+> Default: 0
+
+
 <h3 id="watts_cutoff_threshold" class='config-value'><a class="anchor-heading" href="#watts_cutoff_threshold" aria-labelledby="watts_cutoff_threshold"></a>watts_cutoff_threshold</h3>
+
+> DEPRECATED AS OF v0.3.2 - will be removed in a future release. Please update your configuration to use the `amps_cutoff_threshold` above instead.
 
 This is a software-based filter to help remove very low power noise.  The value you enter here will be the absolute minimum value the power monitor will require in order to save the calculation to the database.  For example, if you set this to `2`, the power monitor will ignore all readings for this channel until they are above 2 Watts.  When data falls below this threshold, the power monitor will hardcode the reading to 0 for power, current, and power factor (PF).
 
