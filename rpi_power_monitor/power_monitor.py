@@ -839,10 +839,13 @@ class RPiPowerMonitor:
                     home_consumption_current += results[chan_num]['current']
                 for chan_num in self.production_channels:
                     home_consumption_power += results[chan_num]['power']
-                    home_consumption_current += results[chan_num]['current']
+                    if self.config['current_transformers'][f'channel_{chan_num}']['two_pole']:
+                        home_consumption_current += ( 2 * results[chan_num]['current'])
+                    else:
+                        home_consumption_current += results[chan_num]['current']
 
             # Production
-            # Set the current for any production sources negative if the power is negative, and find the total power and current from all production sources.
+            # Find the total power and current from all production sources.
             production_power = 0
             production_current = 0
             production_pf = 0   # Average power factor from all production sources
@@ -857,8 +860,16 @@ class RPiPowerMonitor:
                 production_pf = production_pf / len(self.production_channels)
 
             # Net
-            net_power = home_consumption_power - production_power
-            net_current = home_consumption_current - production_current
+            net_power = 0
+            net_current = 0
+            if len(self.mains_channels) == 0:
+                net_power = home_consumption_power
+                net_current = home_consumption_current
+            else:
+                for chan_num in self.mains_channels:
+                    net_power += results[chan_num]['power']
+                    net_current += results[chan_num]['current']                
+                
             if net_power < 0:
                 current_status = "Producing"
             else:
