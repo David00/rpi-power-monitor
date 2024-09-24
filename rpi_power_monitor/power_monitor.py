@@ -753,14 +753,26 @@ class RPiPowerMonitor:
                 'pf': power_factor_6
             }
 
-        # Cutoff Threshold check
-        for chan_num  in self.enabled_channels:
-            cutoff = float(self.config['current_transformers'][f'channel_{chan_num}']['watts_cutoff_threshold'])
+        # Software Noise Filtering - Amps & Watts
+        # amps_cutoff_threshold (added in v0.3.2)
+        #   When the amperage reading falls below the specified value, all readings for the channel will be ignored.
+        #   `amps_cutoff_threshold` is preferred - `watts_cutoff_threshold` is deprecated as of v0.3.2 and will be removed in a future release.
+        #   `watts_cutoff_threshold` will be ignored if `amps_cutoff_threshold` is specified.
+    
+    
+        # Check to see if amps_cutoff_threshold is defined in the config file. If not, fallback to using watts_cutoff_threshold.
+        for chan_num in self.enabled_channels:
+            if self.config['current_transformers'][f'channel_{chan_num}'].get('amps_cutoff_threshold'):
+                cutoff = float(self.config['current_transformers'][f'channel_{chan_num}']['amps_cutoff_threshold'])
+            else:
+                cutoff = float(self.config['current_transformers'][f'channel_{chan_num}']['watts_cutoff_threshold'])
+                
             if cutoff != 0:
                 if abs(results[chan_num]['power']) < cutoff:
                     results[chan_num]['power'] = 0
                     results[chan_num]['current'] = 0
                     results[chan_num]['pf'] = 0
+                    
         return results
 
     def run_main(self):
