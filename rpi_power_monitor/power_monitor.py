@@ -59,8 +59,124 @@ retention_policies = {
 
 
 class RPiPowerMonitor:
-    """ Class to take readings from the MCP3008 and calculate power """
-    def __init__(self, mode='main', config='rpi_power_monitor/config.toml', spi=None):
+    """ Class to take readings from the MCP3008 and calculate power for up to 8 ADC channels.
+    
+    Arguments:
+
+        - config: str|dict, if `config` is a string, it should be a path to the config (relative paths to this module are okay). If `config` is a dict, it should follow the structure below.
+          (See the Configuration Reference Manual for details on these settings)
+          https://david00.github.io/rpi-power-monitor/docs/latest/configuration.html#configuration-reference-manual
+
+        {
+            'general' : {
+                'name' : 'Power-Monitor'
+                },
+            'database' : {
+                'enabled' : true,
+                'host' : 'localhost',
+                'port' : 8086,
+                'username' : 'root',
+                'password' : 'password',
+                'database_name' : 'power_monitor'
+            }
+            'grid_voltage' : {
+                'grid_voltage' : 120.1,
+                'ac_transformer_output_voltage' : 10.51,
+                'frequency' : 60,
+                'voltage_calibration' : 1.0
+                },
+            'current_transformers' : {
+                'channel_1' : {
+                    'name' : 'Channel 1',
+                    'rating' : 100,
+                    'type' : 'consumption',
+                    'two_pole' : false,
+                    'enabled' : true,
+                    'calibration' : 1.0,
+                    'amps_cutoff_threshold' : 0,
+                    'reversed' : false,
+                    'phase_angle' : 0
+                },
+                'channel_2' : {
+                    'name' : 'Channel 2',
+                    'rating' : 100,
+                    'type' : 'consumption',
+                    'two_pole' : false,
+                    'enabled' : true,
+                    'calibration' : 1.0,
+                    'amps_cutoff_threshold' : 0,
+                    'reversed' : false,
+                    'phase_angle' : 0
+                },
+                'channel_3' : {
+                    'name' : 'Channel 3',
+                    'rating' : 100,
+                    'type' : 'consumption',
+                    'two_pole' : false,
+                    'enabled' : true,
+                    'calibration' : 1.0,
+                    'amps_cutoff_threshold' : 0,
+                    'reversed' : false,
+                    'phase_angle' : 0
+                },
+                'channel_4' : {
+                    'name' : 'Channel 4',
+                    'rating' : 100,
+                    'type' : 'consumption',
+                    'two_pole' : false,
+                    'enabled' : true,
+                    'calibration' : 1.0,
+                    'amps_cutoff_threshold' : 0,
+                    'reversed' : false,
+                    'phase_angle' : 0
+                },
+                'channel_5' : {
+                    'name' : 'Channel 5',
+                    'rating' : 100,
+                    'type' : 'consumption',
+                    'two_pole' : false,
+                    'enabled' : true,
+                    'calibration' : 1.0,
+                    'amps_cutoff_threshold' : 0,
+                    'reversed' : false,
+                    'phase_angle' : 0
+                },
+                'channel_6' : {
+                    'name' : 'Channel 6',
+                    'rating' : 100,
+                    'type' : 'consumption',
+                    'two_pole' : false,
+                    'enabled' : true,
+                    'calibration' : 1.0,
+                    'amps_cutoff_threshold' : 0,
+                    'reversed' : false,
+                    'phase_angle' : 0
+                },
+            },
+            # Backups are optional - no need to include this unless you want to use them.
+            'backups' : {
+                'backup_device' : '/dev/sda1',
+                'folder_name' : 'power_monitor_backups',
+                'mount_path' : '/media/backups',
+                'backup_count' : 2    
+            },
+            # Plugins are optional - no need to include this section unless there are plugins you want to use.
+            'plugins' : {
+                'mqtt_v2' : {
+                    # Specific plugin options go here - for example:
+                    'enabled' : true,
+                    'host' : '192.168.0.10'
+                }
+            }
+            
+        }
+        
+
+        - mode: str, one of the following options ['plot', 'terminal' , 'main']. See docs for more info on each mode:
+          https://david00.github.io/rpi-power-monitor/docs/v0.3.0/advanced-usage.html#--mode
+    
+    """
+    def __init__(self, config, mode='main', spi=None):
         self.pid = os.getpid()
         self.imported_plugins = dict()
         
@@ -77,16 +193,29 @@ class RPiPowerMonitor:
             self.spi.open(0, 0)
             self.spi.max_speed_hz = 1750000
         
-        # Get DB Client
-        self.get_db_client()
-        if not self.client:
-            logger.error(f"Failed to connect to InfluxDB server at {self.config['database']['host']}:{self.config['database']['port']}. Please make sure it's reachable and try again.")
-            self.cleanup(-1)
-        
-        # Other Initializations
-        # Validate continuous queries and retention policies
-        self.validate_rps()
-        self.validate_cqs()        
+        # If database is enabled in config, initialize the InfluxDB connection.
+        # The 'enabled' configuration option for 'database' was added in v0.4.0. Because of this, users running a config file from v0.3.x or earlier will not have 
+        # the 'enabled' option in their config.  Therefore, when we attempt to load the setting below, 'enabled' will be one of the following:
+        #   - None if the user doesn't have the option (ie, using an old config). In this case, the database should be assumed enabled/wanted.
+        #   - False if the user explicitely disabled the database connection.
+        #   - True if the user is using a new config as of v0.4.0 (as True is the default setting).
+
+        config_db_value = self.config['database'].get('enabled')
+        if config_db_value in (True, None):
+            self.DB_ENABLED = True
+            self.get_db_client()
+            if config_db_value is None:
+                logger.warning("It appears you may be running an old config file for this version of the power monitor code. Please see for the link to the latest config file: https://david00.github.io/rpi-power-monitor/docs/latest/configuration.html#configuration-reference-manual")
+            if not self.client:
+                logger.error(f"Failed to connect to InfluxDB server at {self.config['database']['host']}:{self.config['database']['port']}. Please make sure it's reachable and try again.")
+                self.cleanup(-1)
+            # Other Initializations
+            # Validate continuous queries and retention policies
+            self.validate_rps()
+            self.validate_cqs()
+            #
+        else:
+            self.DB_ENABLED = False
         self.points_buffer = [] # A buffer to hold sublists of points so that they can be written altogether (reduces DB overhead)
         self.def_cal = 0.88     # This is the default calibration factor for all CTs from my shop.
         self.terminal_mode = False
@@ -186,23 +315,40 @@ class RPiPowerMonitor:
         
         return
 
-    def load_config(self, config_file=os.path.join(module_root, 'config.toml')):
+    def load_config(self, config=os.path.join(module_root, 'config.toml')):
         '''Loads the user's config.toml file and validates entries.'''
 
-        logger.debug(f"Attempting to load config from {config_file}")
-        invalid_settings = False
-        if not os.path.exists(config_file): 
-            logger.error(f"Could not find your config.toml file at rpi_power_monitor/config.toml. Please ensure it exists, or, provide the config file location with the -c flag when launching the program.")
+        if isinstance(config, str):
+            logger.debug(f"Attempting to load config from {config}")
+            invalid_settings = False
+            if not os.path.exists(config): 
+                logger.error(f"Could not find your config.toml file at rpi_power_monitor/config.toml. Please ensure it exists, or, provide the config location with the -c flag when launching the program.")
 
-        try:
-            with open(config_file, 'rb') as f:
-                config = tomli.load(f)
-        except FileNotFoundError:
-            self.cleanup(-1)
+            try:
+                with open(config, 'rb') as f:
+                    config = tomli.load(f)
+            except FileNotFoundError:
+                self.cleanup(-1)
+            
+            except tomli.TOMLDecodeError:
+                logger.warning("The file config.toml appears to have a TOML syntax error. Please run the config through a TOML validator, make corrections, and try again.")
+                self.cleanup(-1)
         
-        except tomli.TOMLDecodeError:
-            logger.warning("The file config.toml appears to have a TOML syntax error. Please run the config through a TOML validator, make corrections, and try again.")
-            self.cleanup(-1)
+        elif isinstance(config, dict):
+            logger.debug(f"Attempting to parse the provided config dictionary.")
+            # Check for bare-minimum config keys:            
+            if not config.get('current_transformers'):
+                # `current_transformers` is required due to subsequent config processing that happens for each CT channel defined underneath the `current_transformers` key.
+                logger.critical("Invalid config setting. Unable to find the required 'current_transformers' key in the config dict.")
+                invalid_settings = True
+            
+            if not config.get('grid_voltage'):
+                # `grid_voltage` is required due to subsequent config processing that happens for each CT channel defined underneath the `grid_voltage` key.
+                logger.critical("Invalid config setting. Unable to find the required 'grid_voltager' key in the config dict.")
+                invalid_settings = True
+            
+            if invalid_settings:
+                self.cleanup(-1)
 
         self.config = config
         self.grid_voltage = config.get('grid_voltage').get('grid_voltage')
@@ -211,10 +357,14 @@ class RPiPowerMonitor:
         self.name = config['general'].get('name')
 
         # Enabled Channels
-        self.enabled_channels = [int(channel.split('_')[-1]) for channel, settings in config['current_transformers'].items() if settings['enabled'] ]
+        try:
+            self.enabled_channels = [int(channel.split('_')[-1]) for channel, settings in config['current_transformers'].items() if settings['enabled'] ]
+        except Exception as e:
+            logger.warning("Invalid config setting. A CT channel is missing the 'enabled' configuration setting.")
+            invalid_settings = True
         if len(self.enabled_channels) == 0:
             invalid_settings = True
-            logger.warning("Invalid config file setting: No channels have been enabled!")
+            logger.warning("Invalid config setting: No channels have been enabled!")
         else:
             logger.debug(f"Sampling enabled for {len(self.enabled_channels)} channels.")
         
@@ -232,7 +382,7 @@ class RPiPowerMonitor:
         # CT Type Check
         for ct_channel, settings in config['current_transformers'].items():
             if settings['type'] not in ('consumption', 'production', 'mains'):
-                logger.warning(f"Invalid config file setting: 'type' for {ct_channel} should be 'consumption' or 'production', or 'mains'. It is currently set to: '{config['current_transformers'][ct_channel]['type']}'.")
+                logger.warning(f"Invalid config setting: 'type' for {ct_channel} should be 'consumption' or 'production', or 'mains'. It is currently set to: '{config['current_transformers'][ct_channel]['type']}'.")
                 invalid_settings = True
 
 
@@ -244,7 +394,7 @@ class RPiPowerMonitor:
             logger.debug("No mains channels configured.")
 
         if invalid_settings:
-            logger.critical("Invalid settings detected in config.toml. Please review any warning messages above and correct the issue.")
+            logger.critical("Invalid settings detected in the provided configuration. Please review any warning messages above and correct the issue.")
             self.cleanup(-1)
 
         # Production sources assignment
@@ -255,11 +405,19 @@ class RPiPowerMonitor:
         self.consumption_channels = [int(channel.split('_')[-1]) for channel, settings in config['current_transformers'].items() if settings['type'] == 'consumption' and settings['enabled'] == True]
         logger.debug(f"Identified {len(self.consumption_channels)} consumption channels: ({self.consumption_channels})")
 
-        # Two-pole validation
+        # CT Channel Settings Validation
         for channel, settings in config['current_transformers'].items():
+            if 'rating' not in settings.keys():
+                logger.warning(f"{channel.capitalize()} is missing the `rating` configuration. Please add the `rating` option to this channel in your configuration.")
+                invalid_settings = True
             if 'two_pole' not in settings.keys():
-                logger.critical(f"{channel.capitalize()} is missing the two_pole setting in the config file. Please make sure the config has an entry for 'two_pole' and try again.")
-                self.cleanup(-1)
+                logger.debug(f"{channel.capitalize()} is missing the two_pole setting in the config. Using the default value of two_pole = False for {channel.capitalize()}")
+                config['current_transformers'][channel]['two_pole'] = False
+
+        if invalid_settings:
+            logger.critical("Invalid settings detected in the provided configuration. Please review any warning messages above and correct the issue.")
+            self.cleanup(-1)
+
 
     def get_db_client(self):
         '''Creates an InfluxDB Client using the loaded configuration.'''
@@ -760,7 +918,7 @@ class RPiPowerMonitor:
         #   `watts_cutoff_threshold` will be ignored if `amps_cutoff_threshold` is specified.
     
     
-        # Check to see if amps_cutoff_threshold is defined in the config file. If not, fallback to using watts_cutoff_threshold.
+        # Check to see if amps_cutoff_threshold is defined in the config. If not, fallback to using watts_cutoff_threshold.
         for chan_num in self.enabled_channels:
             if self.config['current_transformers'][f'channel_{chan_num}'].get('amps_cutoff_threshold'):
                 cutoff = float(self.config['current_transformers'][f'channel_{chan_num}']['amps_cutoff_threshold'])
@@ -963,13 +1121,13 @@ class RPiPowerMonitor:
                 # rms_power_5 = round(results['ct5']['current'] * results['ct5']['voltage'], 2)  # AKA apparent power
                 # rms_power_6 = round(results['ct6']['current'] * results['ct6']['voltage'], 2)  # AKA apparent power
 
-                # Prepare values for database storage
-
-                if write_threshold_counter == write_threshold:
-                    self.queue_for_influx(SMA_Values, poll_time)
-                    write_threshold_counter = 0
-                else:
-                    write_threshold_counter += 1
+                # Prepare values for database storage if DB is enabled.
+                if self.DB_ENABLED:
+                    if write_threshold_counter == write_threshold:
+                        self.queue_for_influx(SMA_Values, poll_time)
+                        write_threshold_counter = 0
+                    else:
+                        write_threshold_counter += 1
 
                 # Expose data to plugins
                 self.latest_results.update(SMA_Values)
