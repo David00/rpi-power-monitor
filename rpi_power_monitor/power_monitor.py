@@ -5,12 +5,11 @@ import os
 import subprocess
 import sys
 import timeit
-from datetime import datetime
+from datetime import datetime, timezone
 from math import sqrt, cos
 from socket import AF_INET, SOCK_DGRAM, socket, getaddrinfo
 import ipaddress
 from textwrap import dedent
-from time import sleep
 import tomli
 import spidev
 from prettytable import PrettyTable
@@ -20,8 +19,9 @@ from multiprocessing import Manager, Event
 import signal
 from copy import deepcopy
 import os
+from typing import Union
 
-from plotting import plot_data
+from rpi_power_monitor.plotting import plot_data
 from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBServerError
 
@@ -78,7 +78,7 @@ class RPiPowerMonitor:
                 'username' : 'root',
                 'password' : 'password',
                 'database_name' : 'power_monitor'
-            }
+            },
             'grid_voltage' : {
                 'grid_voltage' : 120.1,
                 'ac_transformer_output_voltage' : 10.51,
@@ -176,15 +176,16 @@ class RPiPowerMonitor:
           https://david00.github.io/rpi-power-monitor/docs/v0.3.0/advanced-usage.html#--mode
     
     """
-    def __init__(self, config, mode='main', spi=None):
+    def __init__(self, mode='main', config=os.path.join(module_root, 'config.toml'), spi=None) -> None:
         self.pid = os.getpid()
         self.imported_plugins = dict()
         
-        duplicate = self.check_dup_process()
-        if duplicate:
-            self.cleanup()
+        self._load_config(config)
 
-        self.load_config(config)
+        if not self.config.get('disable_dup_process_check'):
+            duplicate = self._check_dup_process()
+            if duplicate:
+                self._cleanup()
         
         if spi:
             self.spi = spi
@@ -192,6 +193,9 @@ class RPiPowerMonitor:
             self.spi = spidev.SpiDev()
             self.spi.open(0, 0)
             self.spi.max_speed_hz = 1750000
+
+        # Check sample rate:
+        self._measure_sample_rate()
         
         # If database is enabled in config, initialize the InfluxDB connection.
         # The 'enabled' configuration option for 'database' was added in v0.4.0. Because of this, users running a config file from v0.3.x or earlier will not have 
@@ -203,16 +207,16 @@ class RPiPowerMonitor:
         config_db_value = self.config['database'].get('enabled')
         if config_db_value in (True, None):
             self.DB_ENABLED = True
-            self.get_db_client()
+            self._get_db_client()
             if config_db_value is None:
                 logger.warning("It appears you may be running an old config file for this version of the power monitor code. Please see for the link to the latest config file: https://david00.github.io/rpi-power-monitor/docs/latest/configuration.html#configuration-reference-manual")
             if not self.client:
                 logger.error(f"Failed to connect to InfluxDB server at {self.config['database']['host']}:{self.config['database']['port']}. Please make sure it's reachable and try again.")
-                self.cleanup(-1)
+                self._cleanup(-1)
             # Other Initializations
             # Validate continuous queries and retention policies
-            self.validate_rps()
-            self.validate_cqs()
+            self._validate_rps()
+            self._validate_cqs()
             #
         else:
             self.DB_ENABLED = False
@@ -224,10 +228,10 @@ class RPiPowerMonitor:
 
         # Plugin Loading
         if self.config.get('plugins') is not None:
-            self.load_plugins(self.config.get('plugins'))   # Note: Plugins are initialized here, but they are only started when the power monitor routine starts.
+            self._load_plugins(self.config.get('plugins'))   # Note: Plugins are initialized here, but they are only started when the power monitor routine starts.
 
     
-    def validate_cqs(self):
+    def _validate_cqs(self) -> None:
         '''Ensures that the continuous queries exist in the configured Influx database, and creates them if not.'''
 
         retention_policies = {
@@ -294,7 +298,7 @@ class RPiPowerMonitor:
         
         return
 
-    def validate_rps(self):
+    def _validate_rps(self) -> None:
         '''Ensures that the retention policies exist in the configured Influx database, and creates them if not.'''
 
         # Validate retention policies and continuous queries.
@@ -303,7 +307,7 @@ class RPiPowerMonitor:
             rp_names = [rp['name'] for rp in existing_rps]
         except Exception as e:
             logger.warning(f"Failed to retrieve InfluxDB Retention Policies. Is Influx running?")
-            self.cleanup(-1)
+            self._cleanup(-1)
         
         try:
             for rp in retention_policies.keys():
@@ -315,24 +319,26 @@ class RPiPowerMonitor:
         
         return
 
-    def load_config(self, config=os.path.join(module_root, 'config.toml')):
-        '''Loads the user's config.toml file and validates entries.'''
+    def _load_config(self, config) -> None:
+        '''Loads the provided config and validates contents.
+        
+        config can be either a os.path, string, or a dictionary.
+        '''
 
-        if isinstance(config, str):
-            logger.debug(f"Attempting to load config from {config}")
-            invalid_settings = False
+        invalid_settings = False
+        if isinstance(config, (pathlib.PosixPath, str)):
+            logger.debug(f"Attempting to load config from {config}")            
             if not os.path.exists(config): 
                 logger.error(f"Could not find your config.toml file at rpi_power_monitor/config.toml. Please ensure it exists, or, provide the config location with the -c flag when launching the program.")
-
             try:
                 with open(config, 'rb') as f:
                     config = tomli.load(f)
             except FileNotFoundError:
-                self.cleanup(-1)
+                self._cleanup(-1)
             
             except tomli.TOMLDecodeError:
                 logger.warning("The file config.toml appears to have a TOML syntax error. Please run the config through a TOML validator, make corrections, and try again.")
-                self.cleanup(-1)
+                self._cleanup(-1)
         
         elif isinstance(config, dict):
             logger.debug(f"Attempting to parse the provided config dictionary.")
@@ -348,7 +354,7 @@ class RPiPowerMonitor:
                 invalid_settings = True
             
             if invalid_settings:
-                self.cleanup(-1)
+                self._cleanup(-1)
 
         self.config = config
         self.grid_voltage = config.get('grid_voltage').get('grid_voltage')
@@ -395,7 +401,7 @@ class RPiPowerMonitor:
 
         if invalid_settings:
             logger.critical("Invalid settings detected in the provided configuration. Please review any warning messages above and correct the issue.")
-            self.cleanup(-1)
+            self._cleanup(-1)
 
         # Production sources assignment
         self.production_channels = [int(channel.split('_')[-1]) for channel, settings in config['current_transformers'].items() if settings['type'] == 'production' and settings['enabled'] == True]
@@ -414,12 +420,21 @@ class RPiPowerMonitor:
                 logger.debug(f"{channel.capitalize()} is missing the two_pole setting in the config. Using the default value of two_pole = False for {channel.capitalize()}")
                 config['current_transformers'][channel]['two_pole'] = False
 
+
+        # Optional Settings
+        
+        # Check for the config setting `disable_dup_process_check`. Set it to False if the config setting doesn't exist, or if it is already False/None.
+        if not config.get('disable_dup_process_check'):
+            config['disable_dup_process_check'] = False
+
         if invalid_settings:
             logger.critical("Invalid settings detected in the provided configuration. Please review any warning messages above and correct the issue.")
-            self.cleanup(-1)
+            self._cleanup(-1)
+        
+        return
 
 
-    def get_db_client(self):
+    def _get_db_client(self) -> None:
         '''Creates an InfluxDB Client using the loaded configuration.'''
 
         host = self.config['database']['host']
@@ -442,7 +457,7 @@ class RPiPowerMonitor:
         if not db_host_valid:
             logger.warning(dedent(
                 f"It appears that the database host value of {host} is not a valid IP or DNS name.  Or, DNS name resolution failed. Please check this setting and your networking settings and try again."))
-            self.cleanup(-1)
+            self._cleanup(-1)
 
         try:
             client = InfluxDBClient(
@@ -458,24 +473,24 @@ class RPiPowerMonitor:
         except Exception as e:
             logger.warning(f"Failed to connect to InfluxDB database at {host}:{port}")
             self.client = None
-            self.cleanup(-1)
+            self._cleanup(-1)
 
         # Test Client
         try:
             self.client.create_database(self.config['database']['database_name'])
         except ConnectionRefusedError:
             logger.warning("DB connection refused - is Influx running?")
-            self.cleanup(-1)
+            self._cleanup(-1)
         except Exception as e:
             logger.warning(f"Failed to connect to the Influx database at {host}:{port}.")
             logger.debug(f"Error message:\n{e}")
-            self.cleanup(-1)
+            self._cleanup(-1)
         
         logger.debug(f"Successfully connected to Influx at {host}:{port}")
         return
         
 
-    def dump_data(self, dump_type, samples):
+    def _dump_data(self, dump_type, samples) -> None:
         """ Writes raw data to a CSV file titled 'data-dump-<current_time>.csv' """
         speed_kHz = self.spi.max_speed_hz / 1000
         now = datetime.now().strftime('%m-%d-%Y-%H-%M')
@@ -496,55 +511,95 @@ class RPiPowerMonitor:
                 writer.writerow([i, ct1_data[i], ct2_data[i], ct3_data[i], ct4_data[i], ct5_data[i], ct6_data[i], v_data[i]])
         logger.info(f"CSV written to {filename}.")
 
-    def get_board_voltage(self):
+    def _get_board_voltage(self) -> float:
         """ Take 10 sample readings and return the average board voltage from the +3.3V rail. """
         samples = []
         while len(samples) <= 10:
-            data = self.read_adc(4) # channel 4 is the 3.3V ref voltage
+            data = self._read_adc(4) # channel 4 is the 3.3V ref voltage
             samples.append(data)
 
         avg_reading = sum(samples) / len(samples)
         board_voltage = (avg_reading / 1024) * 3.31 * 2
         return board_voltage
 
-    def read_adc(self, adc_num):
+    def _read_adc(self, adc_num) -> int:
         """ Read SPI data from the MCP3008, 8 channels in total. """
         r = self.spi.xfer2([1, 8 + adc_num << 4, 0])
         data = ((r[1] & 3) << 8) + r[2]
         return data
 
-    def collect_data(self, num_samples):
+    def _collect_data(self, num_samples, channel_num=None) -> dict:
         """  Takes <num_samples> readings from the ADC for each ADC channel and returns a dictionary containing the CT channel number as the key, and a list of that channel's sample data.
         
         Arguments:
-        num_samples -- int, the number of samples to collect for each channel.
+          - num_samples:    int, the number of samples to collect for each channel.
+          - channel_num:    int|None, a specific channel to sample from. If None, all currently enabled channels (according to the config) will be sampled.
 
         Returns a dictionary where the keys are ct1 - ct6, voltage, and time, and the value of each key is a list of that channel's samples (except for 'time', which is a UTC datetime)
         """
-        now = datetime.utcnow()  # Get time of reading
+        now = datetime.now(timezone.utc) # Get time of reading
 
         samples = dict()
-        for pcb_chan in self.enabled_channels:
-            samples[f'ct{pcb_chan}'] = []
-            samples[f'v{pcb_chan}'] = []
+        if channel_num:
+            samples[f'ct{channel_num}'] = []
+            samples[f'v{channel_num}'] = []
+            start = timeit.default_timer()
+            for _ in range(num_samples):
+                samples[f'ct{channel_num}'].append(self._read_adc(channel_num))
+                samples[f'v{channel_num}'].append(self._read_adc(5))
+            stop = timeit.default_timer()
+            duration = stop - start
+        else:
+            for pcb_chan in self.enabled_channels:
+                samples[f'ct{pcb_chan}'] = []
+                samples[f'v{pcb_chan}'] = []
 
-        start = timeit.default_timer()
-        for _ in range(num_samples):
-            for pcb_chan, adc_chan in self.enabled_adc_ct_channels.items():
-                samples[f'ct{pcb_chan}'].append(self.read_adc(adc_chan))
-                samples[f'v{pcb_chan}'].append(self.read_adc(5))
-        stop = timeit.default_timer()
-        duration = stop - start
+            start = timeit.default_timer()
+            for _ in range(num_samples):
+                for pcb_chan, adc_chan in self.enabled_adc_ct_channels.items():
+                    samples[f'ct{pcb_chan}'].append(self._read_adc(adc_chan))
+                    samples[f'v{pcb_chan}'].append(self._read_adc(5))
+            stop = timeit.default_timer()
+            duration = stop - start
        
         samples['time'] = now
         samples['duration'] = duration
         return samples
+    
 
-    def calculate_power(self, samples, board_voltage):
+    def get_single_channel_measurements(self, channel_num, duration=1) -> dict:
+        """ (Added in v0.4.0) User-level interface to sample a single channel for an approximate number of seconds.
+        
+        Arguments:
+          - channel_num:    int, the channel number that you want to sample (1-6)
+          - duration:       int, the number of seconds that you want to sample for. (Default is 1 second)
+        """
+
+        # The number of samples collected over N seconds is relative to the number of enabled channels and the overall sample rate. The approximate number of samples
+        # collected in `duration` seconds must first be calculated below before calling _collect_data()`
+        
+        num_samples = _convert_duration_to_num_samples(duration, self.sample_rate, 1)
+        samples = self._collect_data(num_samples, channel_num=channel_num)
+        results = self._calculate_power(samples, self._get_board_voltage())
+        return results
+
+    def get_power_measurements(self, duration=1) -> dict:
+        """ (Added in v0.4.0) User-level interface to sample all enabled channels for an approximate number of seconds.
+        
+        Arguments:
+          - duration:   int, the number of seconds that you want to sample for. (Default is 1 second)
+        """
+        
+        enabled_channels = self.enabled_channels
+        num_samples = _convert_duration_to_num_samples(duration, self.sample_rate, 1)
+        
+
+
+    def _calculate_power(self, samples, board_voltage) -> dict:
         """ Calculates amperage, real power, power factor, and voltage
         
         Arguments:
-        samples -- dict, a dictionary containing lists of each channel's sample data, and a voltage wave that's been collected for each corresponding channel.
+          - samples: dict, a dictionary containing lists of each channel's sample data, and a voltage wave that's been collected for each corresponding channel.
 
         Returns a dictionary containing a dictionary for each channel, with the following structure:
         {
@@ -923,7 +978,7 @@ class RPiPowerMonitor:
             if self.config['current_transformers'][f'channel_{chan_num}'].get('amps_cutoff_threshold'):
                 cutoff = float(self.config['current_transformers'][f'channel_{chan_num}']['amps_cutoff_threshold'])
             else:
-                cutoff = float(self.config['current_transformers'][f'channel_{chan_num}']['watts_cutoff_threshold'])
+                cutoff = 0
                 
             if cutoff != 0:
                 if abs(results[chan_num]['power']) < cutoff:
@@ -933,7 +988,7 @@ class RPiPowerMonitor:
                     
         return results
 
-    def run_main(self):
+    def run_main(self) -> None:
         """ Starts the main power monitor loop and launches plugins. """
         logger.info("... Starting Raspberry Pi Power Monitor")
         logger.info("Press Ctrl-c to quit...")
@@ -978,18 +1033,18 @@ class RPiPowerMonitor:
 
 
         # Get the expected sample count for the current configuration.
-        samples = self.collect_data(num_samples)
+        samples = self._collect_data(num_samples)
         sample_count = sum([len(samples[x]) for x in samples.keys() if type(samples[x]) == list])
         
-        while not halt_flag.is_set():
-            board_voltage = self.get_board_voltage()
-            samples = self.collect_data(num_samples)
+        while not _halt_flag.is_set():
+            board_voltage = self._get_board_voltage()
+            samples = self._collect_data(num_samples)
             poll_time = samples['time']
             duration = samples['duration']
             sample_rate = round((sample_count / duration) / num_samples, 2)
             per_channel_sample_rate = round(sample_rate / (2 * len(rpm.enabled_channels)), 2)
 
-            results = self.calculate_power(samples, board_voltage)
+            results = self._calculate_power(samples, board_voltage)
             voltage = results[self.enabled_channels[0]]['voltage']
 
             # Determine Production, Home Consumption, and Net Values
@@ -1124,7 +1179,7 @@ class RPiPowerMonitor:
                 # Prepare values for database storage if DB is enabled.
                 if self.DB_ENABLED:
                     if write_threshold_counter == write_threshold:
-                        self.queue_for_influx(SMA_Values, poll_time)
+                        self._quene_for_influx(SMA_Values, poll_time)
                         write_threshold_counter = 0
                     else:
                         write_threshold_counter += 1
@@ -1135,17 +1190,17 @@ class RPiPowerMonitor:
                 if self.terminal_mode:
                     self.print_results(SMA_Values, sample_rate)
 
-        # Halt flag set
-        self.cleanup()
+        # _halt flag set
+        self._cleanup()
 
-    def queue_for_influx(self, SMA_Values, poll_time):
+    def _quene_for_influx(self, SMA_Values, poll_time) -> None:
         '''Creates Point() objects from the measured values, and caches them into a small batch before writing to Influx.'''
 
         # Create Points() for every measurement.
         ct_points = []
         for chan_num in self.enabled_channels:
             values = SMA_Values['cts'][chan_num]
-            ct_points.append(Point('ct', num=chan_num, power=values['power'], current=values['current'], pf=values['pf'], time=poll_time, name=self.name).to_dict())
+            ct_points.append(Point('ct', num=chan_num, power=values['power'], current=values['current'], pf=values['pf'], time=poll_time, name=self.name)._to_dict())
 
         home_load = Point('home_load', power=SMA_Values['home-consumption']['power'], current=SMA_Values['home-consumption']['current'], time=poll_time, name=self.name)
         production = Point('solar', power=SMA_Values['production']['power'], current=SMA_Values['production']['current'], pf=SMA_Values['production']['pf'], time=poll_time, name=self.name)
@@ -1153,10 +1208,10 @@ class RPiPowerMonitor:
         v = Point('voltage', voltage=SMA_Values['voltage'], v_input=0, time=poll_time, name=self.name)
 
         points = [
-            home_load.to_dict(),
-            production.to_dict(),
-            net.to_dict(),
-            v.to_dict(),
+            home_load._to_dict(),
+            production._to_dict(),
+            net._to_dict(),
+            v._to_dict(),
         ]
         points += ct_points
 
@@ -1170,12 +1225,12 @@ class RPiPowerMonitor:
                 logger.critical(f"Failed to write data to Influx. Reason: {e}")
             except ConnectionError:
                 logger.info("Connection to InfluxDB lost. Please investigate!")
-                self.cleanup()
+                self._cleanup()
             
             self.points_buffer = []
 
 
-    def check_dup_process(self, *args, **kwargs):
+    def _check_dup_process(self, *args, **kwargs) -> bool:
         '''Checks the host to see if the power monitor is already running in a separate process.
         
         Returns True if a duplicate process is found.
@@ -1209,7 +1264,7 @@ class RPiPowerMonitor:
         return False
 
 
-    def cleanup(self, *args, **kwargs):
+    def _cleanup(self, *args, **kwargs) -> None:
         '''Performs necessary termination/shutdown procedures and exits the program.'''
         try:
             if self.spi:
@@ -1231,7 +1286,7 @@ class RPiPowerMonitor:
     
         exit(0)
         
-    def load_plugins(self, plugins):
+    def _load_plugins(self, plugins) -> None:
         '''Handles the import of custom plugins.'''
 
         for plugin_name, config in plugins.items():
@@ -1246,10 +1301,29 @@ class RPiPowerMonitor:
                         'status' : 'imported',
                         'plugin' : p
                     }
+        return
+    
+    def _measure_sample_rate(self) -> None:
+        '''This function gatheres a small amount of sample data and calculates the overall sample rate in samples-per-second.'''
 
+        logger.debug("Checking sample rate...")
+        sample_rates = []
+        for _ in range(5):
+            samples = self._collect_data(100)
+            sample_count = sum([len(samples[x]) for x in samples.keys() if type(samples[x]) == list])
+            duration = samples['duration']
+            sample_rate = round((sample_count / duration), 2)
+            sample_rates.append(sample_rate)
+        
+        
+        avg_sample_rate = sum(sample_rates) / len(sample_rates)
+        self.sample_rate = round(avg_sample_rate, 2)
+        
+        logger.debug(f'Sample Rate: {self.sample_rate} samples per second.')
+        return
 
     @staticmethod
-    def print_results(SMA_Values, sample_rate):
+    def print_results(SMA_Values, sample_rate) -> None:
         t = PrettyTable(['', 'ct1', 'ct2', 'ct3', 'ct4', 'ct5', 'ct6'])
         t.add_row(['Watts',
                    round(SMA_Values['cts'][1]['power'] if SMA_Values['cts'].get(1) else 0, 3),
@@ -1282,9 +1356,10 @@ class RPiPowerMonitor:
         summary_string = summary_table.get_string()
         s = t.get_string()
         logger.info(f"\n{s}\n{summary_string}")
+        return
 
     @staticmethod
-    def get_ip():
+    def get_ip() -> Union[str, None]:
         """ Determines your Pi's local IP address so that it can be displayed to the user for ease of accessing generated plots. 
         
         Returns a string representing the Pi's local IP address that's associated with the default route.
@@ -1301,7 +1376,7 @@ class RPiPowerMonitor:
         return ip
 
 class Point:
-    def __init__(self, p_type, *args, **kwargs):
+    def __init__(self, p_type, *args, **kwargs) -> None:
 
         self.identifier = kwargs['name']    # Power Monitor Identifier, set in config.toml via 'name'
 
@@ -1335,7 +1410,7 @@ class Point:
         elif p_type == 'ct':
             '''
             This type represents a CT reading.
-            self.power   : the real power as calculated in the calculate_power() function
+            self.power   : the real power as calculated in the _calculate_power() function
             self.current : the rms current as measured
             self.p_type  : the type of point [home_load, solar, net, ct, voltage]
             self.ct_num  : the CT number [0-6]
@@ -1359,7 +1434,7 @@ class Point:
             self.time = kwargs['time']
             self.p_type = p_type
 
-    def to_dict(self):
+    def _to_dict(self) -> Union[str, None]:
         if self.p_type == 'home_load':
             data = {
                 "measurement": 'home_load',
@@ -1435,17 +1510,17 @@ class Point:
         return data
 
 # Main Stop Event
-def halt(*args, **kwargs):
-    if not halt_flag.is_set():
+def _halt(*args, **kwargs) -> None:
+    if not _halt_flag.is_set():
         logger.info("\nStopping the power monitor gracefully - please wait.")
-        halt_flag.set()
+        _halt_flag.set()
 
-from plugin_handler import Plugin
+from rpi_power_monitor.plugin_handler import Plugin
 
 if __name__ == '__main__':
-    halt_flag = Event()
-    signal.signal(signal.SIGINT, halt)
-    signal.signal(signal.SIGTERM, halt)
+    _halt_flag = Event()
+    signal.signal(signal.SIGINT, _halt)
+    signal.signal(signal.SIGTERM, _halt)
 
     args = parser.parse_args()
     if args.verbose == True:
@@ -1481,7 +1556,7 @@ if __name__ == '__main__':
             num_samples = args.samples
         else:
             num_samples = 1000
-        samples = rpm.collect_data(num_samples)
+        samples = rpm._collect_data(num_samples)
         duration = samples['duration']
         # Calculate Sample Rate in Kilo-Samples Per Second.
         sample_count = sum([len(samples[x]) for x in samples.keys() if type(samples[x]) == list])
@@ -1506,3 +1581,11 @@ if __name__ == '__main__':
                 "Plot created! I could not determine the IP address of this machine."
                 "Visit your device's IP address in a web browser to view the list of charts "
                 "you've created using '--plot' mode.")
+
+def _convert_duration_to_num_samples(duration, sample_rate, num_enabled_channels) -> int:
+    '''This is a helper function to convert a given duration into an approximate number of samples.'''
+
+    num_channels_samples = 2 * num_enabled_channels
+    est_total_samples_to_collect = sample_rate / duration
+    est_per_channel_samples_to_collect = est_total_samples_to_collect / num_channels_samples
+    return round(est_per_channel_samples_to_collect)
