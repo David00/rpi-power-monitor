@@ -22,8 +22,9 @@ import os
 from typing import Union
 
 from rpi_power_monitor.plotting import plot_data
-from influxdb import InfluxDBClient
-from influxdb.exceptions import InfluxDBServerError
+
+
+
 
 # Logging Config
 logger = logging.getLogger('power_monitor')
@@ -54,7 +55,6 @@ retention_policies = {
         'duration' : '30d'
     }
 }
-
 
 
 
@@ -213,11 +213,6 @@ class RPiPowerMonitor:
             if not self.client:
                 logger.error(f"Failed to connect to InfluxDB server at {self.config['database']['host']}:{self.config['database']['port']}. Please make sure it's reachable and try again.")
                 self._cleanup(-1)
-            # Other Initializations
-            # Validate continuous queries and retention policies
-            self._validate_rps()
-            self._validate_cqs()
-            #
         else:
             self.DB_ENABLED = False
         self.points_buffer = [] # A buffer to hold sublists of points so that they can be written altogether (reduces DB overhead)
@@ -232,7 +227,7 @@ class RPiPowerMonitor:
 
     
     def _validate_cqs(self) -> None:
-        '''Ensures that the continuous queries exist in the configured Influx database, and creates them if not.'''
+        '''Ensures that the continuous queries exist in the configured Influx v1 database, and creates them if not.'''
 
         retention_policies = {
             '5m' : 'rp_5min'
@@ -299,7 +294,7 @@ class RPiPowerMonitor:
         return
 
     def _validate_rps(self) -> None:
-        '''Ensures that the retention policies exist in the configured Influx database, and creates them if not.'''
+        '''Ensures that the retention policies exist in the configured Influx v1 database, and creates them if not.'''
 
         # Validate retention policies and continuous queries.
         try:
@@ -433,31 +428,16 @@ class RPiPowerMonitor:
         
         return
 
+    def _setup_influx_v1(self) -> None:
+        '''Initializes a connection to Influx v1.'''
 
-    def _get_db_client(self) -> None:
-        '''Creates an InfluxDB Client using the loaded configuration.'''
-
+        from influxdb import InfluxDBClient    
+        
         host = self.config['database']['host']
         port = self.config['database']['port']
-        logger.debug(f"Trying to connect to the Influx database at {host}:{port}...")
-
-        # Validate DB Settings
-        db_host_valid = True
-        try:
-            host = host
-        except ipaddress.AddressValueError:
-            logger.debug(f'DB host does not look like an IP address. Testing DNS resolution...')
-            pass
-        try:
-            ip = getaddrinfo(host, None)
-        except Exception as e:
-            logger.debug(f'Failed to translate database host to IP. Exception msg: {e}')
-            db_host_valid = False
-        
-        if not db_host_valid:
-            logger.warning(dedent(
-                f"It appears that the database host value of {host} is not a valid IP or DNS name.  Or, DNS name resolution failed. Please check this setting and your networking settings and try again."))
-            self._cleanup(-1)
+        username = self.config['database']['username']
+        password = self.config['database']['password']
+        logger.debug(f"Trying to connect to the Influx database at {host}:{port}...")        
 
         try:
             client = InfluxDBClient(
@@ -488,7 +468,105 @@ class RPiPowerMonitor:
         
         logger.debug(f"Successfully connected to Influx at {host}:{port}")
         return
+
+    def  _setup_influx_v2(self) -> None:
+        '''Initializes a connection to Influx v2.'''
         
+        import influxdb_client
+        from influxdb_client.client.write_api import SYNCHRONOUS
+
+        try:
+            v2_config = self.config.get('database').get('influx_v2')
+        except Exception as e:
+            logger.warning(f"Failed to load Influx v2 configuration.")
+            return
+
+        bucket = v2_config.get('bucket')
+        org = v2_config.get('org')
+        token = v2_config.get('token')
+        url = v2_config.get('url')
+
+        if not (bucket and org and token and url):
+            logger.warning(f"Influx version 2 is specified, but you're missing one or more Influx v2 config options.")
+            logger.warning(f"Please ensure your [database.influx_v2] includes the bucket, org, token, and url options.")
+            self.client = None
+            return
+
+        client = influxdb_client.InfluxDBClient(
+            url=url,
+            token=token,
+            org=org
+        )
+        write_api = client.write_api(write_options=SYNCHRONOUS)
+        self.client = write_api
+        self.influx_bucket = bucket
+        logger.debug("Initialized Influx version 2 database.")
+        
+    def _build_write_wrapper(self, influx_version) -> None:
+        '''This is a wrapper function that abstracts the InfluxDB write API based on the Influx version specified.
+        
+        The RPiPowerMonitor class should already have self.client defined if Influx is going to be used (via _setup_influx_v# functions).
+        
+        This function simply creates a writer function to work with either the V1 or V2 influx client libraries.
+        The writer function is responsible for accepting the batch of data and getting into the configured InfluxDB instance.
+        '''
+        
+        def _rpi_influx_v1_writer(*args, **kwargs) -> None:
+            '''This function wraps the InfluxDB v2 client libary to present a common Influx interface to the RPI Power Monitor.
+            
+            Note that the datapoints come from the class attribute self.points_buffer.
+            
+            Calling this function will write the points to the configured InfluxDB instance.
+            '''
+
+            try:
+                logger.debug("Trying to write points to InfluxDB v1 Instance")
+                self.client.write_points(self.points_buffer, time_precision='ms')
+            except ConnectionError:
+                logger.warning(f'Failed to write data to Influx. Reason: {e}')
+        
+        def _rpi_influx_v2_writer(*args, **kwargs) -> None:
+            '''This function wraps the InfluxDB v2 client libary to present a common Influx interface to the RPI Power Monitor.
+            
+            Note that the datapoints come from the class attribute self.points_buffer.
+            
+            Calling this function will write the points to the configured InfluxDB instance.
+            '''
+            
+            # Note that self.client, for Influx v2, is an Influx client.write_api instance.
+            try:
+                logger.debug("Trying to write points to InfluxDB v2 Instance")
+                self.client.write(self.influx_bucket, record=self.points_buffer)
+            except Exception as e:
+                logger.warning(f"There was a problem writing data to InfluxDB v2. The exception message is: ")
+                logger.warning(e)
+            
+        if influx_version == 1:
+            self.influx_writer = _rpi_influx_v1_writer
+            logger.debug(f"  INFLUX: Initialized Influx v1 writer")
+            
+        elif influx_version == 2:
+            self.influx_writer = _rpi_influx_v2_writer
+            logger.debug(f"  INFLUX: Initialized Influx v2 writer")
+
+    def _get_db_client(self) -> None:
+        '''Creates an InfluxDB Client using the loaded configuration.'''
+
+        influx_version = self.config['database'].get('influx_version')
+
+        # The `influx_version` config setting will not exist on pre-v0.4.x deployments.
+        # In this case, assume Influx version 1 is expected.
+        if influx_version == 2:
+            self._setup_influx_v2()
+
+        else:
+            self._setup_influx_v1()
+            # Other Initializations
+            # Validate continuous queries and retention policies
+            self._validate_rps()
+            self._validate_cqs()
+        
+        self._build_write_wrapper(influx_version)
 
     def _dump_data(self, dump_type, samples) -> None:
         """ Writes raw data to a CSV file titled 'data-dump-<current_time>.csv' """
@@ -1166,16 +1244,6 @@ class RPiPowerMonitor:
                     if SMA_Values['cts'][chan_num]['power'] < 0 and SMA_Values['cts'][chan_num]['current'] > 0:
                         SMA_Values['cts'][chan_num]['current'] = SMA_Values['cts'][chan_num]['current'] * -1
 
-                # RMS calculation for phase correction only - this is not needed after everything is tuned.
-                # The following code is used to compare the RMS power to the calculated real power.
-                # Ideally, you want the RMS power to equal the real power when measuring a purely resistive load.
-                # rms_power_1 = round(results['ct1']['current'] * results['ct1']['voltage'], 2)  # AKA apparent power
-                # rms_power_2 = round(results['ct2']['current'] * results['ct2']['voltage'], 2)  # AKA apparent power
-                # rms_power_3 = round(results['ct3']['current'] * results['ct3']['voltage'], 2)  # AKA apparent power
-                # rms_power_4 = round(results['ct4']['current'] * results['ct4']['voltage'], 2)  # AKA apparent power
-                # rms_power_5 = round(results['ct5']['current'] * results['ct5']['voltage'], 2)  # AKA apparent power
-                # rms_power_6 = round(results['ct6']['current'] * results['ct6']['voltage'], 2)  # AKA apparent power
-
                 # Prepare values for database storage if DB is enabled.
                 if self.DB_ENABLED:
                     if write_threshold_counter == write_threshold:
@@ -1218,15 +1286,7 @@ class RPiPowerMonitor:
         self.points_buffer += points
         batch_size = 25
         if len(self.points_buffer) >= batch_size:
-            # Push buffer to DB
-            try:
-                self.client.write_points(self.points_buffer, time_precision='ms')
-            except InfluxDBServerError as e:
-                logger.critical(f"Failed to write data to Influx. Reason: {e}")
-            except ConnectionError:
-                logger.info("Connection to InfluxDB lost. Please investigate!")
-                self._cleanup()
-            
+            self.influx_writer()
             self.points_buffer = []
 
 
