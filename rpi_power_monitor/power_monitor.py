@@ -314,6 +314,15 @@ class RPiPowerMonitor:
         
         return
 
+    def _validate_influx_tasks(self) -> None:
+        '''Ensures that the tasks to automatically downsample the measurements are created in InfluxDB'''
+        pass
+    
+    def _validate_influx_bucket(self) -> None:
+        '''Ensures that the configured bucket name (and a bucket to hold the downsampled points created from tasks) is created.'''
+        pass
+        
+
     def _load_config(self, config) -> None:
         '''Loads the provided config and validates contents.
         
@@ -500,6 +509,22 @@ class RPiPowerMonitor:
         write_api = client.write_api(write_options=SYNCHRONOUS)
         self.client = write_api
         self.influx_bucket = bucket
+        
+        # Check for bucket and tasks.
+        buckets_api = client.buckets_api()
+        existing_buckets = buckets_api.find_buckets()
+        
+        # Unpack existing buckets
+        existing_buckets = [bucket.name for bucket in existing_buckets.buckets]
+        if bucket not in existing_buckets:
+            logger.debug(f"  INFLUX - did not find bucket name {bucket} in list of existing buckets. Creating it now.")
+            
+        try:
+            buckets_api.create_bucket(bucket_name=bucket, org=org)
+        except Exception as e:
+            logger.warning("  INFLUX - there was a problem when creating bucket. Message:")
+            logger.warning(e)
+        
         logger.debug("Initialized Influx version 2 database.")
         
     def _build_write_wrapper(self, influx_version) -> None:
@@ -520,7 +545,6 @@ class RPiPowerMonitor:
             '''
 
             try:
-                logger.debug("Trying to write points to InfluxDB v1 Instance")
                 self.client.write_points(self.points_buffer, time_precision='ms')
             except ConnectionError:
                 logger.warning(f'Failed to write data to Influx. Reason: {e}')
@@ -535,7 +559,6 @@ class RPiPowerMonitor:
             
             # Note that self.client, for Influx v2, is an Influx client.write_api instance.
             try:
-                logger.debug("Trying to write points to InfluxDB v2 Instance")
                 self.client.write(self.influx_bucket, record=self.points_buffer)
             except Exception as e:
                 logger.warning(f"There was a problem writing data to InfluxDB v2. The exception message is: ")
