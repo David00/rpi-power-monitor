@@ -564,7 +564,7 @@ class RPiPowerMonitor:
                 logger.warning(f"There was a problem writing data to InfluxDB v2. The exception message is: ")
                 logger.warning(e)
             
-        if influx_version == 1:
+        if influx_version == 1 or influx_version == None:
             self.influx_writer = _rpi_influx_v1_writer
             logger.debug(f"  INFLUX: Initialized Influx v1 writer")
             
@@ -1270,7 +1270,7 @@ class RPiPowerMonitor:
                 # Prepare values for database storage if DB is enabled.
                 if self.DB_ENABLED:
                     if write_threshold_counter == write_threshold:
-                        self._quene_for_influx(SMA_Values, poll_time)
+                        self._queue_for_influx(SMA_Values, poll_time)
                         write_threshold_counter = 0
                     else:
                         write_threshold_counter += 1
@@ -1284,7 +1284,7 @@ class RPiPowerMonitor:
         # _halt flag set
         self._cleanup()
 
-    def _quene_for_influx(self, SMA_Values, poll_time) -> None:
+    def _queue_for_influx(self, SMA_Values, poll_time) -> None:
         '''Creates Point() objects from the measured values, and caches them into a small batch before writing to Influx.'''
 
         # Create Points() for every measurement.
