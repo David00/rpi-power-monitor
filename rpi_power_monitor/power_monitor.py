@@ -176,7 +176,11 @@ class RPiPowerMonitor:
           https://david00.github.io/rpi-power-monitor/docs/v0.3.0/advanced-usage.html#--mode
     
     """
+    
+    _halt_flag = Event()
+    
     def __init__(self, mode='main', config=os.path.join(module_root, 'config.toml'), spi=None) -> None:
+        self._setup_signal_handlers()        
         self.pid = os.getpid()
         self.imported_plugins = dict()
         
@@ -566,11 +570,9 @@ class RPiPowerMonitor:
             
         if influx_version == 1 or influx_version == None:
             self.influx_writer = _rpi_influx_v1_writer
-            logger.debug(f"  INFLUX: Initialized Influx v1 writer")
             
         elif influx_version == 2:
             self.influx_writer = _rpi_influx_v2_writer
-            logger.debug(f"  INFLUX: Initialized Influx v2 writer")
 
     def _get_db_client(self) -> None:
         '''Creates an InfluxDB Client using the loaded configuration.'''
@@ -1137,13 +1139,13 @@ class RPiPowerMonitor:
         samples = self._collect_data(num_samples)
         sample_count = sum([len(samples[x]) for x in samples.keys() if type(samples[x]) == list])
         
-        while not _halt_flag.is_set():
+        while not self._halt_flag.is_set():
             board_voltage = self._get_board_voltage()
             samples = self._collect_data(num_samples)
             poll_time = samples['time']
             duration = samples['duration']
             sample_rate = round((sample_count / duration) / num_samples, 2)
-            per_channel_sample_rate = round(sample_rate / (2 * len(rpm.enabled_channels)), 2)
+            per_channel_sample_rate = round(sample_rate / (2 * len(self.enabled_channels)), 2)
 
             results = self._calculate_power(samples, board_voltage)
             voltage = results[self.enabled_channels[0]]['voltage']
@@ -1404,6 +1406,10 @@ class RPiPowerMonitor:
         
         logger.debug(f'Sample Rate: {self.sample_rate} samples per second.')
         return
+    
+    def _setup_signal_handlers(self) -> None:
+        signal.signal(signal.SIGINT, _halt)
+        signal.signal(signal.SIGTERM, _halt)        
 
     @staticmethod
     def print_results(SMA_Values, sample_rate) -> None:
@@ -1594,17 +1600,15 @@ class Point:
 
 # Main Stop Event
 def _halt(*args, **kwargs) -> None:
-    if not _halt_flag.is_set():
+    if not RPiPowerMonitor._halt_flag.is_set():
         logger.info("\nStopping the power monitor gracefully - please wait.")
-        _halt_flag.set()
+        RPiPowerMonitor._halt_flag.set()
+    else:
+        logger.info("\nThe power monitor is already stopping - please wait.")
 
 from rpi_power_monitor.plugin_handler import Plugin
 
 if __name__ == '__main__':
-    _halt_flag = Event()
-    signal.signal(signal.SIGINT, _halt)
-    signal.signal(signal.SIGTERM, _halt)
-
     args = parser.parse_args()
     if args.verbose == True:
         ch.setLevel(logging.DEBUG)
