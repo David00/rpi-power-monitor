@@ -22,6 +22,7 @@ import os
 from typing import Union
 
 from rpi_power_monitor.plotting import plot_data
+from rpi_power_monitor.influx_helpers.tasks import _add_task
 
 
 
@@ -318,13 +319,41 @@ class RPiPowerMonitor:
         
         return
 
-    def _validate_influx_tasks(self) -> None:
+    def _validate_influx_v2_tasks(self, client, bucket, org_name, org_id) -> None:
         '''Ensures that the tasks to automatically downsample the measurements are created in InfluxDB'''
-        pass
-    
-    def _validate_influx_bucket(self) -> None:
+        
+        task_api = client.tasks_api()
+        existing_tasks = task_api.find_tasks()
+        existing_tasks_by_name = {task.name : task for task in existing_tasks}
+        existing_task_names = [task.name for task in existing_tasks]
+        
+        if 'powermon_high_res_downsample' not in existing_task_names:
+            task = _add_task(task_api, 'powermon_high_res_downsample', 'high-res-5m-downsample', bucket, org_name, org_id)
+
+        if 'powermon_calculate_5m_energy' not in existing_task_names:
+            successful = _add_task(task_api, 'powermon_calculate_5m_energy', 'calculate-5m-energy', bucket, org_name, org_id)
+
+    def _validate_influx_v2_bucket(self, client, bucket, org) -> None:
         '''Ensures that the configured bucket name (and a bucket to hold the downsampled points created from tasks) is created.'''
-        pass
+        # Check for bucket and try to create if it doesn't exist.
+        bucket_api = client.buckets_api()
+        existing_buckets = bucket_api.find_buckets()
+        existing_buckets = [bucket.name for bucket in existing_buckets.buckets]
+    
+        downsample_bucket_name = f'{bucket}_downsampled'
+        
+        if bucket not in existing_buckets:
+            logger.debug(f"  Creating bucket name {bucket} in InfluxDB v2 instance.")
+            successful = self._create_influx_v2_bucket(bucket_api, bucket, org)
+            if not successful:
+                self._cleanup()
+
+        if downsample_bucket_name not in existing_buckets:
+            successful = self._create_influx_v2_bucket(bucket_api, downsample_bucket_name, org)
+            if not successful:
+                logger.warning(f"  Failed to create the bucket to hold downsampled data (named {downsample_bucket_name})")
+                self._cleanup()
+        
         
 
     def _load_config(self, config) -> None:
@@ -514,22 +543,67 @@ class RPiPowerMonitor:
         self.client = write_api
         self.influx_bucket = bucket
         
-        # Check for bucket and tasks.
-        buckets_api = client.buckets_api()
-        existing_buckets = buckets_api.find_buckets()
+        # Create Tasks, which require the Org ID associated with this org.
+        org_id = self._get_influx_v2_org_id(client, org)
+        if not org_id:
+            self._cleanup()
         
-        # Unpack existing buckets
-        existing_buckets = [bucket.name for bucket in existing_buckets.buckets]
-        if bucket not in existing_buckets:
-            logger.debug(f"  INFLUX - did not find bucket name {bucket} in list of existing buckets. Creating it now.")
+        self._validate_influx_v2_bucket(client, bucket, org)
+        self._validate_influx_v2_tasks(client, bucket, org, org_id)        
+        
+        logger.debug("Influx version 2 database checks/setup complete.")
+
+    def _create_influx_v2_bucket(self, bucket_api, bucket_name, org):
+        '''Creates the bucket `bucket_name` via the provided `bucket_api`'''
+        
+        try:
+            bucket_api.create_bucket(bucket_name=bucket_name, org=org)
+            return True
+        except Exception as e:
+            logger.warning("  Influx v2 - there was a problem when creating the bucket. Message:")
+            logger.warning(e)
+            logger.info("Please review the above message and either: ")
+            logger.info(f"  - Investigate why the requested bucket name ({bucket_name}) cannot be used, or")
+            logger.info("  - Change the bucket name in your configuration.")
+            return False
+        
+    def _create_influx_v2_task(self, task_api, task_name, org_id):
+        '''Creates a task via the provided `task_api`'''
+        
+        from rpi_power_monitor.influx_v2_helpers import _build_high_res_downsample_task, _build_5m_energy_task
+        
+        if task_name == 'high_res_downsample':
+            new_task = _build_high_res_downsample_task(org_id)
+                
+        elif task_name == 'calculate_5m_energy':
+            new_task = _build_5m_energy_task(org_id)
             
         try:
-            buckets_api.create_bucket(bucket_name=bucket, org=org)
+            task_api.create_task(new_task)
+            logger.debug(f"  Influx v2 - created task {task_name}")
+            return True
         except Exception as e:
-            logger.warning("  INFLUX - there was a problem when creating bucket. Message:")
+            logger.warning(f"  Influx v2 - failed to create task '{task_name}'. The encountered exception was: ")
             logger.warning(e)
+            return False
+    
+    def _get_influx_v2_org_id(self, client, org) -> str:
+        '''Retrieves the Org ID (needed for creating Tasks) associated with the provided Organization name.'''
+
+        from influxdb_client.rest import ApiException
         
-        logger.debug("Initialized Influx version 2 database.")
+        org_api = client.organizations_api()
+        try:
+            this_org = org_api.find_organizations(org=org)
+            org_id = this_org[0].id
+            return org_id
+                        
+        # The InfluxDB library raises an exception to indicate HTTP 404 not found. Odd, but okay.
+        except ApiException:
+            logger.warning(f"Unable to get Organization ID associated with the Organization {org}. (Is your InfluxDB instance)")
+            return None
+        
+        
         
     def _build_write_wrapper(self, influx_version) -> None:
         '''This is a wrapper function that abstracts the InfluxDB write API based on the Influx version specified.

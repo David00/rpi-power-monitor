@@ -1,0 +1,42 @@
+option v = {timeRangeStart: -10m, timeRangeStop: now()}
+option task = {name: "${TASK_NAME}", every: 5m}
+
+// Net Power
+from(bucket: "$BUCKET_NAME")
+    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+    |> filter(fn: (r) => r["_measurement"] == "net")
+    |> aggregateWindow(every: 5m, fn: mean, createEmpty: false)
+    |> set(key: "_measurement", value: "net_power_5m")
+    |> to(bucket: "${BUCKET_NAME}_downsampled")
+
+// Home Power
+from(bucket: "$BUCKET_NAME")
+    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+    |> filter(fn: (r) => r["_measurement"] == "home_load")
+    |> aggregateWindow(every: 5m, fn: mean, createEmpty: false)
+    |> set(key: "_measurement", value: "home_load_5m")
+    |> to(bucket: "${BUCKET_NAME}_downsampled")
+
+// Raw CT Data
+from(bucket: "$BUCKET_NAME")
+    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+    |> filter(fn: (r) => r["_measurement"] == "raw_cts")
+    |> aggregateWindow(every: 5m, fn: mean, createEmpty: false)
+    |> set(key: "_measurement", value: "raw_cts_5m")
+    |> to(bucket: "${BUCKET_NAME}_downsampled")
+
+// Solar
+from(bucket: "$BUCKET_NAME")
+    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+    |> filter(fn: (r) => r["_measurement"] == "solar")
+    |> aggregateWindow(every: 5m, fn: mean, createEmpty: false)
+    |> set(key: "_measurement", value: "solar_power_5m")
+    |> to(bucket: "${BUCKET_NAME}_downsampled")
+
+// Voltages
+from(bucket: "$BUCKET_NAME")
+    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+    |> filter(fn: (r) => r["_measurement"] == "voltages")
+    |> aggregateWindow(every: 5m, fn: mean, createEmpty: false)
+    |> set(key: "_measurement", value: "voltages_5m")
+    |> to(bucket: "${BUCKET_NAME}_downsampled")

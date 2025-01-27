@@ -1,0 +1,74 @@
+option v = {timeRangeStart: -10m, timeRangeStop: now()}
+option task = {name: "${TASK_NAME}", every: 5m}
+
+// Home Energy
+from(bucket: "$BUCKET_NAME")
+    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+    |> filter(fn: (r) => r["_measurement"] == "home_load")
+    |> filter(fn: (r) => r["_field"] == "power")
+    |> group(columns: ["_measurement", "id"], mode: "by")
+    |> window(every: 5m)
+    |> integral(unit: 1s, column: "_value")
+    |> map(fn: (r) => ({r with _value: r._value / 3600000.0, _measurement: "home_energy_5m"}))
+    |> group(columns: ["measurement", "id"])
+    |> rename(columns: {_value: "energy"})
+    |> duplicate(column: "_stop", as: "_time")
+    |> to(
+        bucket: "${BUCKET_NAME}_downsampled",
+        tagColumns: ["id"],
+        fieldFn: (r) => ({"energy": r.energy}),
+    )
+
+// Net Energy
+from(bucket: "$BUCKET_NAME")
+    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+    |> filter(fn: (r) => r["_measurement"] == "net")
+    |> filter(fn: (r) => r["_field"] == "power")
+    |> group(columns: ["_measurement", "id"], mode: "by")
+    |> window(every: 5m)
+    |> integral(unit: 1s, column: "_value")
+    |> map(fn: (r) => ({r with _value: r._value / 3600000.0, _measurement: "net_energy_5m"}))
+    |> group(columns: ["measurement", "id"])
+    |> rename(columns: {_value: "energy"})
+    |> duplicate(column: "_stop", as: "_time")
+    |> to(
+        bucket: "${BUCKET_NAME}_downsampled",
+        tagColumns: ["id"],
+        fieldFn: (r) => ({"energy": r.energy}),
+    )
+
+// Solar Energy
+from(bucket: "$BUCKET_NAME")
+    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+    |> filter(fn: (r) => r["_measurement"] == "solar")
+    |> filter(fn: (r) => r["_field"] == "power")
+    |> group(columns: ["_measurement", "id"], mode: "by")
+    |> window(every: 5m)
+    |> integral(unit: 1s, column: "_value")
+    |> map(fn: (r) => ({r with _value: r._value / 3600000.0, _measurement: "solar_energy_5m"}))
+    |> group(columns: ["measurement", "id"])
+    |> rename(columns: {_value: "energy"})
+    |> duplicate(column: "_stop", as: "_time")
+    |> to(
+        bucket: "${BUCKET_NAME}_downsampled",
+        tagColumns: ["id"],
+        fieldFn: (r) => ({"energy": r.energy}),
+    )
+
+// Individual CT Energy
+from(bucket: "$BUCKET_NAME")
+    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+    |> filter(fn: (r) => r["_measurement"] == "raw_cts")
+    |> filter(fn: (r) => r["_field"] == "power")
+    |> group(columns: ["_measurement", "id", "ct"], mode: "by")
+    |> window(every: 5m)
+    |> integral(unit: 1s, column: "_value")
+    |> map(fn: (r) => ({r with _value: r._value / 3600000.0, _measurement: "solar_energy_5m"}))
+    |> group(columns: ["measurement", "id", "ct"])
+    |> rename(columns: {_value: "energy"})
+    |> duplicate(column: "_stop", as: "_time")
+    |> to(
+        bucket: "${BUCKET_NAME}_downsampled",
+        tagColumns: ["id"],
+        fieldFn: (r) => ({"energy": r.energy}),
+    )
