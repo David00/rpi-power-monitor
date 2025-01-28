@@ -744,19 +744,23 @@ class RPiPowerMonitor:
         return samples
     
 
-    def get_single_channel_measurements(self, channel_num, duration=1) -> dict:
+    def get_single_channel_measurements(self, channel=None, duration=1) -> dict:
         """ (Added in v0.4.0) User-level interface to sample a single channel for an approximate number of seconds.
         
         Arguments:
           - channel_num:    int, the channel number that you want to sample (1-6)
-          - duration:       int, the number of seconds that you want to sample for. (Default is 1 second)
+          - duration:       int|float, the number of seconds that you want to sample for. (Default is 1 second)
         """
 
         # The number of samples collected over N seconds is relative to the number of enabled channels and the overall sample rate. The approximate number of samples
         # collected in `duration` seconds must first be calculated below before calling _collect_data()`
         
+        if not channel:
+            print("You must provide a channel when calling this function. Example:\n")
+            print("rpm.get_single_channel_measurements(channel=1)")
+            return None
         num_samples = _convert_duration_to_num_samples(duration, self.sample_rate, 1)
-        samples = self._collect_data(num_samples, channel_num=channel_num)
+        samples = self._collect_data(num_samples, channel_num=channel)
         results = self._calculate_power(samples, self._get_board_voltage())
         return results
 
@@ -769,6 +773,9 @@ class RPiPowerMonitor:
         
         enabled_channels = self.enabled_channels
         num_samples = _convert_duration_to_num_samples(duration, self.sample_rate, 1)
+        samples = self._collect_data(num_samples)
+        results = self._calculate_power(samples, self._get_board_voltage())
+        return results
         
 
 
@@ -1151,18 +1158,18 @@ class RPiPowerMonitor:
     
     
         # Check to see if amps_cutoff_threshold is defined in the config. If not, fallback to using watts_cutoff_threshold.
-        for chan_num in self.enabled_channels:
-            if self.config['current_transformers'][f'channel_{chan_num}'].get('amps_cutoff_threshold'):
-                cutoff = float(self.config['current_transformers'][f'channel_{chan_num}']['amps_cutoff_threshold'])
-            else:
-                cutoff = 0
-                
-            if cutoff != 0:
-                if abs(results[chan_num]['power']) < cutoff:
-                    results[chan_num]['power'] = 0
-                    results[chan_num]['current'] = 0
-                    results[chan_num]['pf'] = 0
+        for chan_num in results.keys():
+            if chan_num in self.enabled_channels:
+                if self.config['current_transformers'][f'channel_{chan_num}'].get('amps_cutoff_threshold'):
+                    cutoff = float(self.config['current_transformers'][f'channel_{chan_num}']['amps_cutoff_threshold'])
+                else:
+                    cutoff = 0
                     
+                if cutoff != 0:
+                    if abs(results[chan_num]['power']) < cutoff:
+                        results[chan_num]['power'] = 0
+                        results[chan_num]['current'] = 0
+                        results[chan_num]['pf'] = 0
         return results
 
     def run_main(self) -> None:
@@ -1685,7 +1692,6 @@ from rpi_power_monitor.plugin_handler import Plugin
 if __name__ == '__main__':
     args = parser.parse_args()
     if args.verbose == True:
-        ch.setLevel(logging.DEBUG)
         logger.setLevel(logging.DEBUG)
         logger.debug("Verbose logging output enabled.")
 
