@@ -196,7 +196,11 @@ class RPiPowerMonitor:
             self.spi = spi
         else:
             self.spi = spidev.SpiDev()
-            self.spi.open(0, 0)
+            try:
+                self.spi.open(0, 0)
+            except Exception as e:
+                logger.critical("Unable to open SPI interface. Is SPI enabled on this device?")
+                self._cleanup()
             self.spi.max_speed_hz = 1750000
 
         # Check sample rate:
