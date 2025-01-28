@@ -29,6 +29,7 @@ setup(
     author_email="github@dalbrecht.tech",
     install_requires=[
         "influxdb==5.3.2",
+        "influxdb-client>=1.48.0",
         "prettytable==3.12.0",
         "plotly==4.14.3",
         "spidev==3.6",
