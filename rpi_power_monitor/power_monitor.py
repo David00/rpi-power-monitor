@@ -1,4 +1,3 @@
-#!/usr/bin/python
 import csv
 import logging
 import os
@@ -31,11 +30,12 @@ from rpi_power_monitor.influx_helpers.tasks import _add_task
 logger = logging.getLogger('power_monitor')
 logger.setLevel(logging.INFO)
 ch = logging.StreamHandler(sys.stdout)
-ch.setLevel(logging.INFO)
+logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s : %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 ch_formatter = logging.Formatter('%(levelname)s : %(message)s')
 ch.setFormatter(ch_formatter)
-logger.addHandler(ch)
+if len(logger.handlers) == 0:
+    logger.addHandler(ch)
 
 module_root = pathlib.Path(__file__).parent
 

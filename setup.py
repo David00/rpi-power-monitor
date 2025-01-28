@@ -10,7 +10,7 @@ from codecs import open
 from os import path
 
 # Always prefer setuptools over distutils
-from setuptools import setup
+from setuptools import setup, find_packages
 
 here = path.abspath(path.dirname(__file__))
 
@@ -34,9 +34,10 @@ setup(
         "spidev==3.6",
         "requests==2.32.3",
         "tomli==2.2.1",
+        "setuptools>=75"
     ],
     license="GNU General Public License (GPLv3)",
-    packages=["rpi_power_monitor"],
+    packages=find_packages(include=['rpi_power_monitor', 'rpi_power_monitor.*']),
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
