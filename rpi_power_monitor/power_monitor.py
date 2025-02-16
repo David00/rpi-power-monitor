@@ -977,9 +977,9 @@ class RPiPowerMonitor:
                 'type': self.config['current_transformers']['channel_1']['type'],
                 'power': real_power_1,
                 'current': rms_current_ct1,
-                'voltage': rms_voltage_1,
                 'pf': power_factor_1
             }
+            results['voltage'] = rms_voltage_1
 
         if ct2_samples:
             avg_raw_current_ct2 = sum_raw_current_ct2 / num_samples
@@ -1012,9 +1012,9 @@ class RPiPowerMonitor:
                 'type': self.config['current_transformers']['channel_2']['type'],
                 'power': real_power_2,
                 'current': rms_current_ct2,
-                'voltage': rms_voltage_2,
                 'pf': power_factor_2
             }
+            results['voltage'] = rms_voltage_2
 
         if ct3_samples:
             avg_raw_current_ct3 = sum_raw_current_ct3 / num_samples
@@ -1046,10 +1046,10 @@ class RPiPowerMonitor:
             results[3] = {
                 'type': self.config['current_transformers']['channel_3']['type'],
                 'power': real_power_3,
-                'current': rms_current_ct3,
-                'voltage': rms_voltage_3,
+                'current': rms_current_ct3,                
                 'pf': power_factor_3
             }
+            results['voltage'] = rms_voltage_3
 
         if ct4_samples:
             avg_raw_current_ct4 = sum_raw_current_ct4 / num_samples
@@ -1082,9 +1082,9 @@ class RPiPowerMonitor:
                 'type': self.config['current_transformers']['channel_4']['type'],
                 'power': real_power_4,
                 'current': rms_current_ct4,
-                'voltage': rms_voltage_4,
                 'pf': power_factor_4
             }
+            results['voltage'] = rms_voltage_4
 
         if ct5_samples:
             avg_raw_current_ct5 = sum_raw_current_ct5 / num_samples
@@ -1117,9 +1117,9 @@ class RPiPowerMonitor:
                 'type': self.config['current_transformers']['channel_5']['type'],
                 'power': real_power_5,
                 'current': rms_current_ct5,
-                'voltage': rms_voltage_5,
                 'pf': power_factor_5
             }
+            results['voltage'] = rms_voltage_5
 
         if ct6_samples:
             avg_raw_current_ct6 = sum_raw_current_ct6 / num_samples
@@ -1152,9 +1152,9 @@ class RPiPowerMonitor:
                 'type': self.config['current_transformers']['channel_6']['type'],
                 'power': real_power_6,
                 'current': rms_current_ct6,
-                'voltage': rms_voltage_6,
                 'pf': power_factor_6
             }
+            results['voltage'] = rms_voltage_6
 
         # Software Noise Filtering - Amps & Watts
         # amps_cutoff_threshold (added in v0.3.2)
@@ -1177,7 +1177,7 @@ class RPiPowerMonitor:
                         results[chan_num]['current'] = 0
                         results[chan_num]['pf'] = 0
         return results
-
+    
     def run_main(self) -> None:
         """ Starts the main power monitor loop and launches plugins. """
         logger.info("... Starting Raspberry Pi Power Monitor")
@@ -1187,7 +1187,7 @@ class RPiPowerMonitor:
         production_values = dict(power=[], pf=[], current=[])
         home_consumption_values = dict(power=[], pf=[], current=[])
         net_values = dict(power=[], current=[])
-        ct_dict = {channel : {'power' : [], 'pf' : [], 'current' : [], 'voltage' : []} for channel in self.enabled_channels}
+        ct_dict = {channel : {'power' : [], 'pf' : [], 'current' : []} for channel in self.enabled_channels}
         rms_voltages = []
         SMA_Data = {channel : {'power' : [], 'pf' : [], 'current' : []} for channel in self.enabled_channels}
         # Add 'production', 'home-consumption', and 'net' figures to the SMA_Data dictionary:
@@ -1235,7 +1235,8 @@ class RPiPowerMonitor:
             per_channel_sample_rate = round(sample_rate / (2 * len(self.enabled_channels)), 2)
 
             results = self._calculate_power(samples, board_voltage)
-            voltage = results[self.enabled_channels[0]]['voltage']
+            voltage = results.pop('voltage')
+            
 
             # Determine Production, Home Consumption, and Net Values
             
