@@ -19,6 +19,7 @@ import signal
 from copy import deepcopy
 import os
 from typing import Union
+import atexit
 
 from rpi_power_monitor.plotting import plot_data
 from rpi_power_monitor.influx_helpers.tasks import _add_task
@@ -186,6 +187,7 @@ class RPiPowerMonitor:
         self.imported_plugins = dict()
         
         self._load_config(config)
+        atexit.register(self._cleanup)
 
         if not self.config.get('disable_dup_process_check'):
             duplicate = self._check_dup_process()
@@ -1436,6 +1438,10 @@ class RPiPowerMonitor:
 
     def _cleanup(self, *args, **kwargs) -> None:
         '''Performs necessary termination/shutdown procedures and exits the program.'''
+
+        if not self._halt_flag.is_set():
+            logger.info("\nStopping the power monitor gracefully - please wait.")
+            self._halt_flag.set()
         try:
             if self.spi:
                 self.spi.close()
@@ -1493,8 +1499,8 @@ class RPiPowerMonitor:
         return
     
     def _setup_signal_handlers(self) -> None:
-        signal.signal(signal.SIGINT, _halt)
-        signal.signal(signal.SIGTERM, _halt)        
+        signal.signal(signal.SIGINT, self._cleanup)
+        signal.signal(signal.SIGTERM, self._cleanup)
 
     @staticmethod
     def print_results(SMA_Values, sample_rate) -> None:
