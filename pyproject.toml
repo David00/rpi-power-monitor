@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rpi_power_monitor"
+version = "0.4.0"
+dependencies = [
+    "influxdb>=5.3.2",
+    "influxdb-client>=1.48.0",
+    "prettytable>=3.12.0",
+    "plotly==4.14.3",
+    "spidev==3.6",
+    "requests==2.32.3",
+    "tomli==2.2.1",
+    "setuptools>=75"
+]
+
+
+
+# Working1
+[tool.setuptools]
+packages = ["rpi_power_monitor", "rpi_power_monitor.influx_helpers", "rpi_power_monitor.plugins"]
+include-package-data = true
+
+
+[tool.setuptools.package-data]
+"influx_helpers" = ["*.txt"]
