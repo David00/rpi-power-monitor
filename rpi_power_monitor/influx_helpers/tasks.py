@@ -6,7 +6,7 @@ from influxdb_client.domain import Task
 
 
 
-def _add_task(task_api, task_name, template_name, bucket_name, org_name, org_id) -> bool:
+def _add_task(task_api, task_name, template_name, bucket_name, org_name, org_id, Org) -> bool:
     '''Constructs an Influx v2 `Task` class instance'''
     
     # Templates require the following variables:
@@ -19,6 +19,7 @@ def _add_task(task_api, task_name, template_name, bucket_name, org_name, org_id)
             template_contents = f.read()
     except Exception as e:
         logger.warning(f"Failed to open template file named {template_name} at {template_dir}. Unable to setup InfluxDB downsampling task named {task_name}.")
+        return False
     
     T = Template(template_contents)
     flux = T.substitute(BUCKET_NAME=bucket_name, TASK_NAME=task_name)
@@ -31,7 +32,7 @@ def _add_task(task_api, task_name, template_name, bucket_name, org_name, org_id)
     )
     
     try:
-        task_api.create_task(task)
+        task_api.create_task_every(task_name, flux, '5m', Org)
         logger.debug(f"  Influx v2 - created task {task_name}")
         return True
     except Exception as e:

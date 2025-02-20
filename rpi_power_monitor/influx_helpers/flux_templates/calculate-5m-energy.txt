@@ -1,5 +1,4 @@
 option v = {timeRangeStart: -10m, timeRangeStop: now()}
-option task = {name: "${TASK_NAME}", every: 5m}
 
 // Home Energy
 from(bucket: "$BUCKET_NAME")
