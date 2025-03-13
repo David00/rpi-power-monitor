@@ -562,7 +562,7 @@ class RPiPowerMonitor:
             if self.config['current_transformers']['channel_1'].get('reversed'):
                 # Change the sign of the power calculation, and then make the current calculation match.
                 real_power_1 = real_power_1 * -1
-            if real_power_1 < 0:
+            if real_power_1 < 0 and rms_voltage_1 > 10:
                 rms_current_ct1 = abs(rms_current_ct1) * -1
 
             # Filter out PF if the amperage data is not sufficient.
@@ -597,7 +597,7 @@ class RPiPowerMonitor:
             if self.config['current_transformers']['channel_2'].get('reversed'):
                 # Change the sign of the power calculation, and then make the current calculation match.
                 real_power_2 = real_power_2 * -1
-            if real_power_2 < 0:
+            if real_power_2 < 0 and rms_voltage_2 > 10:
                 rms_current_ct2 = abs(rms_current_ct2) * -1
 
             # Filter out PF if the amperage data is not sufficient.
@@ -632,7 +632,7 @@ class RPiPowerMonitor:
             if self.config['current_transformers']['channel_3'].get('reversed'):
                 # Change the sign of the power calculation, and then make the current calculation match.
                 real_power_3 = real_power_3 * -1
-            if real_power_3 < 0:
+            if real_power_3 < 0 and rms_voltage_3 > 10:
                 rms_current_ct3 = abs(rms_current_ct3) * -1
 
             # Filter out PF if the amperage data is not sufficient.
@@ -667,7 +667,7 @@ class RPiPowerMonitor:
             if self.config['current_transformers']['channel_4'].get('reversed'):
                 # Change the sign of the power calculation, and then make the current calculation match.
                 real_power_4 = real_power_4 * -1
-            if real_power_4 < 0:
+            if real_power_4 < 0 and rms_voltage_4 > 10:
                 rms_current_ct4 = abs(rms_current_ct4) * -1
 
             # Filter out PF if the amperage data is not sufficient.
@@ -702,7 +702,7 @@ class RPiPowerMonitor:
             if self.config['current_transformers']['channel_5'].get('reversed'):
                 # Change the sign of the power calculation, and then make the current calculation match.
                 real_power_5 = real_power_5 * -1
-            if real_power_5 < 0:
+            if real_power_5 < 0 and rms_voltage_5 > 10:
                 rms_current_ct5 = abs(rms_current_ct5) * -1
 
             # Filter out PF if the amperage data is not sufficient.
@@ -737,7 +737,7 @@ class RPiPowerMonitor:
             if self.config['current_transformers']['channel_6'].get('reversed'):
                 # Change the sign of the power calculation, and then make the current calculation match.
                 real_power_6 = real_power_6 * -1
-            if real_power_6 < 0:
+            if real_power_6 < 0 and rms_voltage_6 > 10:
                 rms_current_ct6 = abs(rms_current_ct6) * -1
 
             # Filter out PF if the amperage data is not sufficient.
