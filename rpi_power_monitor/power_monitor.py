@@ -762,7 +762,7 @@ class RPiPowerMonitor:
     
         # Check to see if amps_cutoff_threshold is defined in the config file. If not, fallback to using watts_cutoff_threshold.
         for chan_num in self.enabled_channels:
-            if self.config['current_transformers'][f'channel_{chan_num}'].get('amps_cutoff_threshold'):
+            if self.config['current_transformers'][f'channel_{chan_num}'].get('amps_cutoff_threshold') is not None:
                 cutoff = float(self.config['current_transformers'][f'channel_{chan_num}']['amps_cutoff_threshold'])
             else:
                 cutoff = float(self.config['current_transformers'][f'channel_{chan_num}']['watts_cutoff_threshold'])

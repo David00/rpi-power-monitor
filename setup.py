@@ -20,7 +20,7 @@ with open(path.join(here, "README.md"), encoding="utf-8") as f:
 
 setup(
     name="rpi_power_monitor",
-    version='0.3.2',
+    version='0.3.3',
     description="Raspberry Pi Power Monitor",
     long_description=long_description,
     long_description_content_type="text/markdown",
