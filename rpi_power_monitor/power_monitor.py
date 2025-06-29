@@ -764,14 +764,14 @@ class RPiPowerMonitor:
         for chan_num in self.enabled_channels:
             if self.config['current_transformers'][f'channel_{chan_num}'].get('amps_cutoff_threshold') is not None:
                 cutoff = float(self.config['current_transformers'][f'channel_{chan_num}']['amps_cutoff_threshold'])
+                zero_results = abs(results[chan_num]['current']) < cutoff
             else:
                 cutoff = float(self.config['current_transformers'][f'channel_{chan_num}']['watts_cutoff_threshold'])
-                
-            if cutoff != 0:
-                if abs(results[chan_num]['power']) < cutoff:
-                    results[chan_num]['power'] = 0
-                    results[chan_num]['current'] = 0
-                    results[chan_num]['pf'] = 0
+                zero_results = abs(results[chan_num]['power']) < cutoff
+            if zero_results:
+                results[chan_num]['power'] = 0
+                results[chan_num]['current'] = 0
+                results[chan_num]['pf'] = 0
                     
         return results
 
