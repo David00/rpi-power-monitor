@@ -13,5 +13,5 @@ To contribute ideas to this project, please open an issue in the GitHub reposito
 Thanks for your support!
 """
 
-__version__ = "0.3.2"
+__version__ = "0.3.4"
 __author__ = 'David00'

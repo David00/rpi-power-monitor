@@ -192,7 +192,7 @@ class RPiPowerMonitor:
         logger.debug(f"Attempting to load config from {config_file}")
         invalid_settings = False
         if not os.path.exists(config_file): 
-            logger.error(f"Could not find your config.toml file at rpi_power_monitor/config.toml. Please ensure it exists, or, provide the config file location with the -c flag when launching the program.")
+            logger.error("Could not find your config.toml file at rpi_power_monitor/config.toml. Please ensure it exists, or, provide the config file location with the -c flag when launching the program.")
 
         try:
             with open(config_file, 'rb') as f:
@@ -260,6 +260,35 @@ class RPiPowerMonitor:
             if 'two_pole' not in settings.keys():
                 logger.critical(f"{channel.capitalize()} is missing the two_pole setting in the config file. Please make sure the config has an entry for 'two_pole' and try again.")
                 self.cleanup(-1)
+        
+        # Software Filter validation
+        for channel, settings in config['current_transformers'].items():
+            # Check for presence of amps_cutoff_threshold setting
+            if 'amps_cutoff_threshold' not in settings.keys():
+                logger.warning(f"{channel.capitalize()} is missing the amps_cutoff_threshold setting in the config file. While this isn't required, this featuer is helpful for removing noise when loads are off.")
+                continue
+            # Check to make sure that amps_cutoff_threshold is a number
+            try:
+                float(settings['amps_cutoff_threshold'])
+            except ValueError:
+                logger.critical(f"The value of {channel.capitalize()}'s amps_cutoff_threshold must be a number. Please correct this in your config.toml file and relaunch the software.")
+                self.cleanup(-1)
+            
+            # Provide deprecation notice to watts_cutoff_threshold
+            if 'watts_cutoff_threshold' in settings.keys():
+                logger.warning("The watts_cutoff_threshold setting is deprecated and will be removed in a future release. Please utilize the `amps_cutoff_threshold` instead.")
+                
+            else:   # watts_cutoff_threshold is not in settings
+                continue
+            # Check that watts_cutoff_threshold is a number
+            try:
+                float(settings['watts_cutoff_threshold'])
+            except ValueError:
+                logger.critical(f"The value of {channel.capitalize()}'s watts_cutoff_threshold must be a number. Please correct this in your config.toml file and relaunch the software.")
+                self.cleanup(-1)
+            
+            
+            
 
     def get_db_client(self):
         '''Creates an InfluxDB Client using the loaded configuration.'''
@@ -764,14 +793,18 @@ class RPiPowerMonitor:
         for chan_num in self.enabled_channels:
             if self.config['current_transformers'][f'channel_{chan_num}'].get('amps_cutoff_threshold') is not None:
                 cutoff = float(self.config['current_transformers'][f'channel_{chan_num}']['amps_cutoff_threshold'])
-            else:
-                cutoff = float(self.config['current_transformers'][f'channel_{chan_num}']['watts_cutoff_threshold'])
-                
-            if cutoff != 0:
-                if abs(results[chan_num]['power']) < cutoff:
-                    results[chan_num]['power'] = 0
-                    results[chan_num]['current'] = 0
-                    results[chan_num]['pf'] = 0
+                if cutoff != 0:
+                    if abs(results[chan_num]['current']) < cutoff:
+                        results[chan_num]['power'] = 0
+                        results[chan_num]['current'] = 0
+                        results[chan_num]['pf'] = 0
+            else:   # Filter is based off the `watts_cutoff_threshold` setting
+                cutoff = float(self.config['current_transformers'][f'channel_{chan_num}']['watts_cutoff_threshold'])    
+                if cutoff != 0:
+                    if abs(results[chan_num]['power']) < cutoff:
+                        results[chan_num]['power'] = 0
+                        results[chan_num]['current'] = 0
+                        results[chan_num]['pf'] = 0
                     
         return results
 
