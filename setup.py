@@ -32,7 +32,7 @@ setup(
         "prettytable==0.7.2",
         "plotly==4.5.4",
         "spidev==3.6",
-        "requests==2.21.0",
+        "requests==2.31.0",
         "tomli==2.0.1"
     ],
     license="GNU General Public License (GPLv3)",
