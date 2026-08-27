@@ -141,10 +141,10 @@ These instructions assume that you are running 32-bit Raspberry Pi OS Lite.
     After=network.target
 
     [Service]
+    Type=simple
     Restart=always
-    RestartSec=1
-    StartLimitInterval=120
-    StartLimitBurst=5
+    RestartSec=30s
+    StartLimitIntervalSec=0
     User=pi
     ExecStart=/usr/bin/python3 /home/pi/rpi_power_monitor/rpi_power_monitor/power_monitor.py
 
